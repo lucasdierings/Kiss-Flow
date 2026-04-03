@@ -18,28 +18,48 @@ Plataforma SaaS freemium que ajuda usuarios com dificuldades em relacionamentos 
 ```
 src/
   app/
-    page.tsx              - Dashboard principal (bento grid)
+    page.tsx              - Dashboard principal (bento grid + AlertBanner + ActionBar)
     layout.tsx            - Root layout (pt-BR, dark mode)
     globals.css           - CSS vars, glassmorphism, bento-card
     alvos/                - CRUD de alvos (targets)
       page.tsx            - Lista de alvos com filtros
       novo/page.tsx       - Cadastro de novo alvo
-      [id]/page.tsx       - Detalhe do alvo com analytics
-    onboarding/           - Fluxo de onboarding do usuario (planejado)
-    chat/                 - Chat assistente IA (planejado)
+      [id]/page.tsx       - Detalhe do alvo com analytics + AlertBanner + ActionBar
+    onboarding/page.tsx   - Fluxo 4-step (identidade, quiz, comunicacao, resultado)
+    chat/page.tsx         - Chat assistente IA com personas e upload
+    login/page.tsx        - Magic Link + Google OAuth
+    signup/page.tsx       - Redirect para /login (Magic Link cria conta automaticamente)
+    auth/callback/route.ts - Callback OAuth + Magic Link verification
     pricing/              - Pagina de precos (planejado)
-    api/                  - API routes server-side
-      ai/                 - Endpoints Gemini
-  components/             - Componentes do dashboard
+    api/
+      ai/analyze-screenshot/route.ts - Gemini Vision: OCR + sentimento + tatica
+      ai/analyze-profile/route.ts    - Gemini Vision: arquetipo + vulnerabilidades
+      ai/chat/route.ts               - Chat com Gemini (persona-aware)
+      ai/suggest-action/route.ts     - Sugestao de acao justificada com Greene
+  components/
+    ActionBar.tsx         - Barra flutuante com 5 taticas, abre ActionModal
+    ActionModal.tsx       - Modal com 5 secoes (O que e, Por que agora, Como executar, Risco, Referencia)
+    AlertBanner.tsx       - Cards de alerta proativo com prioridade visual
+    CurrentVictim.tsx     - Card perfil do contato
+    EnchantmentTimeline.tsx - Grafico encantamento
+    KPICards.tsx          - Metricas agregadas
+    MysteryGauge.tsx      - Gauge misterio
+    ScarcityIndex.tsx     - Indice escassez
+    Sidebar.tsx           - Navegacao lateral
+    TensionThermometer.tsx - Termometro tensao
+    VulnerabilityRadar.tsx - Radar 6 eixos
+    chat/                 - ChatInput, ChatMessage, ContactSelector
   lib/
-    supabase.ts           - Cliente Supabase (browser + server)
-    gemini.ts             - Cliente Gemini
-    prompts.ts            - System prompts para IA (adaptativos por persona e objetivo)
+    supabase.ts           - Cliente Supabase (browser + server + server-with-auth)
+    gemini.ts             - Cliente Gemini (Flash, Pro, Vision)
+    prompts.ts            - System prompts adaptativos (persona + objetivo)
     persona.ts            - Sistema de personas (Don Juan / Cleopatra / Neutro)
-    archetype-quiz.ts     - Quiz de 10 perguntas para classificar arquetipo sedutor
+    archetype-quiz.ts     - Quiz 10 perguntas, 9 arquetipos, scoring
+    alerts-engine.ts      - Motor alertas proativos (8 tipos, 24 taticas Greene, Supabase)
     store.ts              - Estado local (localStorage) — legado, migrar para Supabase
-    types.ts              - Tipos TypeScript
-    engine.ts             - Regras de negocio (dopamina, timing, metricas)
+    types.ts              - Tipos TypeScript (Contact, Interaction, 18 vitimas, 5 categorias)
+    engine.ts             - Regras de negocio (dopamina, timing, metricas, pipeline)
+  middleware.ts           - Auth middleware (protege rotas, redirect onboarding)
 ```
 
 ## Design System
@@ -132,8 +152,8 @@ npm run lint                           # ESLint
 - [x] Fase 2: Onboarding usuario (quiz arquetipo 10 perguntas, identidade, comunicacao, resultado) — CONCLUIDO
 - [x] Fase 3: Motor Gemini (API routes: analyze-screenshot, analyze-profile, chat, suggest-action) — CONCLUIDO
 - [x] Fase 4: Chat assistente IA (interface + Gemini + upload screenshots + historico Supabase) — CONCLUIDO
-- [ ] Fase 5: Acoes justificadas + alertas proativos ← PROXIMO
-- [ ] Fase 6: LGPD + Termos de Uso + Termos de Privacidade
+- [x] Fase 5: Acoes justificadas (ActionModal 5 secoes + IA) + alertas proativos (AlertBanner + alerts-engine 8 tipos + 24 taticas Greene) — CONCLUIDO
+- [ ] Fase 6: LGPD + Termos de Uso + Termos de Privacidade ← PROXIMO
 - [ ] Fase 7: Stripe + paywall freemium
 - [ ] Fase 8: Deploy Vercel
 
@@ -146,8 +166,32 @@ npm run lint                           # ESLint
 - **RLS:** Ativo em todas as tabelas (user_id = auth.uid())
 - **Trigger:** Auto-create user_profiles on auth.users insert
 
+## GitHub
+- **Repo:** github.com/lucasdierings/Kiss-Flow (privado)
+- **Branch principal:** main
+
+## Auth
+- **Magic Link:** signInWithOtp (cria conta automaticamente se email nao existe)
+- **Google OAuth:** Configurado no Google Cloud Console + Supabase Dashboard
+- **Middleware:** Protege todas as rotas exceto /login, /signup, /auth/callback, /api/*
+- **Onboarding redirect:** Se user nao completou onboarding, redireciona para /onboarding
+
+## Fase 5: Acoes Justificadas + Alertas (detalhes)
+- **ActionModal:** 5 secoes (O que e, Por que agora, Como executar, Risco, Referencia Greene)
+  - Fetch automatico de /api/ai/suggest-action ao abrir
+  - Botoes: "Confirmar Acao" (registra interacao) e "Pedir Conselho a IA" (abre chat)
+- **AlertBanner:** Cards com prioridade visual (critical=red, high=amber, medium=purple, low=neutral)
+  - Max 3 visiveis, expandivel com "Ver mais X alertas"
+  - Botoes Executar/Ignorar por alerta
+- **alerts-engine.ts:** 8 tipos de alerta proativo:
+  - friendzone_risk, climax_ready, silence_needed, excessive_frequency
+  - mystery_critical, target_pursuing, extended_silence, high_enchantment
+  - Cada alerta referencia tatica de Greene (numero + nome)
+  - GREENE_TACTICS: mapa completo das 24 taticas em portugues
+  - Persistencia Supabase: persistAlerts, dismissAlert, getActiveAlerts
+
 ---
 **Ultima atualizacao:** 03 de abril de 2026
-**Status:** Backend Supabase ativo. Auth funcional. Onboarding com quiz 10 perguntas. 4 API routes Gemini. Chat IA com upload de screenshots, seletor de alvos, historico persistente, quick actions. Fases 1-4 concluidas.
+**Status:** Backend Supabase ativo. Auth funcional (Magic Link + Google OAuth). Onboarding com quiz 10 perguntas. 4 API routes Gemini. Chat IA com personas, upload screenshots, historico. Acoes justificadas com ActionModal + AlertBanner proativo + alerts-engine (24 taticas Greene). Fases 1-5 concluidas.
 
 @AGENTS.md
