@@ -15,6 +15,7 @@ import StrategicInsights from "@/components/StrategicInsights";
 import BehaviorDiagnostic from "@/components/BehaviorDiagnostic";
 import PipelineFunnel from "@/components/PipelineFunnel";
 import ActiveContacts from "@/components/ActiveContacts";
+import ConversionAnalytics from "@/components/ConversionAnalytics";
 import { loadState } from "@/lib/store";
 import { generateProactiveAlerts } from "@/lib/alerts-engine";
 import { calculateUserScore, getDefaultUserScore, type UserScore } from "@/lib/user-scoring";
@@ -38,7 +39,7 @@ export default function Dashboard() {
     const contact = state.contacts.find((c) => c.id === state.activeContactId) || state.contacts[0];
     if (contact) {
       setActiveContact(contact);
-      const proactiveAlerts = generateProactiveAlerts(contact, state.interactions);
+      const proactiveAlerts = generateProactiveAlerts(contact, state.interactions, state.phaseHistory || []);
       setAlerts(
         proactiveAlerts.map((a, i) => ({
           id: `local-${i}`,
@@ -122,7 +123,10 @@ export default function Dashboard() {
           <ActiveContacts />
           <StrategicInsights score={userScore} />
 
-          {/* Row 3: KPI Cards (4 cols) */}
+          {/* Row 3: Conversion Analytics (full width) */}
+          <ConversionAnalytics />
+
+          {/* Row 4: KPI Cards (4 cols) */}
           <KPICards />
 
           {/* Row 4: Behavior Diagnostic (2 cols) + Mystery Gauge + Scarcity Index */}

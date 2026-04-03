@@ -373,7 +373,7 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
 
         {/* Proactive Alerts */}
         <AlertBanner
-          alerts={generateProactiveAlerts(contact, state.interactions).map((a, i) => ({
+          alerts={generateProactiveAlerts(contact, state.interactions, state.phaseHistory || []).map((a, i) => ({
             id: `alert-${i}`,
             alert_type: a.alert_type,
             title: a.title,
