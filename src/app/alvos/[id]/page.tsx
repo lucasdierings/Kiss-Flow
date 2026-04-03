@@ -16,6 +16,9 @@ import {
 } from "@/lib/types";
 import { loadState, addInteraction, getContactInteractions, saveState } from "@/lib/store";
 import { generateAlerts, calculateKPIs, type Alert } from "@/lib/engine";
+import { generateProactiveAlerts } from "@/lib/alerts-engine";
+import ActionBar from "@/components/ActionBar";
+import AlertBanner, { type AlertItem } from "@/components/AlertBanner";
 
 export default function AlvoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -193,34 +196,27 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
           </div>
         </header>
 
-        {/* Alerts */}
-        {alerts.length > 0 && (
-          <div className="mb-6 space-y-2">
-            {alerts.map((alert, i) => (
-              <div
-                key={i}
-                className="glass-strong rounded-xl px-4 py-3 flex items-center justify-between"
-                style={{ borderLeft: `3px solid ${alertColor(alert.type)}` }}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full" style={{ background: alertColor(alert.type) }} />
-                  <div>
-                    <p className="text-xs font-medium text-[#e5e5e5]">{alert.title}</p>
-                    <p className="text-[10px] text-[#737373]">{alert.message}</p>
-                  </div>
-                </div>
-                {alert.action && (
-                  <button
-                    className="px-3 py-1 text-[10px] rounded-lg font-medium"
-                    style={{ background: `${alertColor(alert.type)}15`, color: alertColor(alert.type) }}
-                  >
-                    {alert.action}
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+        {/* Proactive Alerts */}
+        <AlertBanner
+          alerts={generateProactiveAlerts(contact, state.interactions).map((a, i) => ({
+            id: `alert-${i}`,
+            alert_type: a.alert_type,
+            title: a.title,
+            description: a.description,
+            priority: a.priority,
+            action_suggested: a.action_suggested,
+            contact_id: a.contact_id,
+            contact_name: contact.firstName,
+            dismissed: false,
+            created_at: new Date().toISOString(),
+          }))}
+          onExecute={(alertId, action) => {
+            // TODO: Record action as interaction
+          }}
+          onDismiss={(alertId) => {
+            // TODO: Persist dismiss to Supabase
+          }}
+        />
 
         <div className="grid grid-cols-4 gap-4">
           {/* Metrics cards */}
@@ -555,6 +551,9 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
           </div>
         </div>
       </main>
+
+      {/* Floating Action Bar */}
+      <ActionBar contact={contact} />
     </div>
   );
 }

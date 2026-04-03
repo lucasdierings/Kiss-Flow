@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect, useCallback } from "react";
 import Sidebar from "@/components/Sidebar";
 import CurrentVictim from "@/components/CurrentVictim";
 import MysteryGauge from "@/components/MysteryGauge";
@@ -9,8 +10,48 @@ import EnchantmentTimeline from "@/components/EnchantmentTimeline";
 import ScarcityIndex from "@/components/ScarcityIndex";
 import KPICards from "@/components/KPICards";
 import ActionBar from "@/components/ActionBar";
+import AlertBanner, { type AlertItem } from "@/components/AlertBanner";
+import { loadState } from "@/lib/store";
+import { generateProactiveAlerts } from "@/lib/alerts-engine";
 
 export default function Dashboard() {
+  const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const [activeContact, setActiveContact] = useState<ReturnType<typeof loadState>["contacts"][number] | null>(null);
+
+  useEffect(() => {
+    const state = loadState();
+    if (!state) return;
+
+    // Use the active contact or first contact
+    const contact = state.contacts.find((c) => c.id === state.activeContactId) || state.contacts[0];
+    if (contact) {
+      setActiveContact(contact);
+      const proactiveAlerts = generateProactiveAlerts(contact, state.interactions);
+      setAlerts(
+        proactiveAlerts.map((a, i) => ({
+          id: `local-${i}`,
+          alert_type: a.alert_type,
+          title: a.title,
+          description: a.description,
+          priority: a.priority,
+          action_suggested: a.action_suggested,
+          contact_id: a.contact_id,
+          contact_name: contact.firstName,
+          dismissed: false,
+          created_at: new Date().toISOString(),
+        }))
+      );
+    }
+  }, []);
+
+  const handleExecuteAlert = useCallback((alertId: string, action: string) => {
+    setAlerts((prev) => prev.filter((a) => a.id !== alertId));
+  }, []);
+
+  const handleDismissAlert = useCallback((alertId: string) => {
+    setAlerts((prev) => prev.filter((a) => a.id !== alertId));
+  }, []);
+
   return (
     <div className="min-h-screen bg-[#0D0D0D]">
       <Sidebar />
@@ -22,13 +63,13 @@ export default function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold tracking-tighter">
-                Gerenciador de{" "}
+                Kiss{" "}
                 <span className="bg-gradient-to-r from-[#8b5cf6] to-[#e11d48] bg-clip-text text-transparent">
-                  Conquistas
+                  Flow
                 </span>
               </h1>
               <p className="text-sm text-[#737373] mt-1">
-                Controle absoluto sobre a percepcao de valor e misterio
+                Inteligencia estrategica para seus relacionamentos
               </p>
             </div>
 
@@ -52,32 +93,12 @@ export default function Dashboard() {
           </div>
         </header>
 
-        {/* Alert banner */}
-        <div className="mb-6 glass-strong rounded-xl px-5 py-3 flex items-center justify-between border border-[#7c3aed]/10">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#7c3aed]/10 flex items-center justify-center">
-              <svg className="w-4 h-4 text-[#8b5cf6]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v-5.25m0 0a6.01 6.01 0 001.5-.189m-1.5.189a6.01 6.01 0 01-1.5-.189m3.75 7.478a12.06 12.06 0 01-4.5 0m3.75 2.383a14.406 14.406 0 01-3 0M14.25 18v-.192c0-.983.658-1.823 1.508-2.316a7.5 7.5 0 10-7.517 0c.85.493 1.509 1.333 1.509 2.316V18" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-[#e5e5e5]">
-                Reciprocidade Linguistica detectada (0.87)
-              </p>
-              <p className="text-[11px] text-[#737373]">
-                Isabella esta espelhando seu vocabulario. Probabilidade de sucesso: 92%. Considere o Movimento Ousado.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button className="px-3 py-1.5 text-xs rounded-lg bg-[#7c3aed] text-white hover:bg-[#6d28d9] transition-colors">
-              Executar
-            </button>
-            <button className="px-3 py-1.5 text-xs rounded-lg bg-[#262626] text-[#737373] hover:bg-[#333] transition-colors">
-              Ignorar
-            </button>
-          </div>
-        </div>
+        {/* Proactive Alerts */}
+        <AlertBanner
+          alerts={alerts}
+          onExecute={handleExecuteAlert}
+          onDismiss={handleDismissAlert}
+        />
 
         {/* ===== BENTO GRID ===== */}
         <div className="grid grid-cols-4 gap-4 auto-rows-auto">
@@ -181,7 +202,7 @@ export default function Dashboard() {
       </main>
 
       {/* Floating Action Bar */}
-      <ActionBar />
+      <ActionBar contact={activeContact} />
     </div>
   );
 }
