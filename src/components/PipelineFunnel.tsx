@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { loadState } from "@/lib/store";
-import { type Contact, PIPELINE_STAGES } from "@/lib/types";
+import { type Contact, PIPELINE_STAGES, LOST_REASON_LABELS, type LostReason } from "@/lib/types";
 
 interface FunnelStage {
   id: string;
@@ -30,18 +30,35 @@ const STAGE_LABELS: Record<string, string> = {
   retention: "Retenção",
 };
 
+interface LostGroup {
+  reason: LostReason;
+  label: string;
+  contacts: { id: string; name: string }[];
+}
+
 export default function PipelineFunnel() {
   const [stages, setStages] = useState<FunnelStage[]>([]);
   const [totalContacts, setTotalContacts] = useState(0);
+  const [lostContacts, setLostContacts] = useState<{ id: string; name: string; lostReason?: LostReason }[]>([]);
 
   useEffect(() => {
     const state = loadState();
     if (!state) return;
 
-    setTotalContacts(state.contacts.length);
+    const activeContacts = state.contacts.filter((c) => c.status !== "lost");
+    const lost = state.contacts.filter((c) => c.status === "lost");
+
+    setTotalContacts(activeContacts.length);
+    setLostContacts(
+      lost.map((c) => ({
+        id: c.id,
+        name: `${c.firstName} ${c.lastName || ""}`.trim(),
+        lostReason: c.lostReason,
+      }))
+    );
 
     const funnelStages: FunnelStage[] = PIPELINE_STAGES.map((stage) => {
-      const contactsInStage = state.contacts.filter(
+      const contactsInStage = activeContacts.filter(
         (c) => c.pipelineStage === stage.id
       );
       return {
@@ -176,6 +193,102 @@ export default function PipelineFunnel() {
               </div>
             );
           })}
+
+          {/* Perdidos section */}
+          {lostContacts.length > 0 && (
+            <>
+              <div className="border-t border-[#ef4444]/30 my-3" />
+              <div className="flex items-center gap-3">
+                <div className="w-20 text-right">
+                  <span className="text-[10px] font-medium text-[#ef4444]">
+                    Perdidos
+                  </span>
+                </div>
+                <div className="flex-1 relative">
+                  <div
+                    className="h-8 rounded-lg flex items-center justify-between px-3"
+                    style={{
+                      background: "#ef444415",
+                      border: "1px solid #ef444430",
+                    }}
+                  >
+                    <span className="text-sm font-bold text-[#ef4444]">
+                      {lostContacts.length}
+                    </span>
+                    <div className="flex -space-x-1.5">
+                      {lostContacts.slice(0, 4).map((contact) => (
+                        <Link
+                          key={contact.id}
+                          href={`/alvos/${contact.id}`}
+                          className="w-5 h-5 rounded-full bg-[#0D0D0D] border border-[#ef4444]/30 flex items-center justify-center hover:scale-125 transition-transform z-10 opacity-60"
+                          title={contact.name}
+                        >
+                          <span className="text-[7px] font-semibold text-[#ef4444]/70">
+                            {contact.name[0]}
+                          </span>
+                        </Link>
+                      ))}
+                      {lostContacts.length > 4 && (
+                        <div className="w-5 h-5 rounded-full bg-[#0D0D0D] border border-[#ef4444]/30 flex items-center justify-center opacity-60">
+                          <span className="text-[7px] text-[#ef4444]/50">
+                            +{lostContacts.length - 4}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {/* Sub-groups by lost reason */}
+              {(Object.keys(LOST_REASON_LABELS) as LostReason[]).map((reason) => {
+                const group = lostContacts.filter((c) => c.lostReason === reason);
+                if (group.length === 0) return null;
+                return (
+                  <div key={reason} className="flex items-center gap-3 ml-6">
+                    <div className="w-14 text-right">
+                      <span className="text-[9px] text-[#ef4444]/50">
+                        {LOST_REASON_LABELS[reason]}
+                      </span>
+                    </div>
+                    <div className="flex-1 relative">
+                      <div
+                        className="h-6 rounded-md flex items-center justify-between px-2"
+                        style={{
+                          background: "#ef444408",
+                          border: "1px solid #ef444420",
+                        }}
+                      >
+                        <span className="text-[10px] font-semibold text-[#ef4444]/60">
+                          {group.length}
+                        </span>
+                        <div className="flex -space-x-1">
+                          {group.slice(0, 3).map((contact) => (
+                            <Link
+                              key={contact.id}
+                              href={`/alvos/${contact.id}`}
+                              className="w-4 h-4 rounded-full bg-[#0D0D0D] border border-[#ef4444]/20 flex items-center justify-center hover:scale-125 transition-transform z-10 opacity-50"
+                              title={contact.name}
+                            >
+                              <span className="text-[6px] font-semibold text-[#ef4444]/60">
+                                {contact.name[0]}
+                              </span>
+                            </Link>
+                          ))}
+                          {group.length > 3 && (
+                            <div className="w-4 h-4 rounded-full bg-[#0D0D0D] border border-[#ef4444]/20 flex items-center justify-center opacity-50">
+                              <span className="text-[6px] text-[#ef4444]/40">
+                                +{group.length - 3}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </>
+          )}
         </div>
       )}
 

@@ -42,7 +42,9 @@ export default function ActiveContacts() {
     const state = loadState();
     if (!state) return;
 
-    const summaries: ContactSummary[] = state.contacts.map((c) => {
+    const activeContacts = state.contacts.filter(c => c.status !== "lost");
+
+    const summaries: ContactSummary[] = activeContacts.map((c) => {
       const contactInteractions = state.interactions.filter(
         (i) => i.contactId === c.id
       );

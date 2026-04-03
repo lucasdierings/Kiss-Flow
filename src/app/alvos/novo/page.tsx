@@ -7,6 +7,7 @@ import {
   VICTIM_TYPES,
   LOVE_LANGUAGES,
   PIPELINE_STAGES,
+  CLOSING_GOALS,
   INTERACTION_CATEGORIES,
   type VictimType,
   type LoveLanguage,
@@ -23,6 +24,8 @@ export default function NovoAlvoPage() {
   const [secondaryArchetype, setSecondaryArchetype] = useState<VictimType | "">("");
   const [loveLanguage, setLoveLanguage] = useState<LoveLanguage | "">("");
   const [pipelineStage, setPipelineStage] = useState<PipelineStage>("lead_generation");
+  const [closingGoal, setClosingGoal] = useState("");
+  const [customClosingGoal, setCustomClosingGoal] = useState("");
   const [notes, setNotes] = useState("");
 
   // Interacoes passadas
@@ -93,6 +96,7 @@ export default function NovoAlvoPage() {
       secondaryArchetype: secondaryArchetype || undefined,
       loveLanguage: loveLanguage || undefined,
       pipelineStage,
+      closingGoal: closingGoal === "outro" ? customClosingGoal : closingGoal || undefined,
       notes,
     });
 
@@ -103,7 +107,7 @@ export default function NovoAlvoPage() {
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     );
     for (const pi of sorted) {
-      state = addInteraction(state, {
+      const result = addInteraction(state, {
         contactId: contact.id,
         typeId: pi.typeId as any,
         category: pi.category,
@@ -114,6 +118,7 @@ export default function NovoAlvoPage() {
         duration: pi.duration,
         location: pi.location,
       });
+      state = result.state;
     }
 
     router.push(`/alvos/${contact.id}`);
@@ -260,6 +265,45 @@ export default function NovoAlvoPage() {
                 </select>
               </div>
             </div>
+          </section>
+
+          {/* Meta de Fechamento */}
+          <section className="bento-card">
+            <h2 className="text-sm font-medium tracking-widest uppercase text-[#737373] mb-1">
+              Meta de Fechamento
+            </h2>
+            <p className="text-[10px] text-[#737373]/60 mb-4">
+              Qual o objetivo final com este alvo?
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {CLOSING_GOALS.map((goal) => (
+                <button
+                  key={goal.id}
+                  onClick={() => {
+                    setClosingGoal(goal.id);
+                    if (goal.id !== "outro") setCustomClosingGoal("");
+                  }}
+                  className={`text-left p-3 rounded-xl border transition-all ${
+                    closingGoal === goal.id
+                      ? "bg-[#d97706]/10 border-[#d97706]/30 text-[#d97706]"
+                      : "bg-[#161616] border-[#262626] text-[#a3a3a3] hover:border-[#333]"
+                  }`}
+                >
+                  <div className="text-xs font-medium">{goal.name}</div>
+                </button>
+              ))}
+            </div>
+            {closingGoal === "outro" && (
+              <div className="mt-3">
+                <input
+                  type="text"
+                  value={customClosingGoal}
+                  onChange={(e) => setCustomClosingGoal(e.target.value)}
+                  placeholder="Descreva seu objetivo..."
+                  className="w-full px-4 py-2.5 rounded-xl bg-[#0D0D0D] border border-[#262626] text-sm text-[#e5e5e5] placeholder:text-[#737373]/50 focus:outline-none focus:border-[#d97706]/50 transition-colors"
+                />
+              </div>
+            )}
           </section>
 
           {/* Interacoes passadas */}

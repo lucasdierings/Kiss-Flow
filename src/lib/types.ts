@@ -57,6 +57,39 @@ export const PIPELINE_STAGES = [
 
 export type PipelineStage = typeof PIPELINE_STAGES[number]["id"];
 
+// ===== Status e Conversão =====
+
+export type ContactStatus = "active" | "lost";
+
+export type LostReason = "desistencia" | "rejeicao" | "sucesso_efemero";
+
+export const LOST_REASON_LABELS: Record<LostReason, string> = {
+  desistencia: "Desistência",
+  rejeicao: "Rejeição",
+  sucesso_efemero: "Sucesso Efêmero",
+};
+
+export const CLOSING_GOALS = [
+  { id: "primeiro_beijo", name: "Primeiro Beijo" },
+  { id: "encontro_fisico", name: "Encontro Físico" },
+  { id: "relacionamento", name: "Relacionamento" },
+  { id: "amizade_profunda", name: "Amizade Profunda" },
+  { id: "negocio_parceria", name: "Negócio/Parceria" },
+  { id: "outro", name: "Outro" },
+] as const;
+
+export type ClosingGoalId = typeof CLOSING_GOALS[number]["id"];
+
+export interface PhaseTransition {
+  id: string;
+  contactId: string;
+  oldPhase: PipelineStage | "none" | "lost";
+  newPhase: PipelineStage | "lost";
+  evidence: string;
+  lostReason?: LostReason;
+  timestamp: string;
+}
+
 // ===== Tipos de Interação =====
 
 export const INTERACTION_CATEGORIES = {
@@ -135,6 +168,11 @@ export interface Contact {
   secondaryArchetype?: VictimType;
   loveLanguage?: LoveLanguage;
   pipelineStage: PipelineStage;
+  status: ContactStatus;
+  closingGoal?: string;
+  lostReason?: LostReason;
+  lostAt?: string;
+  postMortem?: string;
   notes: string;
   // Métricas calculadas
   mysteryCoefficient: number;   // 0-100
@@ -175,6 +213,7 @@ export interface Interaction {
 export interface AppState {
   contacts: Contact[];
   interactions: Interaction[];
+  phaseHistory: PhaseTransition[];
   activeContactId: string | null;
   seducerArchetype: SeducerArchetype;
 }

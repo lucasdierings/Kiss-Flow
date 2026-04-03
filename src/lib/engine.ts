@@ -1,31 +1,33 @@
 import {
   Contact,
   Interaction,
+  PipelineStage,
   INTERACTION_CATEGORIES,
   InteractionCategory,
   PIPELINE_STAGES,
 } from "./types";
 
-// ===== Motor de Regras de Negocio =====
-// Baseado nos PDFs: dopamina, timing, Greene tactics
+// ===== Motor de Regras de Negócio =====
+
+export interface InteractionImpactResult {
+  contact: Contact;
+  suggestedProgression?: PipelineStage;
+}
 
 /**
- * Aplica o impacto de uma interacao nas metricas do contato.
- * Regras:
- * - Mystery diminui com exposicao e aumenta com silencio/distancia
- * - Tension e o conflito doce (ansiedade vs desejo) - deve oscilar, nao estabilizar
- * - Enchantment acumula com interacoes positivas, cai com excesso ou monotonia
- * - Scarcity sobe quando o usuario e escasso, cai quando disponivel demais
+ * Aplica o impacto de uma interação nas métricas do contato.
+ * Retorna o contato atualizado + sugestão de progressão (se houver).
+ * A progressão NÃO é auto-comitada — a UI deve exibir o modal de confirmação.
  */
 export function applyInteractionImpact(
   contact: Contact,
   interaction: Interaction
-): Contact {
+): InteractionImpactResult {
   const category = interaction.category as InteractionCategory;
   const cat = INTERACTION_CATEGORIES[category];
   const typeInfo = cat.types.find((t) => t.id === interaction.typeId);
 
-  if (!typeInfo) return contact;
+  if (!typeInfo) return { contact };
 
   const impact = typeInfo.impact;
   const sentiment = interaction.sentiment; // -1 a 1
@@ -73,23 +75,30 @@ export function applyInteractionImpact(
   newScarcity = clamp(newScarcity, 0, 100);
   newVictimScore = clamp(newVictimScore, 0, 100);
 
-  // Detectar avanço de pipeline
-  const newStage = evaluatePipelineProgression(
+  // Detectar sugestão de progressão (NÃO auto-comitar)
+  const suggestedStage = evaluatePipelineProgression(
     contact.pipelineStage,
     newVictimScore,
     newEnchantment,
     newTension
   );
 
-  return {
+  const updatedContact: Contact = {
     ...contact,
     mysteryCoefficient: Math.round(newMystery * 10) / 10,
     tensionLevel: Math.round(newTension * 10) / 10,
     enchantmentScore: Math.round(newEnchantment * 100) / 100,
     scarcityScore: Math.round(newScarcity * 10) / 10,
     victimScore: Math.round(newVictimScore * 10) / 10,
-    pipelineStage: newStage,
+    // Manter a fase atual — progressão requer confirmação do usuário
+    pipelineStage: contact.pipelineStage,
     updatedAt: new Date().toISOString(),
+  };
+
+  return {
+    contact: updatedContact,
+    suggestedProgression:
+      suggestedStage !== contact.pipelineStage ? suggestedStage : undefined,
   };
 }
 

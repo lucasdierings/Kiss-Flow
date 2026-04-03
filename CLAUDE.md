@@ -166,9 +166,20 @@ npm run lint                           # ESLint
 - [x] Fase 4: Chat assistente IA (interface + Gemini + upload screenshots + historico Supabase) — CONCLUIDO
 - [x] Fase 5: Acoes justificadas (ActionModal 5 secoes + IA) + alertas proativos (AlertBanner + alerts-engine 8 tipos + 24 taticas) — CONCLUIDO
 - [x] Fase 5.5: Dashboard funcional + perfil usuario + scoring + funil + acentos + remover Greene — CONCLUIDO
-- [ ] Fase 6: LGPD + Termos de Uso + Termos de Privacidade ← PROXIMO
-- [ ] Fase 7: Stripe + paywall freemium
-- [ ] Fase 8: Deploy Cloudflare
+- [x] Fase 6: Pipeline v2.0 (Fases 1-4 do plano v2.0) — PARCIAL (fases 5-8 pendentes)
+  - [x] Tipos: ContactStatus, LostReason, PhaseTransition, ClosingGoal em types.ts
+  - [x] Store: moveToLost, reactivateContact, manualStageChange, addPhaseTransition, backward compat
+  - [x] Engine: suggestion-based progression (nao auto-comita, retorna sugestao para modal)
+  - [x] PhaseTransitionModal: modal obrigatorio com evidencia + motivo de perda
+  - [x] Closing Goal: campo no form de novo alvo + badge editavel no detalhe
+  - [x] Funil com Perdidos: secao vermelha no funil + filtro na lista + reativacao
+  - [ ] Analytics: analytics.ts + ConversionAnalytics (taxa conversao, velocidade, gargalos)
+  - [ ] Tom IA estrategista: persona.ts + prompts.ts (de mentor para estrategista operacional)
+  - [ ] Alertas estagnacao + post-mortem IA
+  - [ ] Testes e polish final
+- [ ] Fase 7: LGPD + Termos de Uso + Termos de Privacidade
+- [ ] Fase 8: Stripe + paywall freemium
+- [ ] Fase 9: Deploy Cloudflare
 
 ## Supabase (projeto Kiss Flow)
 - **Project ID:** ozsnnqebzlvnohqvwklu
@@ -215,8 +226,18 @@ npm run lint                           # ESLint
 - **Acentos:** 150+ palavras corrigidas em 10 arquivos
 - **Greene removido:** Todas as mencoes a Robert Greene removidas da interface
 
+## Fase 6: Pipeline v2.0 — Behavioral Intelligence System (detalhes)
+- **Novos tipos (types.ts):** ContactStatus (active/lost), LostReason (desistencia/rejeicao/sucesso_efemero), CLOSING_GOALS (6 opcoes), PhaseTransition (historico de transicoes), campos novos no Contact (status, closingGoal, lostReason, lostAt, postMortem), phaseHistory no AppState
+- **Store (store.ts):** addPhaseTransition, manualStageChange, moveToLost, reactivateContact, getContactPhaseHistory, backward compat (contacts sem status → "active"), addInteraction agora retorna AddInteractionResult { state, suggestedProgression? }
+- **Engine (engine.ts):** applyInteractionImpact retorna InteractionImpactResult { contact, suggestedProgression? } — NÃO auto-comita progressao, UI mostra modal de confirmacao
+- **PhaseTransitionModal:** Modal obrigatorio em toda transicao de fase. Evidencia texto obrigatoria (min 10 chars). Se "Perdidos": radio de motivo (3 opcoes). Dispara em auto-progressao E mudanca manual
+- **Closing Goal:** Seletor no form /alvos/novo (6 opcoes predefinidas + custom). Badge editavel no detalhe /alvos/[id]
+- **Perdidos:** Secao vermelha no PipelineFunnel com sub-grupos por motivo. Filtro "Perdidos" na lista /alvos. Botao "Mover para Perdidos" no detalhe. Reativacao → Nurturing
+- **PENDENTE p/ proxima sessao:** analytics.ts (conversao/velocidade/gargalos), ConversionAnalytics component, tom IA estrategista (persona + prompts), alertas estagnacao, post-mortem IA
+- **Plano completo:** /Users/lucasdierings/.claude/plans/rustling-watching-mountain.md
+
 ---
 **Ultima atualizacao:** 03 de abril de 2026
-**Status:** Backend Supabase ativo. Auth funcional (Magic Link + Google OAuth). Onboarding com quiz 10 perguntas. 4 API routes Gemini. Chat IA com personas, upload screenshots, historico. Acoes justificadas com ActionModal + AlertBanner proativo + alerts-engine. Dashboard funcional com perfil do usuario, funil de pipeline, alvos ativos, scoring comportamental, insights estrategicos. Pagina /perfil com edicao + foto. Fases 1-5.5 concluidas.
+**Status:** Fases 1-6 parcial concluidas. Pipeline v2.0 com status lost, phase history, closing goals, modal de transicao, funil com perdidos. Pendente: analytics dashboard, tom IA estrategista, alertas estagnacao, post-mortem.
 
 @AGENTS.md

@@ -1,4 +1,11 @@
-import { AppState, Contact, Interaction } from "./types";
+import {
+  AppState,
+  Contact,
+  Interaction,
+  PhaseTransition,
+  PipelineStage,
+  LostReason,
+} from "./types";
 import { applyInteractionImpact } from "./engine";
 
 const STORAGE_KEY = "kissflow_state";
@@ -6,18 +13,28 @@ const STORAGE_KEY = "kissflow_state";
 const DEFAULT_STATE: AppState = {
   contacts: [],
   interactions: [],
+  phaseHistory: [],
   activeContactId: null,
   seducerArchetype: "charmer",
 };
 
-// ===== Persistencia localStorage =====
+// ===== Persistência localStorage =====
 
 export function loadState(): AppState {
   if (typeof window === "undefined") return DEFAULT_STATE;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_STATE;
-    return JSON.parse(raw) as AppState;
+    const parsed = JSON.parse(raw) as AppState;
+
+    // Backward compat: garantir campos novos existem
+    if (!parsed.phaseHistory) parsed.phaseHistory = [];
+    parsed.contacts = parsed.contacts.map((c) => ({
+      ...c,
+      status: c.status || "active",
+    }));
+
+    return parsed;
   } catch {
     return DEFAULT_STATE;
   }
@@ -28,18 +45,33 @@ export function saveState(state: AppState): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
-// ===== Operacoes CRUD =====
+// ===== Operações CRUD =====
 
-export function createContact(data: Omit<Contact, "id" | "createdAt" | "updatedAt" | "mysteryCoefficient" | "tensionLevel" | "enchantmentScore" | "victimScore" | "scarcityScore" | "vulnerabilities">): Contact {
+export function createContact(
+  data: Omit<
+    Contact,
+    | "id"
+    | "createdAt"
+    | "updatedAt"
+    | "mysteryCoefficient"
+    | "tensionLevel"
+    | "enchantmentScore"
+    | "victimScore"
+    | "scarcityScore"
+    | "vulnerabilities"
+    | "status"
+  >
+): Contact {
   const now = new Date().toISOString();
   return {
     ...data,
     id: generateId(),
-    mysteryCoefficient: 85, // comeca misterioso
-    tensionLevel: 30,       // tensao baixa no inicio
-    enchantmentScore: 0,    // neutro
-    victimScore: 10,        // baixo, precisa construir
-    scarcityScore: 70,      // comeca escasso
+    status: "active",
+    mysteryCoefficient: 85,
+    tensionLevel: 30,
+    enchantmentScore: 0,
+    victimScore: 10,
+    scarcityScore: 70,
     vulnerabilities: {
       fantasy: 50,
       snobbery: 50,
@@ -63,67 +95,212 @@ export function addContact(state: AppState, contact: Contact): AppState {
   return newState;
 }
 
-export function updateContact(state: AppState, contactId: string, updates: Partial<Contact>): AppState {
+export function updateContact(
+  state: AppState,
+  contactId: string,
+  updates: Partial<Contact>
+): AppState {
   const newState = {
     ...state,
     contacts: state.contacts.map((c) =>
-      c.id === contactId ? { ...c, ...updates, updatedAt: new Date().toISOString() } : c
+      c.id === contactId
+        ? { ...c, ...updates, updatedAt: new Date().toISOString() }
+        : c
     ),
   };
   saveState(newState);
   return newState;
 }
 
-export function deleteContact(state: AppState, contactId: string): AppState {
+export function deleteContact(
+  state: AppState,
+  contactId: string
+): AppState {
   const newState = {
     ...state,
     contacts: state.contacts.filter((c) => c.id !== contactId),
     interactions: state.interactions.filter((i) => i.contactId !== contactId),
-    activeContactId: state.activeContactId === contactId ? null : state.activeContactId,
+    phaseHistory: state.phaseHistory.filter((p) => p.contactId !== contactId),
+    activeContactId:
+      state.activeContactId === contactId ? null : state.activeContactId,
   };
   saveState(newState);
   return newState;
 }
 
+// ===== Interações =====
+
+export interface AddInteractionResult {
+  state: AppState;
+  suggestedProgression?: PipelineStage;
+}
+
 export function addInteraction(
   state: AppState,
-  interaction: Omit<Interaction, "id" | "mysteryAfter" | "tensionAfter" | "enchantmentAfter">
-): AppState {
+  interaction: Omit<
+    Interaction,
+    "id" | "mysteryAfter" | "tensionAfter" | "enchantmentAfter"
+  >
+): AddInteractionResult {
   const contact = state.contacts.find((c) => c.id === interaction.contactId);
-  if (!contact) return state;
+  if (!contact) return { state };
 
   const fullInteraction: Interaction = {
     ...interaction,
     id: generateId(),
   };
 
-  // Aplicar impacto nas metricas do contato
-  const updatedContact = applyInteractionImpact(contact, fullInteraction);
+  // Aplicar impacto nas métricas do contato
+  const result = applyInteractionImpact(contact, fullInteraction);
 
-  // Salvar snapshot das metricas apos interacao
-  fullInteraction.mysteryAfter = updatedContact.mysteryCoefficient;
-  fullInteraction.tensionAfter = updatedContact.tensionLevel;
-  fullInteraction.enchantmentAfter = updatedContact.enchantmentScore;
+  // Salvar snapshot das métricas após interação
+  fullInteraction.mysteryAfter = result.contact.mysteryCoefficient;
+  fullInteraction.tensionAfter = result.contact.tensionLevel;
+  fullInteraction.enchantmentAfter = result.contact.enchantmentScore;
 
   const newState = {
     ...state,
-    contacts: state.contacts.map((c) => (c.id === contact.id ? updatedContact : c)),
+    contacts: state.contacts.map((c) =>
+      c.id === contact.id ? result.contact : c
+    ),
     interactions: [...state.interactions, fullInteraction],
+  };
+  saveState(newState);
+
+  return {
+    state: newState,
+    suggestedProgression: result.suggestedProgression,
+  };
+}
+
+// ===== Transições de Fase =====
+
+export function addPhaseTransition(
+  state: AppState,
+  transition: Omit<PhaseTransition, "id" | "timestamp">
+): AppState {
+  const fullTransition: PhaseTransition = {
+    ...transition,
+    id: generateId(),
+    timestamp: new Date().toISOString(),
+  };
+  const newState = {
+    ...state,
+    phaseHistory: [...state.phaseHistory, fullTransition],
   };
   saveState(newState);
   return newState;
 }
 
-export function setActiveContact(state: AppState, contactId: string | null): AppState {
+export function manualStageChange(
+  state: AppState,
+  contactId: string,
+  newStage: PipelineStage,
+  evidence: string
+): AppState {
+  const contact = state.contacts.find((c) => c.id === contactId);
+  if (!contact) return state;
+
+  const transition: Omit<PhaseTransition, "id" | "timestamp"> = {
+    contactId,
+    oldPhase: contact.pipelineStage,
+    newPhase: newStage,
+    evidence,
+  };
+
+  let newState = addPhaseTransition(state, transition);
+  newState = updateContact(newState, contactId, {
+    pipelineStage: newStage,
+    status: "active",
+  });
+
+  return newState;
+}
+
+export function moveToLost(
+  state: AppState,
+  contactId: string,
+  reason: LostReason,
+  evidence: string
+): AppState {
+  const contact = state.contacts.find((c) => c.id === contactId);
+  if (!contact) return state;
+
+  const transition: Omit<PhaseTransition, "id" | "timestamp"> = {
+    contactId,
+    oldPhase: contact.pipelineStage,
+    newPhase: "lost",
+    evidence,
+    lostReason: reason,
+  };
+
+  let newState = addPhaseTransition(state, transition);
+  newState = updateContact(newState, contactId, {
+    status: "lost",
+    lostReason: reason,
+    lostAt: new Date().toISOString(),
+  });
+
+  return newState;
+}
+
+export function reactivateContact(
+  state: AppState,
+  contactId: string,
+  evidence: string
+): AppState {
+  const contact = state.contacts.find((c) => c.id === contactId);
+  if (!contact) return state;
+
+  const transition: Omit<PhaseTransition, "id" | "timestamp"> = {
+    contactId,
+    oldPhase: "lost",
+    newPhase: "nurturing",
+    evidence,
+  };
+
+  let newState = addPhaseTransition(state, transition);
+  newState = updateContact(newState, contactId, {
+    status: "active",
+    pipelineStage: "nurturing",
+    lostReason: undefined,
+    lostAt: undefined,
+    postMortem: undefined,
+  });
+
+  return newState;
+}
+
+// ===== Consultas =====
+
+export function setActiveContact(
+  state: AppState,
+  contactId: string | null
+): AppState {
   const newState = { ...state, activeContactId: contactId };
   saveState(newState);
   return newState;
 }
 
-export function getContactInteractions(state: AppState, contactId: string): Interaction[] {
+export function getContactInteractions(
+  state: AppState,
+  contactId: string
+): Interaction[] {
   return state.interactions
     .filter((i) => i.contactId === contactId)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+}
+
+export function getContactPhaseHistory(
+  state: AppState,
+  contactId: string
+): PhaseTransition[] {
+  return state.phaseHistory
+    .filter((p) => p.contactId === contactId)
+    .sort(
+      (a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
 }
 
 // ===== Utils =====

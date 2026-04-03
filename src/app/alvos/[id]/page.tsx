@@ -11,20 +11,33 @@ import {
   VICTIM_TYPES,
   PIPELINE_STAGES,
   LOVE_LANGUAGES,
+  CLOSING_GOALS,
   INTERACTION_CATEGORIES,
   type InteractionCategory,
+  type LostReason,
+  type PipelineStage,
 } from "@/lib/types";
-import { loadState, addInteraction, getContactInteractions, saveState } from "@/lib/store";
+import { loadState, addInteraction, getContactInteractions, saveState, updateContact, manualStageChange, moveToLost } from "@/lib/store";
 import { generateAlerts, calculateKPIs, type Alert } from "@/lib/engine";
 import { generateProactiveAlerts } from "@/lib/alerts-engine";
 import ActionBar from "@/components/ActionBar";
 import AlertBanner, { type AlertItem } from "@/components/AlertBanner";
+import PhaseTransitionModal from "@/components/PhaseTransitionModal";
 
 export default function AlvoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
   const [state, setState] = useState<AppState | null>(null);
   const [showAddInteraction, setShowAddInteraction] = useState(false);
+  const [pendingTransition, setPendingTransition] = useState<{
+    oldPhase: string;
+    newPhase: string;
+    isLost: boolean;
+  } | null>(null);
+  const [showStageSelector, setShowStageSelector] = useState(false);
+  const [editingClosingGoal, setEditingClosingGoal] = useState(false);
+  const [closingGoalDraft, setClosingGoalDraft] = useState("");
+  const [customClosingGoalDraft, setCustomClosingGoalDraft] = useState("");
 
   // Interaction form
   const [intCategory, setIntCategory] = useState<InteractionCategory>("digital_passive");
@@ -111,7 +124,7 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
 
   const handleAddInteraction = () => {
     if (!intTypeId) return;
-    const newState = addInteraction(state, {
+    const result = addInteraction(state, {
       contactId: id,
       typeId: intTypeId as any,
       category: intCategory,
@@ -122,13 +135,42 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
       duration: intDuration ? parseInt(intDuration) : undefined,
       location: intLocation || undefined,
     });
-    setState(newState);
+    setState(result.state);
+    if (result.suggestedProgression) {
+      setPendingTransition({
+        oldPhase: contact.pipelineStage,
+        newPhase: result.suggestedProgression,
+        isLost: false,
+      });
+    }
     setIntNotes("");
     setIntSentiment(0.5);
     setIntInitiatedByTarget(false);
     setIntDuration("");
     setIntLocation("");
     setShowAddInteraction(false);
+  };
+
+  const handleConfirmTransition = (evidence: string, lostReason?: LostReason) => {
+    if (!pendingTransition || !state) return;
+    let newState: AppState;
+    if (pendingTransition.isLost) {
+      newState = moveToLost(state, id, lostReason!, evidence);
+    } else {
+      newState = manualStageChange(state, id, pendingTransition.newPhase as PipelineStage, evidence);
+    }
+    setState(newState);
+    setPendingTransition(null);
+  };
+
+  const handleManualStageSelect = (newStage: PipelineStage) => {
+    if (newStage === contact.pipelineStage) return;
+    setPendingTransition({
+      oldPhase: contact.pipelineStage,
+      newPhase: newStage,
+      isLost: false,
+    });
+    setShowStageSelector(false);
   };
 
   const stageColor = getStageColor(contact.pipelineStage);
@@ -163,7 +205,7 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
                 <h1 className="text-2xl font-bold tracking-tighter text-[#e5e5e5]">
                   {contact.firstName} {contact.lastName}
                 </h1>
-                <div className="flex items-center gap-3 mt-1">
+                <div className="flex items-center gap-3 mt-1 flex-wrap">
                   <span className="text-sm text-[#8b5cf6]">{getArchetypeName(contact.primaryArchetype)}</span>
                   <span
                     className="text-[10px] px-2 py-0.5 rounded-full font-medium"
@@ -171,6 +213,84 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
                   >
                     {getStageName(contact.pipelineStage)} - {getStagePhase(contact.pipelineStage)}
                   </span>
+                  {/* Meta de Fechamento badge */}
+                  <div className="relative">
+                    <button
+                      onClick={() => {
+                        const currentGoal = contact.closingGoal || "";
+                        const isPreset = CLOSING_GOALS.some((g) => g.id === currentGoal);
+                        setClosingGoalDraft(isPreset ? currentGoal : currentGoal ? "outro" : "");
+                        setCustomClosingGoalDraft(isPreset ? "" : currentGoal);
+                        setEditingClosingGoal(!editingClosingGoal);
+                      }}
+                      className="text-[10px] px-2 py-0.5 rounded-full font-medium flex items-center gap-1 transition-colors hover:opacity-80"
+                      style={{
+                        background: contact.closingGoal ? "#d9770615" : "#73737315",
+                        color: contact.closingGoal ? "#d97706" : "#737373",
+                        border: `1px solid ${contact.closingGoal ? "#d9770630" : "#73737330"}`,
+                      }}
+                    >
+                      <span>🎯</span>
+                      <span>{contact.closingGoal ? (CLOSING_GOALS.find((g) => g.id === contact.closingGoal)?.name || contact.closingGoal) : "Sem meta"}</span>
+                      <svg className="w-2.5 h-2.5 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                      </svg>
+                    </button>
+                    {editingClosingGoal && (
+                      <div className="absolute top-7 left-0 z-50 p-3 rounded-xl bg-[#161616] border border-[#262626] shadow-xl min-w-[240px]">
+                        <div className="text-[10px] text-[#737373] mb-2 uppercase tracking-wider font-medium">Meta de Fechamento</div>
+                        <div className="flex flex-col gap-1.5">
+                          {CLOSING_GOALS.map((goal) => (
+                            <button
+                              key={goal.id}
+                              onClick={() => {
+                                setClosingGoalDraft(goal.id);
+                                if (goal.id !== "outro") {
+                                  setCustomClosingGoalDraft("");
+                                }
+                              }}
+                              className={`text-left px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                                closingGoalDraft === goal.id
+                                  ? "bg-[#d97706]/15 text-[#d97706] border border-[#d97706]/30"
+                                  : "bg-[#0D0D0D] text-[#a3a3a3] border border-[#262626] hover:border-[#333]"
+                              }`}
+                            >
+                              {goal.name}
+                            </button>
+                          ))}
+                        </div>
+                        {closingGoalDraft === "outro" && (
+                          <input
+                            type="text"
+                            value={customClosingGoalDraft}
+                            onChange={(e) => setCustomClosingGoalDraft(e.target.value)}
+                            placeholder="Descreva seu objetivo..."
+                            className="w-full mt-2 px-2.5 py-1.5 rounded-lg bg-[#0D0D0D] border border-[#262626] text-xs text-[#e5e5e5] placeholder:text-[#737373]/50 focus:outline-none focus:border-[#d97706]/50 transition-colors"
+                            autoFocus
+                          />
+                        )}
+                        <div className="flex gap-2 justify-end mt-2.5">
+                          <button
+                            onClick={() => setEditingClosingGoal(false)}
+                            className="px-2.5 py-1 rounded-lg text-[10px] text-[#737373] hover:text-[#a3a3a3]"
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            onClick={() => {
+                              const newGoal = closingGoalDraft === "outro" ? customClosingGoalDraft : closingGoalDraft;
+                              const newState = updateContact(state!, id, { closingGoal: newGoal || undefined });
+                              setState(newState);
+                              setEditingClosingGoal(false);
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-[#d97706] text-white text-[10px] font-medium hover:bg-[#b45309] transition-colors"
+                          >
+                            Salvar
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -193,6 +313,61 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
                 <span className="text-[9px]" style={{ color: i <= stageIndex ? stageColor : "#737373" }}>{stage}</span>
               </div>
             ))}
+          </div>
+
+          {/* Pipeline controls */}
+          <div className="mt-3 flex items-center gap-2">
+            <div className="relative">
+              <button
+                onClick={() => setShowStageSelector(!showStageSelector)}
+                className="px-3 py-1.5 rounded-lg text-[10px] font-medium bg-[#0D0D0D] border border-[#262626] text-[#a3a3a3] hover:border-[#333] transition-colors flex items-center gap-1.5"
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" />
+                </svg>
+                Alterar Fase
+              </button>
+              {showStageSelector && (
+                <div className="absolute top-full left-0 mt-1 z-20 bg-[#161616] border border-[#262626] rounded-xl shadow-xl py-1 min-w-40">
+                  {PIPELINE_STAGES.map((stage) => (
+                    <button
+                      key={stage.id}
+                      onClick={() => handleManualStageSelect(stage.id as PipelineStage)}
+                      disabled={stage.id === contact.pipelineStage}
+                      className={`w-full text-left px-3 py-2 text-xs transition-colors flex items-center gap-2 ${
+                        stage.id === contact.pipelineStage
+                          ? "text-[#737373] cursor-default"
+                          : "text-[#e5e5e5] hover:bg-[#262626]"
+                      }`}
+                    >
+                      <div
+                        className="w-2 h-2 rounded-full flex-shrink-0"
+                        style={{ background: getStageColor(stage.id) }}
+                      />
+                      {stage.name}
+                      {stage.id === contact.pipelineStage && (
+                        <span className="text-[9px] text-[#737373] ml-auto">atual</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() =>
+                setPendingTransition({
+                  oldPhase: contact.pipelineStage,
+                  newPhase: "lost",
+                  isLost: true,
+                })
+              }
+              className="px-3 py-1.5 rounded-lg text-[10px] font-medium bg-[#ef4444]/10 border border-[#ef4444]/20 text-[#ef4444] hover:bg-[#ef4444]/20 transition-colors flex items-center gap-1.5"
+            >
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+              </svg>
+              Mover para Perdidos
+            </button>
           </div>
         </header>
 
@@ -554,6 +729,17 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
 
       {/* Floating Action Bar */}
       <ActionBar contact={contact} />
+
+      {/* Phase Transition Modal */}
+      <PhaseTransitionModal
+        isOpen={pendingTransition !== null}
+        onClose={() => setPendingTransition(null)}
+        onConfirm={handleConfirmTransition}
+        contactName={`${contact.firstName} ${contact.lastName}`}
+        oldPhase={pendingTransition?.oldPhase || ""}
+        newPhase={pendingTransition?.newPhase || ""}
+        isLost={pendingTransition?.isLost || false}
+      />
     </div>
   );
 }

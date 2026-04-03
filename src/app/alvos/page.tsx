@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
-import { AppState, Contact, VICTIM_TYPES, PIPELINE_STAGES } from "@/lib/types";
-import { loadState } from "@/lib/store";
+import { AppState, Contact, VICTIM_TYPES, PIPELINE_STAGES, LOST_REASON_LABELS, type LostReason } from "@/lib/types";
+import { loadState, reactivateContact } from "@/lib/store";
 
 export default function AlvosPage() {
   const [state, setState] = useState<AppState | null>(null);
@@ -16,9 +16,14 @@ export default function AlvosPage() {
 
   if (!state) return null;
 
-  const filtered = filter === "all"
-    ? state.contacts
-    : state.contacts.filter((c) => c.pipelineStage === filter);
+  const activeContacts = state.contacts.filter((c) => c.status !== "lost");
+  const lostContacts = state.contacts.filter((c) => c.status === "lost");
+
+  const filtered = filter === "lost"
+    ? lostContacts
+    : filter === "all"
+    ? activeContacts
+    : activeContacts.filter((c) => c.pipelineStage === filter);
 
   const getArchetypeName = (id: string) =>
     VICTIM_TYPES.find((v) => v.id === id)?.name || id;
@@ -50,7 +55,10 @@ export default function AlvosPage() {
               </span>
             </h1>
             <p className="text-sm text-[#737373] mt-1">
-              {state.contacts.length} contatos no pipeline
+              {activeContacts.length} contato{activeContacts.length !== 1 ? "s" : ""} no pipeline
+              {lostContacts.length > 0 && (
+                <span className="text-[#ef4444]/60"> · {lostContacts.length} perdido{lostContacts.length !== 1 ? "s" : ""}</span>
+              )}
             </p>
           </div>
           <Link
@@ -74,10 +82,10 @@ export default function AlvosPage() {
                 : "bg-[#161616] text-[#737373] border border-[#262626] hover:border-[#333]"
             }`}
           >
-            Todos ({state.contacts.length})
+            Todos ({activeContacts.length})
           </button>
           {PIPELINE_STAGES.map((stage) => {
-            const count = state.contacts.filter((c) => c.pipelineStage === stage.id).length;
+            const count = activeContacts.filter((c) => c.pipelineStage === stage.id).length;
             return (
               <button
                 key={stage.id}
@@ -101,6 +109,18 @@ export default function AlvosPage() {
               </button>
             );
           })}
+          {lostContacts.length > 0 && (
+            <button
+              onClick={() => setFilter("lost")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                filter === "lost"
+                  ? "bg-[#ef4444]/15 text-[#ef4444] border border-[#ef4444]/30"
+                  : "bg-[#161616] text-[#737373] border border-[#262626] hover:border-[#333]"
+              }`}
+            >
+              Perdidos ({lostContacts.length})
+            </button>
+          )}
         </div>
 
         {/* Contact list */}
@@ -111,17 +131,55 @@ export default function AlvosPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-4.5 0 2.625 2.625 0 014.5 0z" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-[#e5e5e5] mb-2">Nenhum alvo cadastrado</h3>
-            <p className="text-sm text-[#737373] mb-6">Comece adicionando seu primeiro alvo ao pipeline</p>
-            <Link
-              href="/alvos/novo"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#7c3aed] text-white text-sm font-medium hover:bg-[#6d28d9] transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-              </svg>
-              Adicionar Alvo
-            </Link>
+            <h3 className="text-lg font-semibold text-[#e5e5e5] mb-2">
+              {filter === "lost" ? "Nenhum alvo perdido" : "Nenhum alvo cadastrado"}
+            </h3>
+            <p className="text-sm text-[#737373] mb-6">
+              {filter === "lost"
+                ? "Nenhum alvo foi marcado como perdido"
+                : "Comece adicionando seu primeiro alvo ao pipeline"}
+            </p>
+            {filter !== "lost" && (
+              <Link
+                href="/alvos/novo"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#7c3aed] text-white text-sm font-medium hover:bg-[#6d28d9] transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                </svg>
+                Adicionar Alvo
+              </Link>
+            )}
+          </div>
+        ) : filter === "lost" ? (
+          /* Lost contacts grouped by reason */
+          <div className="space-y-6">
+            {(Object.keys(LOST_REASON_LABELS) as LostReason[]).map((reason) => {
+              const group = filtered.filter((c) => c.lostReason === reason);
+              if (group.length === 0) return null;
+              return (
+                <div key={reason}>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-2 h-2 rounded-full bg-[#ef4444]" />
+                    <h3 className="text-sm font-semibold text-[#ef4444]">
+                      {LOST_REASON_LABELS[reason]}
+                    </h3>
+                    <span className="text-[10px] text-[#ef4444]/50">({group.length})</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {group.map((contact) => (
+                      <LostContactCard
+                        key={contact.id}
+                        contact={contact}
+                        getArchetypeName={getArchetypeName}
+                        getStageName={getStageName}
+                        getStageColor={getStageColor}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -231,5 +289,97 @@ function ContactCard({
         </div>
       </div>
     </Link>
+  );
+}
+
+function LostContactCard({
+  contact,
+  getArchetypeName,
+  getStageName,
+  getStageColor,
+}: {
+  contact: Contact;
+  getArchetypeName: (id: string) => string;
+  getStageName: (id: string) => string;
+  getStageColor: (id: string) => string;
+}) {
+  const stageColor = getStageColor(contact.pipelineStage);
+
+  return (
+    <div className="bento-card opacity-75 relative overflow-hidden">
+      {/* Red accent top border */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#ef4444]/40" />
+
+      <div className="flex items-start gap-4">
+        {/* Avatar */}
+        <div className="relative flex-shrink-0">
+          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#1a1a1a] via-[#1a1010] to-[#2a1010] flex items-center justify-center border border-[#ef4444]/20">
+            <span className="text-lg font-semibold text-[#ef4444]/60">
+              {contact.firstName[0]}{contact.lastName?.[0] || ""}
+            </span>
+          </div>
+        </div>
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-sm font-semibold text-[#e5e5e5]/60 truncate">
+              {contact.firstName} {contact.lastName}
+            </h3>
+            {contact.lostReason && (
+              <span
+                className="text-[9px] px-2 py-0.5 rounded-full font-medium flex-shrink-0 ml-2 bg-[#ef4444]/10 text-[#ef4444] border border-[#ef4444]/20"
+              >
+                {LOST_REASON_LABELS[contact.lostReason]}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-xs text-[#8b5cf6]/50">
+              {getArchetypeName(contact.primaryArchetype)}
+            </span>
+            <span className="text-[8px] text-[#737373]">·</span>
+            <span
+              className="text-[9px] px-1.5 py-0.5 rounded-full font-medium"
+              style={{
+                background: `${stageColor}10`,
+                color: `${stageColor}80`,
+                border: `1px solid ${stageColor}20`,
+              }}
+            >
+              {getStageName(contact.pipelineStage)}
+            </span>
+          </div>
+
+          {/* Reativar button */}
+          <Link
+            href={`/alvos/${contact.id}`}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-medium bg-[#059669]/10 text-[#059669] border border-[#059669]/20 hover:bg-[#059669]/20 transition-colors"
+          >
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
+            </svg>
+            Reativar
+          </Link>
+        </div>
+      </div>
+
+      {/* Pipeline bar (dimmed) */}
+      <div className="mt-4 flex gap-0.5 opacity-40">
+        {["lead_generation", "qualification", "nurturing", "closing", "retention"].map((stage, i) => {
+          const stageIdx = ["lead_generation", "qualification", "nurturing", "closing", "retention"].indexOf(contact.pipelineStage);
+          return (
+            <div
+              key={stage}
+              className="flex-1 h-1 rounded-full"
+              style={{
+                background: i <= stageIdx ? stageColor : "#262626",
+              }}
+            />
+          );
+        })}
+      </div>
+    </div>
   );
 }
