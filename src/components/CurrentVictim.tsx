@@ -71,7 +71,7 @@ export default function CurrentVictim() {
         <div className="w-full grid grid-cols-3 gap-3">
           <div className="text-center p-3 rounded-xl bg-[#0D0D0D] border border-[#262626]">
             <div className="text-lg font-semibold tracking-tighter text-[#8b5cf6]">87%</div>
-            <div className="text-[10px] text-[#737373] uppercase tracking-wider">Victim Score</div>
+            <div className="text-[10px] text-[#737373] uppercase tracking-wider">Receptividade</div>
           </div>
           <div className="text-center p-3 rounded-xl bg-[#0D0D0D] border border-[#262626]">
             <div className="text-lg font-semibold tracking-tighter text-[#e11d48]">72%</div>

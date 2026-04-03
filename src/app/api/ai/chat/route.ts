@@ -1,10 +1,11 @@
 import { NextRequest } from "next/server";
 import { getFlashModel } from "@/lib/gemini";
 import { buildChatSystemPrompt } from "@/lib/prompts";
+import { buildContextPromptSection, type ContactContext } from "@/lib/context-engine";
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, userProfile, targetContext, history = [] } = await request.json();
+    const { message, userProfile, targetContext, contactContext, history = [] } = await request.json();
 
     if (!message) {
       return Response.json({ error: "Message is required" }, { status: 400 });
@@ -15,10 +16,15 @@ export async function POST(request: NextRequest) {
     }
 
     const model = getFlashModel();
-    const systemPrompt = buildChatSystemPrompt(
+    let systemPrompt = buildChatSystemPrompt(
       userProfile || { name: "Usuario", gender: "nao_informado", orientation: "nao_informado", archetype: "charmer" },
       targetContext
     );
+
+    // Inject contact context (memory) if available
+    if (contactContext) {
+      systemPrompt += buildContextPromptSection(contactContext as ContactContext);
+    }
 
     // Build chat history
     const chatHistory = history.map((msg: { role: string; content: string }) => ({

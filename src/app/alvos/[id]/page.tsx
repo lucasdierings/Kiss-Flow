@@ -17,12 +17,17 @@ import {
   type LostReason,
   type PipelineStage,
 } from "@/lib/types";
-import { loadState, addInteraction, getContactInteractions, saveState, updateContact, manualStageChange, moveToLost } from "@/lib/store";
-import { generateAlerts, calculateKPIs, type Alert } from "@/lib/engine";
+import { loadState, addInteraction, getContactInteractions, saveState, updateContact, deleteContact, updateInteraction, deleteInteraction, manualStageChange, moveToLost, markGoalAchieved } from "@/lib/store";
+import { generateAlerts, calculateKPIs, calculateTemperature, type Alert } from "@/lib/engine";
+import type { ContactTemperature } from "@/lib/types";
 import { generateProactiveAlerts } from "@/lib/alerts-engine";
 import ActionBar from "@/components/ActionBar";
 import AlertBanner, { type AlertItem } from "@/components/AlertBanner";
 import PhaseTransitionModal from "@/components/PhaseTransitionModal";
+import EditContactModal from "@/components/EditContactModal";
+import EditInteractionModal from "@/components/EditInteractionModal";
+import ConfirmDeleteModal from "@/components/ConfirmDeleteModal";
+import AvatarUpload from "@/components/AvatarUpload";
 
 export default function AlvoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -38,6 +43,13 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
   const [editingClosingGoal, setEditingClosingGoal] = useState(false);
   const [closingGoalDraft, setClosingGoalDraft] = useState("");
   const [customClosingGoalDraft, setCustomClosingGoalDraft] = useState("");
+  const [showEditContact, setShowEditContact] = useState(false);
+  const [editingInteraction, setEditingInteraction] = useState<Interaction | null>(null);
+  const [deletingInteractionId, setDeletingInteractionId] = useState<string | null>(null);
+  const [showDeleteContact, setShowDeleteContact] = useState(false);
+  const [showGoalAchievedModal, setShowGoalAchievedModal] = useState(false);
+  const [goalEvidence, setGoalEvidence] = useState("");
+  const [generatingPostMortem, setGeneratingPostMortem] = useState(false);
 
   // Interaction form
   const [intCategory, setIntCategory] = useState<InteractionCategory>("digital_passive");
@@ -122,6 +134,57 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
     }
   };
 
+  // Temperature calculation
+  const lastInteraction = interactions.length > 0
+    ? interactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
+    : null;
+  const daysSinceLastInteraction = lastInteraction
+    ? Math.floor((Date.now() - new Date(lastInteraction.date).getTime()) / (1000 * 60 * 60 * 24))
+    : 999;
+  const temperature = calculateTemperature(contact, daysSinceLastInteraction);
+
+  const temperatureConfig: Record<ContactTemperature, { emoji: string; label: string; color: string }> = {
+    hot: { emoji: "\u{1F525}", label: "Quente", color: "#059669" },
+    warm: { emoji: "\u{1F7E0}", label: "Morno", color: "#d97706" },
+    cold: { emoji: "\u{2744}\uFE0F", label: "Frio", color: "#3b82f6" },
+    frozen: { emoji: "\u{1F9CA}", label: "Congelado", color: "#737373" },
+  };
+  const tempInfo = temperatureConfig[temperature];
+
+  // Goal achieved handler
+  const handleGoalAchieved = () => {
+    if (goalEvidence.length < 10) return;
+    const newState = markGoalAchieved(state, id, goalEvidence);
+    setState(newState);
+    setShowGoalAchievedModal(false);
+    setGoalEvidence("");
+  };
+
+  // Post-mortem generation
+  const handleGeneratePostMortem = async () => {
+    setGeneratingPostMortem(true);
+    try {
+      const res = await fetch("/api/ai/post-mortem", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contact,
+          interactions,
+          phaseHistory: state.phaseHistory?.filter((p) => p.contactId === id) || [],
+        }),
+      });
+      const data = await res.json();
+      if (data.analysis) {
+        const newState = updateContact(state, id, { postMortem: data.analysis });
+        setState(newState);
+      }
+    } catch (err) {
+      console.error("Erro ao gerar análise pós-operação:", err);
+    } finally {
+      setGeneratingPostMortem(false);
+    }
+  };
+
   const handleAddInteraction = () => {
     if (!intTypeId) return;
     const result = addInteraction(state, {
@@ -195,16 +258,30 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
             <div className="flex items-center gap-4">
               <div className="relative">
                 <div className="absolute inset-0 rounded-full bg-[#7c3aed]/20 blur-xl scale-150" />
-                <div className="relative w-16 h-16 rounded-full bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460] flex items-center justify-center border-2 border-[#262626] ring-2 ring-[#7c3aed]/30 ring-offset-2 ring-offset-[#0D0D0D]">
-                  <span className="text-xl font-bold text-[#8b5cf6]">
-                    {contact.firstName[0]}{contact.lastName?.[0] || ""}
-                  </span>
+                <div className="relative ring-2 ring-[#7c3aed]/30 ring-offset-2 ring-offset-[#0D0D0D] rounded-full">
+                  <AvatarUpload
+                    currentUrl={contact.avatarUrl}
+                    storagePath={`contacts/${id}/avatar`}
+                    size={64}
+                    onUploaded={(url) => {
+                      const newState = updateContact(state, id, { avatarUrl: url });
+                      setState(newState);
+                    }}
+                  />
                 </div>
               </div>
               <div>
-                <h1 className="text-2xl font-bold tracking-tighter text-[#e5e5e5]">
-                  {contact.firstName} {contact.lastName}
-                </h1>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-bold tracking-tighter text-[#e5e5e5]">
+                    {contact.firstName} {contact.lastName}
+                  </h1>
+                  <span
+                    className="text-[10px] px-2 py-0.5 rounded-full font-medium"
+                    style={{ background: `${tempInfo.color}15`, color: tempInfo.color, border: `1px solid ${tempInfo.color}30` }}
+                  >
+                    {tempInfo.emoji} {tempInfo.label}
+                  </span>
+                </div>
                 <div className="flex items-center gap-3 mt-1 flex-wrap">
                   <span className="text-sm text-[#8b5cf6]">{getArchetypeName(contact.primaryArchetype)}</span>
                   <span
@@ -291,9 +368,42 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
                       </div>
                     )}
                   </div>
+                  {/* Objetivo Alcançado button */}
+                  {contact.status === "active" &&
+                    contact.closingGoal &&
+                    (contact.pipelineStage === "closing" || contact.pipelineStage === "retention") && (
+                      <button
+                        onClick={() => setShowGoalAchievedModal(true)}
+                        className="text-[10px] px-2.5 py-1 rounded-full font-medium flex items-center gap-1 transition-colors bg-[#059669]/15 text-[#059669] border border-[#059669]/30 hover:bg-[#059669]/25"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Objetivo Alcançado
+                      </button>
+                    )}
                 </div>
               </div>
             </div>
+            <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowEditContact(true)}
+              className="px-4 py-2.5 rounded-xl bg-[#0D0D0D] border border-[#262626] text-[#a3a3a3] text-sm font-medium hover:border-[#333] hover:text-[#e5e5e5] transition-colors flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+              </svg>
+              Editar
+            </button>
+            <button
+              onClick={() => setShowDeleteContact(true)}
+              className="px-3 py-2.5 rounded-xl bg-[#ef4444]/10 border border-[#ef4444]/20 text-[#ef4444] text-sm hover:bg-[#ef4444]/20 transition-colors"
+              title="Excluir alvo permanentemente"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+              </svg>
+            </button>
             <button
               onClick={() => setShowAddInteraction(!showAddInteraction)}
               className="px-5 py-2.5 rounded-xl bg-[#7c3aed] text-white text-sm font-medium hover:bg-[#6d28d9] transition-colors flex items-center gap-2"
@@ -303,6 +413,7 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
               </svg>
               Nova Interacao
             </button>
+            </div>
           </div>
 
           {/* Pipeline bar */}
@@ -371,6 +482,69 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
           </div>
         </header>
 
+        {/* Lost contact section */}
+        {contact.status === "lost" && (
+          <div className="mb-6">
+            <div className="rounded-2xl border border-[#ef4444]/20 bg-[#ef4444]/5 overflow-hidden">
+              <div className="px-5 py-3 flex items-center gap-3 border-b border-[#ef4444]/10">
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-[#ef4444]/20 text-[#ef4444] border border-[#ef4444]/30">
+                  Perdido
+                </span>
+                <span className="text-xs text-[#ef4444]/80">
+                  {contact.lostReason === "desistencia"
+                    ? "Desistência"
+                    : contact.lostReason === "rejeicao"
+                    ? "Rejeição"
+                    : "Sucesso Efêmero"}
+                </span>
+                {contact.lostAt && (
+                  <span className="text-[10px] text-[#737373] ml-auto">
+                    {new Date(contact.lostAt).toLocaleDateString("pt-BR")}
+                  </span>
+                )}
+              </div>
+
+              <div className="p-5">
+                {contact.postMortem ? (
+                  <div>
+                    <h3 className="text-xs font-medium tracking-widest uppercase text-[#ef4444]/70 mb-3">
+                      Análise Pós-Operação
+                    </h3>
+                    <div className="rounded-xl bg-[#0D0D0D] border border-[#262626] p-4">
+                      <p className="text-xs text-[#a3a3a3] whitespace-pre-wrap leading-relaxed">
+                        {contact.postMortem}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleGeneratePostMortem}
+                    disabled={generatingPostMortem}
+                    className="w-full py-3 rounded-xl bg-[#161616] border border-[#262626] text-sm font-medium text-[#a3a3a3] hover:text-[#e5e5e5] hover:border-[#333] transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {generatingPostMortem ? (
+                      <>
+                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        Gerando análise...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
+                        </svg>
+                        Gerar Análise Pós-Operação
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Proactive Alerts */}
         <AlertBanner
           alerts={generateProactiveAlerts(contact, state.interactions, state.phaseHistory || []).map((a, i) => ({
@@ -411,7 +585,7 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
           </div>
           <div className="bento-card text-center">
             <div className="text-3xl font-bold tracking-tighter text-[#059669]">{Math.round(contact.victimScore)}%</div>
-            <div className="text-[10px] text-[#737373] uppercase tracking-wider mt-1">Victim Score</div>
+            <div className="text-[10px] text-[#737373] uppercase tracking-wider mt-1">Receptividade</div>
             <div className="mt-2 w-full h-1.5 rounded-full bg-[#0D0D0D] overflow-hidden">
               <div className="h-full rounded-full bg-[#059669]" style={{ width: `${contact.victimScore}%` }} />
             </div>
@@ -605,6 +779,19 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
                 <span className="text-xs text-[#737373]">Arquetipo</span>
                 <span className="text-xs text-[#8b5cf6]">{getArchetypeName(contact.primaryArchetype)}</span>
               </div>
+              {contact.phone && (
+                <div className="flex justify-between">
+                  <span className="text-xs text-[#737373]">Telefone</span>
+                  <a
+                    href={`https://wa.me/${contact.phone.replace(/\D/g, "")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-[#059669] hover:underline"
+                  >
+                    {contact.phone}
+                  </a>
+                </div>
+              )}
               {contact.secondaryArchetype && (
                 <div className="flex justify-between">
                   <span className="text-xs text-[#737373]">Secundario</span>
@@ -716,9 +903,29 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
                         </div>
                       )}
                     </div>
-                    <span className="text-[10px] text-[#737373] flex-shrink-0">
-                      {new Date(interaction.date).toLocaleDateString("pt-BR")}
-                    </span>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      <span className="text-[10px] text-[#737373]">
+                        {new Date(interaction.date).toLocaleDateString("pt-BR")}
+                      </span>
+                      <button
+                        onClick={() => setEditingInteraction(interaction)}
+                        className="p-1 rounded-lg text-[#737373] hover:text-[#8b5cf6] hover:bg-[#8b5cf6]/10 transition-colors"
+                        title="Editar interação"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => setDeletingInteractionId(interaction.id)}
+                        className="p-1 rounded-lg text-[#737373] hover:text-[#ef4444] hover:bg-[#ef4444]/10 transition-colors"
+                        title="Excluir interação"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -739,6 +946,109 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
         oldPhase={pendingTransition?.oldPhase || ""}
         newPhase={pendingTransition?.newPhase || ""}
         isLost={pendingTransition?.isLost || false}
+      />
+
+      {/* Edit Contact Modal */}
+      <EditContactModal
+        contact={contact}
+        isOpen={showEditContact}
+        onClose={() => setShowEditContact(false)}
+        onSave={(updates) => {
+          const newState = updateContact(state, id, updates);
+          setState(newState);
+        }}
+      />
+
+      {/* Edit Interaction Modal */}
+      {editingInteraction && (
+        <EditInteractionModal
+          interaction={editingInteraction}
+          isOpen={true}
+          onClose={() => setEditingInteraction(null)}
+          onSave={(updates) => {
+            const newState = updateInteraction(state, editingInteraction.id, updates);
+            setState(newState);
+          }}
+        />
+      )}
+
+      {/* Delete Interaction Confirmation */}
+      <ConfirmDeleteModal
+        isOpen={deletingInteractionId !== null}
+        title="Excluir Interação"
+        message="Esta ação não pode ser desfeita. A interação será removida permanentemente."
+        onClose={() => setDeletingInteractionId(null)}
+        onConfirm={() => {
+          if (deletingInteractionId) {
+            const newState = deleteInteraction(state, deletingInteractionId);
+            setState(newState);
+            setDeletingInteractionId(null);
+          }
+        }}
+      />
+
+      {/* Goal Achieved Modal */}
+      {showGoalAchievedModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-[#161616] border border-[#262626] shadow-2xl p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-[#059669]/15 flex items-center justify-center">
+                <svg className="w-5 h-5 text-[#059669]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-[#e5e5e5]">Objetivo Alcançado!</h3>
+                <p className="text-[10px] text-[#737373]">
+                  Meta: {CLOSING_GOALS.find((g) => g.id === contact.closingGoal)?.name || contact.closingGoal}
+                </p>
+              </div>
+            </div>
+            <div className="mb-4">
+              <label className="text-xs text-[#737373] mb-1.5 block">Descreva como o objetivo foi alcançado (mín. 10 caracteres)</label>
+              <textarea
+                value={goalEvidence}
+                onChange={(e) => setGoalEvidence(e.target.value)}
+                placeholder="Conte o que aconteceu, como foi o momento, evidências..."
+                rows={3}
+                className="w-full px-3 py-2 rounded-xl bg-[#0D0D0D] border border-[#262626] text-xs text-[#e5e5e5] placeholder:text-[#737373]/50 focus:outline-none focus:border-[#059669]/50 resize-none"
+                autoFocus
+              />
+              {goalEvidence.length > 0 && goalEvidence.length < 10 && (
+                <p className="text-[9px] text-[#d97706] mt-1">Mínimo 10 caracteres ({goalEvidence.length}/10)</p>
+              )}
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => { setShowGoalAchievedModal(false); setGoalEvidence(""); }}
+                className="px-4 py-2 rounded-xl text-xs text-[#737373] hover:text-[#a3a3a3]"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleGoalAchieved}
+                disabled={goalEvidence.length < 10}
+                className="px-5 py-2 rounded-xl bg-[#059669] text-white text-xs font-medium hover:bg-[#047857] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Confirmar Conquista
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Contact Confirmation */}
+      <ConfirmDeleteModal
+        isOpen={showDeleteContact}
+        title="Excluir Alvo"
+        message={`Tem certeza que deseja excluir ${contact.firstName}? Todas as interações e dados serão removidos permanentemente.`}
+        confirmLabel="Excluir Permanentemente"
+        onClose={() => setShowDeleteContact(false)}
+        onConfirm={() => {
+          const newState = deleteContact(state, id);
+          setState(newState);
+          router.push("/alvos");
+        }}
       />
     </div>
   );

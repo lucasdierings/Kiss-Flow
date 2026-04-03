@@ -46,7 +46,8 @@ export type AlertType =
   | "high_enchantment"
   | "archetype_shift"
   | "stagnation_warning"
-  | "post_mortem_available";
+  | "post_mortem_available"
+  | "goal_achievable";
 
 export type AlertPriority = "low" | "medium" | "high" | "critical";
 
@@ -312,6 +313,25 @@ export function generateProactiveAlerts(
       description: `Solicite uma análise completa da operação com ${contact.firstName} para extrair lições estratégicas.`,
       priority: "medium",
       action_suggested: "Solicitar análise pós-operação à IA",
+    });
+  }
+
+  // 11. Meta de fechamento alcançável
+  if (
+    contact.status === "active" &&
+    contact.closingGoal &&
+    (contact.pipelineStage === "closing" || contact.pipelineStage === "retention") &&
+    contact.victimScore > 70 &&
+    contact.enchantmentScore > 0.6 &&
+    !contact.goalAchievedAt
+  ) {
+    alerts.push({
+      contact_id: contact.id,
+      alert_type: "goal_achievable",
+      title: "Sinais de Prontidão para Meta Detectados",
+      description: `Métricas de ${contact.firstName} indicam alta receptividade. Meta "${contact.closingGoal}" está ao alcance. Considere registrar a conquista.`,
+      priority: "critical",
+      action_suggested: "Registrar conquista ou executar movimento de fechamento",
     });
   }
 

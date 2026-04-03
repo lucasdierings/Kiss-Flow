@@ -59,9 +59,11 @@ export type PipelineStage = typeof PIPELINE_STAGES[number]["id"];
 
 // ===== Status e Conversão =====
 
-export type ContactStatus = "active" | "lost";
+export type ContactStatus = "active" | "lost" | "won";
 
 export type LostReason = "desistencia" | "rejeicao" | "sucesso_efemero";
+
+export type ContactTemperature = "hot" | "warm" | "cold" | "frozen";
 
 export const LOST_REASON_LABELS: Record<LostReason, string> = {
   desistencia: "Desistência",
@@ -164,6 +166,7 @@ export interface Contact {
   firstName: string;
   lastName: string;
   avatarUrl?: string;
+  phone?: string;
   primaryArchetype: VictimType;
   secondaryArchetype?: VictimType;
   loveLanguage?: LoveLanguage;
@@ -173,6 +176,8 @@ export interface Contact {
   lostReason?: LostReason;
   lostAt?: string;
   postMortem?: string;
+  goalAchievedAt?: string;
+  goalEvidence?: string;
   notes: string;
   // Métricas calculadas
   mysteryCoefficient: number;   // 0-100

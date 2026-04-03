@@ -184,7 +184,7 @@ export default function ActiveContacts() {
               {/* Mini metrics */}
               <div className="flex items-center gap-2 flex-shrink-0">
                 <MiniScore
-                  label="VS"
+                  label="R"
                   value={contact.victimScore}
                   color="#8b5cf6"
                 />

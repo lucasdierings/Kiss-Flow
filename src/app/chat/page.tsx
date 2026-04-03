@@ -5,8 +5,11 @@ import Link from "next/link";
 import ChatMessage from "@/components/chat/ChatMessage";
 import ChatInput from "@/components/chat/ChatInput";
 import ContactSelector from "@/components/chat/ContactSelector";
+import ChatModeSelector, { type ChatMode } from "@/components/chat/ChatModeSelector";
+import MessageSuggestionCard from "@/components/chat/MessageSuggestionCard";
 import { createSupabaseBrowser } from "@/lib/supabase";
 import { getPersona, getObjectiveTone, type Persona } from "@/lib/persona";
+import { getContactContext, saveContactContext } from "@/lib/context-engine";
 
 interface Message {
   id: string;
@@ -43,6 +46,8 @@ export default function ChatPage() {
   const [persona, setPersona] = useState<Persona>(getPersona(null));
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [chatMode, setChatMode] = useState<ChatMode>("conversa");
+  const [suggestions, setSuggestions] = useState<Array<{ style: string; message: string }>>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
@@ -140,6 +145,36 @@ export default function ChatPage() {
   async function handleSend(message: string) {
     if (!userProfile) return;
 
+    // Build mode-specific prefix for the AI
+    let aiMessage = message;
+    if (chatMode === "sugerir") {
+      aiMessage = `MODO SUGESTÃO DE MENSAGEM: O usuário quer enviar uma mensagem para o alvo. Contexto: "${message}".
+
+Gere EXATAMENTE 3 sugestões de mensagem que o usuário pode enviar DIRETAMENTE ao alvo. Cada mensagem deve soar NATURAL e HUMANA — como se um amigo escrevesse, não uma IA.
+
+REGRAS:
+- Use linguagem informal e natural do português brasileiro
+- Varie o comprimento (uma curta, uma média, uma mais elaborada)
+- Use emojis com moderação e naturalidade (1-2 no máximo)
+- NÃO use linguagem rebuscada ou formal
+- Cada mensagem deve ter um tom diferente
+
+Retorne EXATAMENTE neste formato JSON:
+{"suggestions": [{"style": "Misteriosa", "message": "texto aqui"}, {"style": "Provocativa", "message": "texto aqui"}, {"style": "De validação", "message": "texto aqui"}]}
+
+Retorne APENAS o JSON, sem markdown.`;
+    } else if (chatMode === "validar") {
+      aiMessage = `MODO VALIDADOR: O usuário quer enviar esta mensagem para o alvo: "${message}"
+
+Analise o risco desta mensagem considerando o perfil do alvo e o estado atual da dinâmica. Avalie:
+1. Tom emocional (carente? agressivo? equilibrado?)
+2. Nível de disponibilidade transmitido
+3. Impacto no mistério e tensão
+4. Risco de friendzone ou afastar o alvo
+
+Dê uma nota de risco de 1-10 e sugestões de ajuste específicas. Se a mensagem está boa, diga. Seja direto e prático.`;
+    }
+
     const userMsg: Message = {
       id: `user-${Date.now()}`,
       role: "user",
@@ -149,6 +184,7 @@ export default function ChatPage() {
 
     setMessages((prev) => [...prev, userMsg]);
     setLoading(true);
+    setSuggestions([]);
 
     try {
       // Build context
@@ -169,11 +205,14 @@ export default function ChatPage() {
         };
       }
 
+      // Load contact context (memory)
+      const contactContext = selectedContactId ? getContactContext(selectedContactId) : null;
+
       const response = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message,
+          message: aiMessage,
           userProfile: {
             name: userProfile.display_name,
             gender: userProfile.gender,
@@ -181,16 +220,51 @@ export default function ChatPage() {
             archetype: userProfile.seducer_archetype,
           },
           targetContext,
+          contactContext,
           history: messages.slice(-20).map((m) => ({ role: m.role, content: m.content })),
         }),
       });
 
       const data = await response.json();
+      const responseText = data.response || data.error || "Erro ao processar resposta";
+
+      // Parse suggestions if in "sugerir" mode
+      if (chatMode === "sugerir") {
+        try {
+          const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            if (parsed.suggestions) {
+              setSuggestions(parsed.suggestions);
+              const assistantMsg: Message = {
+                id: `assistant-${Date.now()}`,
+                role: "assistant",
+                content: `Gerei 3 sugestões de mensagem para você enviar. Escolha a que mais combina com o momento:`,
+                timestamp: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
+              };
+              setMessages((prev) => [...prev, assistantMsg]);
+              // Save + context update below
+              const supabase = createSupabaseBrowser();
+              const { data: { user } } = await supabase.auth.getUser();
+              if (user) {
+                await supabase.from("ai_chat_messages").insert([
+                  { user_id: user.id, contact_id: selectedContactId, role: "user", content: message },
+                  { user_id: user.id, contact_id: selectedContactId, role: "assistant", content: assistantMsg.content },
+                ]);
+              }
+              setLoading(false);
+              return;
+            }
+          }
+        } catch {
+          // If JSON parse fails, show raw response
+        }
+      }
 
       const assistantMsg: Message = {
         id: `assistant-${Date.now()}`,
         role: "assistant",
-        content: data.response || data.error || "Erro ao processar resposta",
+        content: responseText,
         timestamp: new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }),
       };
 
@@ -204,6 +278,32 @@ export default function ChatPage() {
           { user_id: user.id, contact_id: selectedContactId, role: "user", content: message },
           { user_id: user.id, contact_id: selectedContactId, role: "assistant", content: assistantMsg.content },
         ]);
+      }
+
+      // Auto-update context every 5 messages (background, non-blocking)
+      if (selectedContactId && messages.length > 0 && messages.length % 5 === 0) {
+        const recentChat = messages.slice(-10).map((m) => `${m.role}: ${m.content}`).join("\n");
+        fetch("/api/ai/update-context", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contactName: selectedContact ? `${selectedContact.first_name} ${selectedContact.last_name}`.trim() : "Alvo",
+            currentContext: contactContext,
+            recentInteractions,
+            chatMessages: recentChat,
+          }),
+        })
+          .then((r) => r.json())
+          .then((data) => {
+            if (data.context) {
+              saveContactContext({
+                contactId: selectedContactId,
+                ...data.context,
+                updatedAt: new Date().toISOString(),
+              });
+            }
+          })
+          .catch(() => {}); // Silently fail
       }
     } catch (err) {
       setMessages((prev) => [...prev, {
@@ -330,16 +430,17 @@ export default function ChatPage() {
         </div>
       </header>
 
-      {/* Contact selector */}
-      {contacts.length > 0 && (
-        <div className="px-4 py-2 border-b border-[#262626]/30">
+      {/* Contact selector + Mode selector */}
+      <div className="px-4 py-2 border-b border-[#262626]/30 flex items-center justify-between gap-3">
+        {contacts.length > 0 && (
           <ContactSelector
             contacts={contacts}
             selectedId={selectedContactId}
             onSelect={setSelectedContactId}
           />
-        </div>
-      )}
+        )}
+        <ChatModeSelector mode={chatMode} onChange={setChatMode} />
+      </div>
 
       {/* Messages area */}
       <div ref={chatContainerRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
@@ -388,6 +489,16 @@ export default function ChatPage() {
           />
         ))}
 
+        {/* Message suggestions */}
+        {suggestions.length > 0 && (
+          <div className="max-w-lg">
+            <MessageSuggestionCard
+              suggestions={suggestions}
+              phone={(selectedContact as unknown as { phone?: string })?.phone}
+            />
+          </div>
+        )}
+
         {/* Loading indicator */}
         {loading && (
           <div className="flex gap-3">
@@ -416,7 +527,13 @@ export default function ChatPage() {
           onUpload={handleUpload}
           disabled={loading}
           placeholder={
-            selectedContact
+            chatMode === "sugerir"
+              ? selectedContact
+                ? `Descreva a situação para sugerir mensagem para ${selectedContact.first_name}...`
+                : "Selecione um alvo para gerar sugestões..."
+              : chatMode === "validar"
+              ? "Cole aqui a mensagem que quer validar antes de enviar..."
+              : selectedContact
               ? `Pergunte sobre ${selectedContact.first_name}...`
               : "Pergunte sobre estrategia de conquista..."
           }

@@ -1,5 +1,6 @@
 import {
   Contact,
+  ContactTemperature,
   Interaction,
   PipelineStage,
   INTERACTION_CATEGORIES,
@@ -19,9 +20,21 @@ export interface InteractionImpactResult {
  * Retorna o contato atualizado + sugestão de progressão (se houver).
  * A progressão NÃO é auto-comitada — a UI deve exibir o modal de confirmação.
  */
+export function calculateTemperature(
+  contact: Contact,
+  daysSinceLastInteraction: number
+): ContactTemperature {
+  if (contact.status !== "active") return "frozen";
+  if (daysSinceLastInteraction <= 3 && contact.enchantmentScore > 0.5) return "hot";
+  if (daysSinceLastInteraction <= 7 && contact.enchantmentScore > 0.2) return "warm";
+  if (daysSinceLastInteraction > 21 || contact.mysteryCoefficient < 20) return "frozen";
+  return "cold";
+}
+
 export function applyInteractionImpact(
   contact: Contact,
-  interaction: Interaction
+  interaction: Interaction,
+  interactionCount: number
 ): InteractionImpactResult {
   const category = interaction.category as InteractionCategory;
   const cat = INTERACTION_CATEGORIES[category];
@@ -80,7 +93,8 @@ export function applyInteractionImpact(
     contact.pipelineStage,
     newVictimScore,
     newEnchantment,
-    newTension
+    newTension,
+    interactionCount
   );
 
   const updatedContact: Contact = {
@@ -109,18 +123,17 @@ function evaluatePipelineProgression(
   currentStage: string,
   victimScore: number,
   enchantment: number,
-  tension: number
+  tension: number,
+  interactionCount: number
 ): Contact["pipelineStage"] {
-  const stageIndex = PIPELINE_STAGES.findIndex((s) => s.id === currentStage);
-
-  // Criterios para avancar
-  if (currentStage === "lead_generation" && victimScore > 20 && enchantment > 0.1) {
+  // Critérios para avançar (com gates de interação)
+  if (currentStage === "lead_generation" && victimScore > 30 && enchantment > 0.15 && interactionCount >= 3) {
     return "qualification";
   }
-  if (currentStage === "qualification" && victimScore > 40 && enchantment > 0.3) {
+  if (currentStage === "qualification" && victimScore > 50 && enchantment > 0.35 && interactionCount >= 5) {
     return "nurturing";
   }
-  if (currentStage === "nurturing" && victimScore > 65 && enchantment > 0.6 && tension > 40) {
+  if (currentStage === "nurturing" && victimScore > 70 && enchantment > 0.6 && tension > 40 && interactionCount >= 8) {
     return "closing";
   }
   if (currentStage === "closing" && victimScore > 85 && enchantment > 0.8) {
@@ -193,7 +206,7 @@ export function generateAlerts(contact: Contact, interactions: Interaction[]): A
     alerts.push({
       type: "success",
       title: "Reciprocidade Alta Detectada",
-      message: `Victim Score ${contact.victimScore}%, Encantamento ${Math.round(contact.enchantmentScore * 100)}%. Considere o Movimento Ousado.`,
+      message: `Receptividade ${contact.victimScore}%, Encantamento ${Math.round(contact.enchantmentScore * 100)}%. Considere o Movimento Ousado.`,
       action: "Executar Movimento Ousado",
     });
   }

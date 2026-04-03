@@ -2,9 +2,13 @@
 
 import { useEffect, useState } from "react";
 
-export default function MysteryGauge() {
+interface MysteryGaugeProps {
+  value?: number; // 0-100
+}
+
+export default function MysteryGauge({ value: propValue }: MysteryGaugeProps) {
   const [value, setValue] = useState(0);
-  const targetValue = 73; // 73% enigmatico
+  const targetValue = propValue ?? 0;
   const radius = 45;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (value / 100) * circumference;
@@ -12,7 +16,7 @@ export default function MysteryGauge() {
   useEffect(() => {
     const timer = setTimeout(() => setValue(targetValue), 300);
     return () => clearTimeout(timer);
-  }, []);
+  }, [targetValue]);
 
   const getLabel = (v: number) => {
     if (v < 25) return "Transparente";
@@ -94,7 +98,7 @@ export default function MysteryGauge() {
 
         {/* Center text */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-3xl font-bold tracking-tighter">{value}%</span>
+          <span className="text-3xl font-bold tracking-tighter">{targetValue === 0 ? "—" : `${value}%`}</span>
           <span className="text-[10px] text-[#737373] uppercase tracking-wider">
             {getLabel(value)}
           </span>
@@ -104,12 +108,14 @@ export default function MysteryGauge() {
       {/* Info footer */}
       <div className="mt-4 text-center">
         <p className="text-[11px] text-[#737373]">
-          27% do perfil revelado ao alvo
+          {targetValue > 0 ? `${100 - targetValue}% do perfil revelado ao alvo` : "Sem dados de mistério"}
         </p>
-        <div className="flex items-center justify-center gap-1 mt-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-[#059669]" />
-          <span className="text-[10px] text-[#059669]">Nivel ideal de ocultacao</span>
-        </div>
+        {targetValue > 50 && (
+          <div className="flex items-center justify-center gap-1 mt-2">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#059669]" />
+            <span className="text-[10px] text-[#059669]">Nível ideal de ocultação</span>
+          </div>
+        )}
       </div>
     </div>
   );

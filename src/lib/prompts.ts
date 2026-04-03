@@ -168,6 +168,7 @@ export function buildChatSystemPrompt(userProfile: {
   gender: string;
   archetype: string;
   objective: string;
+  closingGoal?: string;
   metrics: Record<string, number>;
   recentInteractions: string;
 }) {
@@ -201,10 +202,13 @@ ALVO ATUAL: ${targetContext.name}
 Gênero: ${targetContext.gender === "male" ? "Homem" : targetContext.gender === "female" ? "Mulher" : "Não informado"}
 Arquétipo de vítima: ${targetContext.archetype}
 Objetivo com este alvo: ${objTone.label} — ${objTone.description}
-Métricas atuais: Mystery ${targetContext.metrics.mystery}%, Tension ${targetContext.metrics.tension}%, Enchantment ${targetContext.metrics.enchantment}
+Meta de fechamento: ${targetContext.closingGoal || "Não definida"}
+Métricas atuais: Mystery ${targetContext.metrics.mystery}%, Tension ${targetContext.metrics.tension}%, Enchantment ${targetContext.metrics.enchantment}, Receptividade ${targetContext.metrics.victimScore || 0}%
 Interações recentes: ${targetContext.recentInteractions}
 
-Quando relevante, faça perguntas sobre o alvo para completar o perfil e melhorar as sugestões. Pergunte sobre a cidade, profissão, hobbies, como se conheceram — tudo que ajude a entender melhor a dinâmica.`;
+DIRETRIZ SOBRE META: ${targetContext.closingGoal ? `A meta definida é "${targetContext.closingGoal}". Todas as suas recomendações devem direcionar o operador para alcançar especificamente esta meta. Quando detectar que a meta está próxima de ser alcançada, sinalize: "Sinais de prontidão para [meta] detectados."` : "Nenhuma meta definida. Sugira ao operador definir uma meta clara para direcionar a estratégia."}
+
+Quando relevante, faça perguntas sobre o alvo para completar o perfil e melhorar as recomendações. Pergunte sobre a cidade, profissão, hobbies, como se conheceram — tudo que ajude a calibrar a estratégia.`;
   } else {
     prompt += `
 

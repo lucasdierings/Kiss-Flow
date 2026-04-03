@@ -2,16 +2,21 @@
 
 import { useEffect, useState } from "react";
 
-export default function ScarcityIndex() {
+interface ScarcityIndexProps {
+  value?: number; // 0-100
+}
+
+export default function ScarcityIndex({ value: propValue }: ScarcityIndexProps) {
   const [animate, setAnimate] = useState(false);
 
   useEffect(() => {
     setTimeout(() => setAnimate(true), 500);
   }, []);
 
-  const inactivityHours = 18;
-  const messagesReceived = 7;
-  const scarcityScore = Math.min(100, Math.round((inactivityHours / 24) * 50 + (messagesReceived / 10) * 50));
+  const scarcityScore = propValue ?? 0;
+  // Derive display metrics from score
+  const inactivityHours = Math.round((scarcityScore / 100) * 48);
+  const messagesReceived = Math.round((scarcityScore / 100) * 15);
 
   const getStatus = (score: number) => {
     if (score >= 80) return { label: "Objeto de Desejo", color: "#7c3aed", bg: "#7c3aed" };
@@ -90,9 +95,9 @@ export default function ScarcityIndex() {
           <span className="text-[11px] text-[#737373]">Ratio iniciativa</span>
           <div className="flex items-center gap-2">
             <div className="w-16 h-1 rounded-full bg-[#0D0D0D] overflow-hidden">
-              <div className="h-full rounded-full bg-[#d97706]" style={{ width: "73%" }} />
+              <div className="h-full rounded-full bg-[#d97706]" style={{ width: `${scarcityScore}%` }} />
             </div>
-            <span className="text-[11px] font-mono text-[#a3a3a3]">73%</span>
+            <span className="text-[11px] font-mono text-[#a3a3a3]">{scarcityScore}%</span>
           </div>
         </div>
       </div>
@@ -100,7 +105,15 @@ export default function ScarcityIndex() {
       {/* Insight */}
       <div className="mt-4 p-2.5 rounded-lg bg-[#7c3aed]/5 border border-[#7c3aed]/10">
         <p className="text-[10px] text-[#8b5cf6]">
-          Ela iniciou 73% das conversas. Manter silencio por mais 6h maximizara o efeito de escassez.
+          {scarcityScore >= 80
+            ? "Nível de escassez excelente. Você é objeto de desejo."
+            : scarcityScore >= 60
+            ? "Boa escassez. Manter o ritmo atual para maximizar o efeito."
+            : scarcityScore >= 40
+            ? "Escassez moderada. Considere reduzir a frequência de contato."
+            : scarcityScore > 0
+            ? "Disponível demais. Aumente o tempo entre as respostas."
+            : "Sem dados de escassez."}
         </p>
       </div>
     </div>

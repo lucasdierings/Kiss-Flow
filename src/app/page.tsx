@@ -10,6 +10,7 @@ import EnchantmentTimeline from "@/components/EnchantmentTimeline";
 import ScarcityIndex from "@/components/ScarcityIndex";
 import KPICards from "@/components/KPICards";
 import ActionBar from "@/components/ActionBar";
+import QuickLogFAB from "@/components/QuickLogFAB";
 import AlertBanner, { type AlertItem } from "@/components/AlertBanner";
 import StrategicInsights from "@/components/StrategicInsights";
 import BehaviorDiagnostic from "@/components/BehaviorDiagnostic";
@@ -17,17 +18,22 @@ import PipelineFunnel from "@/components/PipelineFunnel";
 import ActiveContacts from "@/components/ActiveContacts";
 import ConversionAnalytics from "@/components/ConversionAnalytics";
 import { loadState } from "@/lib/store";
+import type { Interaction } from "@/lib/types";
 import { generateProactiveAlerts } from "@/lib/alerts-engine";
 import { calculateUserScore, getDefaultUserScore, type UserScore } from "@/lib/user-scoring";
+import { calculateKPIs } from "@/lib/engine";
 
 export default function Dashboard() {
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [activeContact, setActiveContact] = useState<ReturnType<typeof loadState>["contacts"][number] | null>(null);
+  const [allInteractions, setAllInteractions] = useState<Interaction[]>([]);
   const [userScore, setUserScore] = useState<UserScore>(getDefaultUserScore());
 
   useEffect(() => {
     const state = loadState();
     if (!state) return;
+
+    setAllInteractions(state.interactions);
 
     // Calculate user score from all interactions
     if (state.interactions.length > 0) {
@@ -127,24 +133,42 @@ export default function Dashboard() {
           <ConversionAnalytics />
 
           {/* Row 4: KPI Cards (4 cols) */}
-          <KPICards />
+          <KPICards
+            {...(activeContact ? (() => {
+              const kpis = calculateKPIs(activeContact, allInteractions);
+              return {
+                pursuitRate: kpis.pursuitRate,
+                avgSentiment: kpis.avgSentiment,
+                daysInPipeline: kpis.daysInPipeline,
+                interactionsPerWeek: kpis.interactionsPerWeek,
+              };
+            })() : {})}
+          />
 
           {/* Row 4: Behavior Diagnostic (2 cols) + Mystery Gauge + Scarcity Index */}
           <BehaviorDiagnostic score={userScore} />
-          <MysteryGauge />
-          <ScarcityIndex />
+          <MysteryGauge value={activeContact?.mysteryCoefficient} />
+          <ScarcityIndex value={activeContact?.scarcityScore} />
 
           {/* Row 5: Tension Thermometer (2 cols) + Vulnerability Radar */}
-          <TensionThermometer />
-          <VulnerabilityRadar />
+          <TensionThermometer value={activeContact?.tensionLevel} />
+          <VulnerabilityRadar vulnerabilities={activeContact?.vulnerabilities} />
 
           {/* Row 6: Enchantment Timeline (full width) */}
-          <EnchantmentTimeline />
+          <EnchantmentTimeline
+            interactions={activeContact
+              ? allInteractions
+                  .filter((i) => i.contactId === activeContact.id)
+                  .map((i) => ({ date: i.date, enchantmentAfter: i.enchantmentAfter, sentiment: i.sentiment }))
+              : []
+            }
+          />
         </div>
       </main>
 
       {/* Floating Action Bar */}
       <ActionBar contact={activeContact} />
+      <QuickLogFAB />
     </div>
   );
 }

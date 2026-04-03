@@ -20,6 +20,7 @@ export default function NovoAlvoPage() {
   const router = useRouter();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
   const [primaryArchetype, setPrimaryArchetype] = useState<VictimType>("disappointed_dreamer");
   const [secondaryArchetype, setSecondaryArchetype] = useState<VictimType | "">("");
   const [loveLanguage, setLoveLanguage] = useState<LoveLanguage | "">("");
@@ -92,6 +93,7 @@ export default function NovoAlvoPage() {
     const contact = createContact({
       firstName: firstName.trim(),
       lastName: lastName.trim(),
+      phone: phone.trim() || undefined,
       primaryArchetype,
       secondaryArchetype: secondaryArchetype || undefined,
       loveLanguage: loveLanguage || undefined,
@@ -198,6 +200,17 @@ export default function NovoAlvoPage() {
                   className="w-full px-4 py-2.5 rounded-xl bg-[#0D0D0D] border border-[#262626] text-sm text-[#e5e5e5] placeholder:text-[#737373]/50 focus:outline-none focus:border-[#7c3aed]/50 transition-colors"
                 />
               </div>
+            </div>
+
+            <div className="mt-4">
+              <label className="text-xs text-[#737373] mb-1 block">Telefone (WhatsApp)</label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+55 11 99999-9999"
+                className="w-full px-4 py-2.5 rounded-xl bg-[#0D0D0D] border border-[#262626] text-sm text-[#e5e5e5] placeholder:text-[#737373]/50 focus:outline-none focus:border-[#7c3aed]/50 transition-colors"
+              />
             </div>
 
             <div className="mt-4">

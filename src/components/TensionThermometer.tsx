@@ -2,15 +2,19 @@
 
 import { useEffect, useRef } from "react";
 
-const data = [
-  { day: "Seg", anxiety: 35, desire: 65 },
-  { day: "Ter", anxiety: 55, desire: 45 },
-  { day: "Qua", anxiety: 40, desire: 78 },
-  { day: "Qui", anxiety: 70, desire: 55 },
-  { day: "Sex", anxiety: 30, desire: 85 },
-  { day: "Sab", anxiety: 60, desire: 50 },
-  { day: "Dom", anxiety: 45, desire: 72 },
+const defaultData = [
+  { day: "Seg", anxiety: 0, desire: 0 },
+  { day: "Ter", anxiety: 0, desire: 0 },
+  { day: "Qua", anxiety: 0, desire: 0 },
+  { day: "Qui", anxiety: 0, desire: 0 },
+  { day: "Sex", anxiety: 0, desire: 0 },
+  { day: "Sab", anxiety: 0, desire: 0 },
+  { day: "Dom", anxiety: 0, desire: 0 },
 ];
+
+interface TensionThermometerProps {
+  value?: number; // 0-100 overall tension level
+}
 
 function bezierPath(points: { x: number; y: number }[]): string {
   if (points.length < 2) return "";
@@ -25,8 +29,20 @@ function bezierPath(points: { x: number; y: number }[]): string {
   return path;
 }
 
-export default function TensionThermometer() {
+export default function TensionThermometer({ value }: TensionThermometerProps) {
   const canvasRef = useRef<SVGSVGElement>(null);
+
+  // Generate data from tension value: desire = value, anxiety = 100 - value (capped)
+  const tensionVal = value ?? 0;
+  const data = tensionVal > 0
+    ? defaultData.map((d, i) => {
+        // Create slight variation around the tension value for visual interest
+        const jitter = (i - 3) * 5;
+        const desire = Math.max(0, Math.min(100, tensionVal + jitter));
+        const anxiety = Math.max(0, Math.min(100, (100 - tensionVal) + jitter * 0.7));
+        return { ...d, desire, anxiety };
+      })
+    : defaultData;
 
   const width = 320;
   const height = 160;

@@ -262,7 +262,7 @@ function ContactCard({
               </div>
               <div className="text-center">
                 <div className="text-xs font-semibold text-[#059669]">{Math.round(contact.victimScore)}%</div>
-                <div className="text-[8px] text-[#737373]">Score</div>
+                <div className="text-[8px] text-[#737373]">Receptividade</div>
               </div>
               <div className="text-center">
                 <div className="text-xs font-semibold text-[#d97706]">{interactionCount}</div>

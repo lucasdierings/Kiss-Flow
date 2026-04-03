@@ -91,8 +91,15 @@ export function addContact(state: AppState, contact: Contact): AppState {
     contacts: [...state.contacts, contact],
     activeContactId: state.activeContactId || contact.id,
   };
-  saveState(newState);
-  return newState;
+  // Registrar transição de fase inicial
+  const withTransition = addPhaseTransition(newState, {
+    contactId: contact.id,
+    oldPhase: "none",
+    newPhase: contact.pipelineStage,
+    evidence: "Contato criado",
+  });
+  saveState(withTransition);
+  return withTransition;
 }
 
 export function updateContact(
@@ -151,7 +158,8 @@ export function addInteraction(
   };
 
   // Aplicar impacto nas métricas do contato
-  const result = applyInteractionImpact(contact, fullInteraction);
+  const contactInteractions = state.interactions.filter(i => i.contactId === contact.id);
+  const result = applyInteractionImpact(contact, fullInteraction, contactInteractions.length + 1);
 
   // Salvar snapshot das métricas após interação
   fullInteraction.mysteryAfter = result.contact.mysteryCoefficient;
@@ -171,6 +179,33 @@ export function addInteraction(
     state: newState,
     suggestedProgression: result.suggestedProgression,
   };
+}
+
+export function updateInteraction(
+  state: AppState,
+  interactionId: string,
+  updates: Partial<Omit<Interaction, "id" | "contactId">>
+): AppState {
+  const newState = {
+    ...state,
+    interactions: state.interactions.map((i) =>
+      i.id === interactionId ? { ...i, ...updates } : i
+    ),
+  };
+  saveState(newState);
+  return newState;
+}
+
+export function deleteInteraction(
+  state: AppState,
+  interactionId: string
+): AppState {
+  const newState = {
+    ...state,
+    interactions: state.interactions.filter((i) => i.id !== interactionId),
+  };
+  saveState(newState);
+  return newState;
 }
 
 // ===== Transições de Fase =====
@@ -241,6 +276,27 @@ export function moveToLost(
     lostAt: new Date().toISOString(),
   });
 
+  return newState;
+}
+
+export function markGoalAchieved(state: AppState, contactId: string, evidence: string): AppState {
+  const contact = state.contacts.find(c => c.id === contactId);
+  if (!contact) return state;
+
+  const transition: Omit<PhaseTransition, "id" | "timestamp"> = {
+    contactId,
+    oldPhase: contact.pipelineStage,
+    newPhase: "retention",
+    evidence,
+  };
+
+  let newState = addPhaseTransition(state, transition);
+  newState = updateContact(newState, contactId, {
+    status: "won",
+    goalAchievedAt: new Date().toISOString(),
+    goalEvidence: evidence,
+    pipelineStage: "retention",
+  });
   return newState;
 }
 

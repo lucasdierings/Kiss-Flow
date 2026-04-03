@@ -13,7 +13,7 @@ Plataforma SaaS freemium que ajuda usuarios com dificuldades em relacionamentos 
 - **Backend:** Supabase (Postgres + Auth + Storage + RLS)
 - **IA:** Google Gemini Flash/Pro via `@google/generative-ai` SDK
 - **Pagamentos:** Stripe (freemium)
-- **Deploy:** Vercel (free tier → Pro quando escalar)
+- **Deploy:** Cloudflare (Pages + Workers)
 - **Fonts:** Geist Sans + Geist Mono
 
 ## Estrutura
@@ -29,7 +29,10 @@ src/
       [id]/page.tsx       - Detalhe do alvo com analytics + AlertBanner + ActionBar
     perfil/page.tsx       - Edicao de perfil (nome, foto, genero, orientacao, arquetipo, scores)
     onboarding/page.tsx   - Fluxo 4-step (identidade, quiz, comunicacao, resultado)
-    chat/page.tsx         - Chat assistente IA com personas e upload
+    chat/page.tsx         - Chat assistente IA com 3 modos (conversa, sugerir mensagem, validar mensagem)
+    kanban/page.tsx       - Kanban board com drag-and-drop HTML5 (5 colunas + Lost)
+    taticas/page.tsx      - Biblioteca de 24 taticas com filtros (fase, risco, busca)
+    analytics/page.tsx    - Analytics dedicado (conversao, velocidade, gargalos, performance usuario)
     login/page.tsx        - Magic Link + Google OAuth
     signup/page.tsx       - Redirect para /login (Magic Link cria conta automaticamente)
     auth/callback/route.ts - Callback OAuth + Magic Link verification
@@ -37,35 +40,51 @@ src/
     api/
       ai/analyze-screenshot/route.ts - Gemini Vision: OCR + sentimento + tatica
       ai/analyze-profile/route.ts    - Gemini Vision: arquetipo + vulnerabilidades
-      ai/chat/route.ts               - Chat com Gemini (persona-aware)
-      ai/suggest-action/route.ts     - Sugestao de acao justificada com Greene
+      ai/chat/route.ts               - Chat com Gemini (persona-aware, context-aware)
+      ai/suggest-action/route.ts     - Sugestao de acao justificada
+      ai/update-context/route.ts     - Atualiza memoria de contexto por alvo via Gemini
+      ai/post-mortem/route.ts        - Analise post-mortem de alvos perdidos
   components/
     ActionBar.tsx         - Barra flutuante com 5 taticas, abre ActionModal
     ActionModal.tsx       - Modal com 5 secoes (O que e, Por que agora, Como executar, Risco, Referencia)
     AlertBanner.tsx       - Cards de alerta proativo com prioridade visual
+    AvatarUpload.tsx      - Upload de avatar reutilizavel (Supabase Storage)
+    ConfirmDeleteModal.tsx - Modal reutilizavel de confirmacao de exclusao
+    EditContactModal.tsx  - Modal de edicao completa de alvo (nome, telefone, arquetipo, vulnerabilidades)
+    EditInteractionModal.tsx - Modal de edicao de interacao (categoria, tipo, sentimento, notas)
     UserProfileCard.tsx   - Card perfil do USUARIO no dashboard (scores, foto, arquetipo)
     ActiveContacts.tsx    - Lista de alvos ativos com metricas mini e prioridade
     PipelineFunnel.tsx    - Funil visual de pipeline (contatos por fase)
+    QuickLogFAB.tsx       - Botao flutuante para registro rapido de interacao
     StrategicInsights.tsx - Insights dos 3 pilares (seducao, poder, natureza humana)
     BehaviorDiagnostic.tsx - Diagnostico comportamental (forcas/fraquezas/indicadores)
+    ConversionAnalytics.tsx - Widget de analytics embutido no dashboard
     EnchantmentTimeline.tsx - Grafico encantamento
     KPICards.tsx          - Metricas agregadas
     MysteryGauge.tsx      - Gauge misterio
     ScarcityIndex.tsx     - Indice escassez
-    Sidebar.tsx           - Navegacao lateral (carrega perfil real do Supabase, link /perfil)
+    Sidebar.tsx           - Navegacao lateral (Dashboard, Alvos, Kanban, Chat, Taticas, Analytics, Perfil)
     TensionThermometer.tsx - Termometro tensao
     VulnerabilityRadar.tsx - Radar 6 eixos
-    chat/                 - ChatInput, ChatMessage, ContactSelector
+    chat/
+      ChatInput.tsx       - Input de mensagem
+      ChatMessage.tsx     - Bolha de mensagem
+      ContactSelector.tsx - Seletor de alvo no chat
+      ChatModeSelector.tsx - Toggle entre 3 modos (conversa/sugerir/validar)
+      MessageSuggestionCard.tsx - Card de sugestao com botoes Copiar + Enviar WhatsApp (wa.me)
   lib/
     supabase.ts           - Cliente Supabase (browser + server + server-with-auth)
     gemini.ts             - Cliente Gemini (Flash, Pro, Vision)
-    prompts.ts            - System prompts adaptativos (persona + objetivo)
+    prompts.ts            - System prompts adaptativos (persona + objetivo + contexto por alvo)
     persona.ts            - Sistema de personas (Don Juan / Cleopatra / Neutro)
     archetype-quiz.ts     - Quiz 10 perguntas, 9 arquetipos, scoring
     alerts-engine.ts      - Motor alertas proativos (8 tipos, 24 taticas, Supabase)
+    analytics.ts          - Funcoes de analytics (conversao, velocidade, gargalos, distribuicao)
+    context-engine.ts     - Memoria de contexto por alvo (localStorage, injeta no prompt da IA)
+    tactics-data.ts       - 24 taticas estruturadas (nome, descricao, fase, risco, exemplo)
     user-scoring.ts       - Motor de scoring do USUARIO (5 scores + indicadores + diagnostico + 3 livros)
-    store.ts              - Estado local (localStorage) — legado, migrar para Supabase
-    types.ts              - Tipos TypeScript (Contact, Interaction, 18 vitimas, 5 categorias)
+    store.ts              - Estado local (localStorage) com CRUD completo (create, update, delete contacts/interactions)
+    types.ts              - Tipos TypeScript (Contact com phone, Interaction, 18 vitimas, 5 categorias)
     engine.ts             - Regras de negocio (dopamina, timing, metricas, pipeline)
   middleware.ts           - Auth middleware (protege rotas, redirect onboarding)
 ```
@@ -155,8 +174,8 @@ npm run lint                           # ESLint
 ```
 
 ## Divisao de Trabalho
-- **Claude Code (backend):** Supabase, API routes, Gemini integration, engine, auth, Stripe
-- **VS Code + Gemini Code Assist (frontend):** Design visual, UI polish, animacoes, responsividade
+- **Claude Code Terminal:** Supabase, API routes, Gemini integration, engine, auth, Stripe, features complexas
+- **Claude Code VS Code:** Design visual, UI polish, animacoes, responsividade, ajustes pontuais
 - **Ambos:** Componentes React, logica de estado
 
 ## Pendencias por Fase
@@ -176,6 +195,17 @@ npm run lint                           # ESLint
   - [x] Analytics: analytics.ts + ConversionAnalytics (taxa conversao, velocidade, gargalos)
   - [x] Tom IA estrategista: persona.ts + prompts.ts + alerts-engine.ts (de mentor para estrategista operacional)
   - [x] Alertas estagnacao (stagnation_warning) + post-mortem IA (API route + prompt Gemini)
+- [x] Fase 6.5: Funcionalidades extras — CONCLUIDO
+  - [x] Rename "Victim Score" → "Receptividade" em toda a UI
+  - [x] CRUD completo: EditContactModal, EditInteractionModal, ConfirmDeleteModal, exclusao de alvo
+  - [x] Upload de avatar para alvos (AvatarUpload.tsx reutilizavel, Supabase Storage)
+  - [x] Campo telefone (phone) nos contatos + link wa.me no detalhe
+  - [x] Memoria de contexto por alvo (context-engine.ts + API update-context + auto-update a cada 5 msgs)
+  - [x] Chat com 3 modos: conversa, sugerir mensagem (3 opcoes + Copiar + WhatsApp), validar rascunho
+  - [x] Kanban board (/kanban) com drag-and-drop HTML5 nativo + PhaseTransitionModal
+  - [x] Biblioteca de Taticas (/taticas) com 24 taticas, filtros por fase/risco/busca
+  - [x] Quick Log FAB no dashboard (registro rapido de interacao)
+  - [x] Analytics page (/analytics) com conversao, velocidade, gargalos, perdas, performance usuario
 - [ ] Fase 7: LGPD + Termos de Uso + Termos de Privacidade
 - [ ] Fase 8: Stripe + paywall freemium
 - [ ] Fase 9: Deploy Cloudflare
@@ -215,7 +245,7 @@ npm run lint                           # ESLint
 ## Fase 5.5: Dashboard Funcional + Perfil + Scoring (detalhes)
 - **UserProfileCard:** Substituiu CurrentVictim no dashboard. Mostra perfil do USUARIO (nao do alvo), foto, arquetipo, power score circular, 5 barras de score, indice de carencia
 - **PipelineFunnel:** Funil visual mostrando quantos alvos em cada fase do pipeline com barras proporcionais e avatares clicaveis
-- **ActiveContacts:** Lista de alvos ordenados por prioridade (victim score), com mini metricas (VS, M, T), fase, e tempo desde ultima interacao
+- **ActiveContacts:** Lista de alvos ordenados por prioridade (receptividade), com mini metricas (R, M, T), fase, e tempo desde ultima interacao
 - **StrategicInsights:** 3 cards de insights (seducao, poder, natureza humana) + dica proximo nivel — todos sem citar fontes
 - **BehaviorDiagnostic:** 4 indicadores (impulsividade, equilibrio presenca, diversidade tatica, carencia) + forcas/fraquezas
 - **user-scoring.ts:** Motor de scoring do usuario com 5 scores principais (mysteryMaintenance, emotionalControl, strategicPatience, socialProofAwareness, adaptability) + 4 indicadores comportamentais + diagnostico textual + insights de 3 pilares (48 leis do poder, natureza humana, seducao)
@@ -232,11 +262,36 @@ npm run lint                           # ESLint
 - **PhaseTransitionModal:** Modal obrigatorio em toda transicao de fase. Evidencia texto obrigatoria (min 10 chars). Se "Perdidos": radio de motivo (3 opcoes). Dispara em auto-progressao E mudanca manual
 - **Closing Goal:** Seletor no form /alvos/novo (6 opcoes predefinidas + custom). Badge editavel no detalhe /alvos/[id]
 - **Perdidos:** Secao vermelha no PipelineFunnel com sub-grupos por motivo. Filtro "Perdidos" na lista /alvos. Botao "Mover para Perdidos" no detalhe. Reativacao → Nurturing
-- **PENDENTE p/ proxima sessao:** analytics.ts (conversao/velocidade/gargalos), ConversionAnalytics component, tom IA estrategista (persona + prompts), alertas estagnacao, post-mortem IA
 - **Plano completo:** /Users/lucasdierings/.claude/plans/rustling-watching-mountain.md
+
+## Fase 6.5: Funcionalidades Extras (detalhes)
+- **Rename Victim Score → Receptividade:** Labels atualizados em KPICards, ActiveContacts, alvos/[id], alvos/page, engine.ts. Campo interno `victimScore` mantido no banco, so mudou a UI
+- **CRUD completo:**
+  - `EditContactModal.tsx` — edita nome, sobrenome, telefone, arquetipo (button grid), secundario, love language, vulnerabilidades (6 sliders), notas
+  - `EditInteractionModal.tsx` — edita categoria (5 botoes), tipo, data, iniciador, duracao, local, sentimento (slider), notas
+  - `ConfirmDeleteModal.tsx` — reutilizavel, com icone warning, titulo/mensagem/label customizaveis
+  - `store.ts` — funcoes `updateInteraction(state, id, updates)` e `deleteInteraction(state, id)` adicionadas
+  - `/alvos/[id]` — botao Editar abre modal, botao Excluir com dupla confirmacao, edit/delete por interacao
+- **AvatarUpload.tsx:** Componente reutilizavel (props: currentUrl, storagePath, size, onUploaded). Camera overlay no hover, spinner, Supabase Storage upload. Usado em /alvos/[id] e /alvos/novo
+- **Telefone + wa.me:** Campo `phone?: string` em Contact (types.ts). Input no form /alvos/novo. Exibicao no detalhe com link wa.me direto. MessageSuggestionCard gera link `wa.me/{phone}?text={encoded}`
+- **Memoria de contexto (context-engine.ts):**
+  - Interface `ContactContext`: contactId, summary, keyFacts[], communicationStyle, lastTopics[], emotionalState, updatedAt
+  - Funcoes: loadContexts, getContactContext, saveContactContext, deleteContactContext, buildContextPromptSection
+  - Armazenamento: localStorage (chave `kissflow_contexts`)
+  - API `/api/ai/update-context`: Gemini gera/atualiza resumo estruturado a partir de interacoes + chat
+  - Auto-update: a cada 5 mensagens no chat, atualiza contexto em background
+  - Injecao: contexto injetado no system prompt do chat via buildContextPromptSection
+- **Chat 3 modos (ChatModeSelector.tsx):**
+  - `conversa` — chat livre com IA (modo original)
+  - `sugerir` — usuario descreve situacao, IA gera 3 mensagens naturais (JSON parsed). Exibe via MessageSuggestionCard com Copiar (clipboard) + Enviar WhatsApp (wa.me link)
+  - `validar` — usuario cola rascunho, IA analisa tom/risco/ajustes e sugere versao melhorada
+- **Kanban (/kanban):** 5 colunas pipeline + coluna Lost. Cards com avatar, nome, arquetipo, Mystery, Receptividade, dias na fase. HTML5 drag-and-drop nativo (onDragStart/onDragOver/onDrop). Ao soltar, abre PhaseTransitionModal
+- **Taticas (/taticas):** 24 taticas em `tactics-data.ts`. Filtros: fase (5 botoes), risco (baixo/medio/alto), busca texto. TacticCard expandivel com "quando usar" e "exemplo pratico". Sem mencionar fontes
+- **Quick Log FAB (QuickLogFAB.tsx):** Botao roxo flutuante (raio) no canto inferior direito do dashboard. Abre modal bottom-sheet com: seletor de alvo, categoria (5 botoes), tipo, quem iniciou, slider sentimento, salvar
+- **Analytics (/analytics):** KPIs (taxa geral, total alvos, perdidos, interacoes). Conversao por fase (barras coloridas). Velocidade por fase. Gargalos (loss rate + tempo). Analise de perdas por motivo. Performance por arquetipo (avg receptividade). Distribuicao atual. Score do usuario (5 dimensoes)
 
 ---
 **Ultima atualizacao:** 03 de abril de 2026
-**Status:** Fases 1-6 concluidas. Pipeline v2.0 completo: status lost, phase history, closing goals, modal de transicao, funil com perdidos, analytics de conversao, tom IA estrategista, alertas estagnacao, post-mortem IA. Proximo: LGPD, Stripe, Deploy.
+**Status:** Fases 1-6.5 concluidas. Todas as funcionalidades core implementadas: CRUD completo, chat IA com 3 modos, memoria de contexto, kanban, taticas, analytics, avatar upload, wa.me integration. Proximo: LGPD, Stripe, Deploy Cloudflare.
 
 @AGENTS.md
