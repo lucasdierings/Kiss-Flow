@@ -1,9 +1,11 @@
 # Kiss Flow - Gerenciador de Conquistas
 
 ## Visao Geral
-CRM de Conquistas baseado nas 24 taticas de seducao de Robert Greene. O sistema gerencia relacionamentos interpessoais atraves de um pipeline (Lead Generation -> Qualification -> Nurturing -> Closing -> Retention) com metricas psicologicas (Mystery, Tension, Vulnerability, Enchantment, Scarcity).
+CRM de Conquistas baseado em estrategias classicas de seducao e psicologia comportamental. O sistema gerencia relacionamentos interpessoais atraves de um pipeline (Lead Generation -> Qualification -> Nurturing -> Closing -> Retention) com metricas psicologicas (Mystery, Tension, Vulnerability, Enchantment, Scarcity).
 
 Plataforma SaaS freemium que ajuda usuarios com dificuldades em relacionamentos a usar estrategias de seducao de forma inteligente e justificada.
+
+**IMPORTANTE:** NAO mencionar Robert Greene, nomes de livros, ou fontes das estrategias na interface do usuario. As estrategias sao usadas internamente mas a origem e segredo nosso.
 
 ## Stack
 - **Framework:** Next.js 16 (App Router) + React 19 + TypeScript
@@ -25,6 +27,7 @@ src/
       page.tsx            - Lista de alvos com filtros
       novo/page.tsx       - Cadastro de novo alvo
       [id]/page.tsx       - Detalhe do alvo com analytics + AlertBanner + ActionBar
+    perfil/page.tsx       - Edicao de perfil (nome, foto, genero, orientacao, arquetipo, scores)
     onboarding/page.tsx   - Fluxo 4-step (identidade, quiz, comunicacao, resultado)
     chat/page.tsx         - Chat assistente IA com personas e upload
     login/page.tsx        - Magic Link + Google OAuth
@@ -40,12 +43,16 @@ src/
     ActionBar.tsx         - Barra flutuante com 5 taticas, abre ActionModal
     ActionModal.tsx       - Modal com 5 secoes (O que e, Por que agora, Como executar, Risco, Referencia)
     AlertBanner.tsx       - Cards de alerta proativo com prioridade visual
-    CurrentVictim.tsx     - Card perfil do contato
+    UserProfileCard.tsx   - Card perfil do USUARIO no dashboard (scores, foto, arquetipo)
+    ActiveContacts.tsx    - Lista de alvos ativos com metricas mini e prioridade
+    PipelineFunnel.tsx    - Funil visual de pipeline (contatos por fase)
+    StrategicInsights.tsx - Insights dos 3 pilares (seducao, poder, natureza humana)
+    BehaviorDiagnostic.tsx - Diagnostico comportamental (forcas/fraquezas/indicadores)
     EnchantmentTimeline.tsx - Grafico encantamento
     KPICards.tsx          - Metricas agregadas
     MysteryGauge.tsx      - Gauge misterio
     ScarcityIndex.tsx     - Indice escassez
-    Sidebar.tsx           - Navegacao lateral
+    Sidebar.tsx           - Navegacao lateral (carrega perfil real do Supabase, link /perfil)
     TensionThermometer.tsx - Termometro tensao
     VulnerabilityRadar.tsx - Radar 6 eixos
     chat/                 - ChatInput, ChatMessage, ContactSelector
@@ -55,7 +62,8 @@ src/
     prompts.ts            - System prompts adaptativos (persona + objetivo)
     persona.ts            - Sistema de personas (Don Juan / Cleopatra / Neutro)
     archetype-quiz.ts     - Quiz 10 perguntas, 9 arquetipos, scoring
-    alerts-engine.ts      - Motor alertas proativos (8 tipos, 24 taticas Greene, Supabase)
+    alerts-engine.ts      - Motor alertas proativos (8 tipos, 24 taticas, Supabase)
+    user-scoring.ts       - Motor de scoring do USUARIO (5 scores + indicadores + diagnostico + 3 livros)
     store.ts              - Estado local (localStorage) — legado, migrar para Supabase
     types.ts              - Tipos TypeScript (Contact, Interaction, 18 vitimas, 5 categorias)
     engine.ts             - Regras de negocio (dopamina, timing, metricas, pipeline)
@@ -90,13 +98,15 @@ src/
 1. **Onboarding obrigatorio:** Usuario deve completar quiz de arquetipo antes de usar o app
 2. **Alvo requer:** nome, genero, cidade, objetivo — arquetipo pode ser sugerido por IA
 3. **Analise de midia:** Screenshots de conversas/perfis sao analisados por Gemini Flash (OCR + sentimento + sugestoes)
-4. **Acoes justificadas:** Toda sugestao de tatica deve explicar o PORQUE (contexto + referencia a Greene)
+4. **Acoes justificadas:** Toda sugestao de tatica deve explicar o PORQUE (contexto + referencia estrategica)
 5. **Alertas proativos:** Sistema detecta friendzone risk, climax emocional, recuo necessario
 6. **Alerta de proximidade:** Dois alvos na mesma cidade = warning visual
 7. **Chat IA coleta intel:** O chat faz perguntas ativamente para completar o perfil do alvo
 8. **LGPD:** Dados sensiveis requerem consentimento, termos de uso e privacidade OBRIGATORIOS antes do deploy publico
 9. **Linguagem harmonica:** NAO parecer ferramenta so para sexo. Adaptar linguagem ao objetivo (amor, casamento, companheirismo, amizade). Ser empatetico com insegurancas dos usuarios
 10. **Personas adaptativas:** Don Juan (homens), Cleopatra (mulheres), Neutro (NB/outros). Tom e sugestoes mudam conforme genero do usuario E objetivo com cada alvo
+11. **NAO citar fontes:** NUNCA mencionar Robert Greene, nomes de livros, ou origens das estrategias na interface. Usar termos genericos como "estrategias comprovadas", "psicologia comportamental", "tecnicas classicas de seducao"
+12. **Acentos:** Todo texto em portugues DEVE ter acentos corretos (você, ação, estratégia, etc.)
 
 ## Monetizacao (Freemium)
 | Feature | Free | Premium |
@@ -114,9 +124,11 @@ src/
 - Custo: ~$0.001 por analise de screenshot
 - Futuro: avaliar Meta Graph API quando app estiver maduro
 
-## Referencias (livros base)
+## Referencias (livros base — INTERNO, nao expor ao usuario)
 Pasta `/Users/lucasdierings/Kiss Flow/Referencias/`:
-- A Arte da Seducao - Robert Greene (BASE PRINCIPAL)
+- A Arte da Seducao (BASE PRINCIPAL — 24 taticas, 9 sedutores, 18 vitimas)
+- 48 Leis do Poder (18 leis mapeadas em user-scoring.ts para insights)
+- Leis da Natureza Humana (18 leis mapeadas em user-scoring.ts para insights)
 - Nacao Dopamina - Dra Anna Lembke
 - As 5 Linguagens do Amor para Solteiros - Chapman
 - Como fazer amigos e influenciar pessoas - Dale Carnegie
@@ -152,10 +164,11 @@ npm run lint                           # ESLint
 - [x] Fase 2: Onboarding usuario (quiz arquetipo 10 perguntas, identidade, comunicacao, resultado) — CONCLUIDO
 - [x] Fase 3: Motor Gemini (API routes: analyze-screenshot, analyze-profile, chat, suggest-action) — CONCLUIDO
 - [x] Fase 4: Chat assistente IA (interface + Gemini + upload screenshots + historico Supabase) — CONCLUIDO
-- [x] Fase 5: Acoes justificadas (ActionModal 5 secoes + IA) + alertas proativos (AlertBanner + alerts-engine 8 tipos + 24 taticas Greene) — CONCLUIDO
+- [x] Fase 5: Acoes justificadas (ActionModal 5 secoes + IA) + alertas proativos (AlertBanner + alerts-engine 8 tipos + 24 taticas) — CONCLUIDO
+- [x] Fase 5.5: Dashboard funcional + perfil usuario + scoring + funil + acentos + remover Greene — CONCLUIDO
 - [ ] Fase 6: LGPD + Termos de Uso + Termos de Privacidade ← PROXIMO
 - [ ] Fase 7: Stripe + paywall freemium
-- [ ] Fase 8: Deploy Vercel
+- [ ] Fase 8: Deploy Cloudflare
 
 ## Supabase (projeto Kiss Flow)
 - **Project ID:** ozsnnqebzlvnohqvwklu
@@ -177,7 +190,7 @@ npm run lint                           # ESLint
 - **Onboarding redirect:** Se user nao completou onboarding, redireciona para /onboarding
 
 ## Fase 5: Acoes Justificadas + Alertas (detalhes)
-- **ActionModal:** 5 secoes (O que e, Por que agora, Como executar, Risco, Referencia Greene)
+- **ActionModal:** 5 secoes (O que e, Por que agora, Como executar, Risco, Referencia)
   - Fetch automatico de /api/ai/suggest-action ao abrir
   - Botoes: "Confirmar Acao" (registra interacao) e "Pedir Conselho a IA" (abre chat)
 - **AlertBanner:** Cards com prioridade visual (critical=red, high=amber, medium=purple, low=neutral)
@@ -186,12 +199,24 @@ npm run lint                           # ESLint
 - **alerts-engine.ts:** 8 tipos de alerta proativo:
   - friendzone_risk, climax_ready, silence_needed, excessive_frequency
   - mystery_critical, target_pursuing, extended_silence, high_enchantment
-  - Cada alerta referencia tatica de Greene (numero + nome)
-  - GREENE_TACTICS: mapa completo das 24 taticas em portugues
+  - 24 taticas mapeadas (sem mencionar fonte ao usuario)
   - Persistencia Supabase: persistAlerts, dismissAlert, getActiveAlerts
+
+## Fase 5.5: Dashboard Funcional + Perfil + Scoring (detalhes)
+- **UserProfileCard:** Substituiu CurrentVictim no dashboard. Mostra perfil do USUARIO (nao do alvo), foto, arquetipo, power score circular, 5 barras de score, indice de carencia
+- **PipelineFunnel:** Funil visual mostrando quantos alvos em cada fase do pipeline com barras proporcionais e avatares clicaveis
+- **ActiveContacts:** Lista de alvos ordenados por prioridade (victim score), com mini metricas (VS, M, T), fase, e tempo desde ultima interacao
+- **StrategicInsights:** 3 cards de insights (seducao, poder, natureza humana) + dica proximo nivel — todos sem citar fontes
+- **BehaviorDiagnostic:** 4 indicadores (impulsividade, equilibrio presenca, diversidade tatica, carencia) + forcas/fraquezas
+- **user-scoring.ts:** Motor de scoring do usuario com 5 scores principais (mysteryMaintenance, emotionalControl, strategicPatience, socialProofAwareness, adaptability) + 4 indicadores comportamentais + diagnostico textual + insights de 3 pilares (48 leis do poder, natureza humana, seducao)
+- **/perfil:** Pagina completa de edicao de perfil (foto via Supabase Storage, nome, genero, orientacao, faixa etaria, arquetipo), resumo comportamental, detalhamento de scores
+- **Sidebar:** Carrega dados reais do Supabase (nome, foto, arquetipo), link clicavel para /perfil
+- **Supabase migration:** avatar_url e age_range adicionados a user_profiles
+- **Acentos:** 150+ palavras corrigidas em 10 arquivos
+- **Greene removido:** Todas as mencoes a Robert Greene removidas da interface
 
 ---
 **Ultima atualizacao:** 03 de abril de 2026
-**Status:** Backend Supabase ativo. Auth funcional (Magic Link + Google OAuth). Onboarding com quiz 10 perguntas. 4 API routes Gemini. Chat IA com personas, upload screenshots, historico. Acoes justificadas com ActionModal + AlertBanner proativo + alerts-engine (24 taticas Greene). Fases 1-5 concluidas.
+**Status:** Backend Supabase ativo. Auth funcional (Magic Link + Google OAuth). Onboarding com quiz 10 perguntas. 4 API routes Gemini. Chat IA com personas, upload screenshots, historico. Acoes justificadas com ActionModal + AlertBanner proativo + alerts-engine. Dashboard funcional com perfil do usuario, funil de pipeline, alvos ativos, scoring comportamental, insights estrategicos. Pagina /perfil com edicao + foto. Fases 1-5.5 concluidas.
 
 @AGENTS.md

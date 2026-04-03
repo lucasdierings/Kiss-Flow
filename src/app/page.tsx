@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Sidebar from "@/components/Sidebar";
-import CurrentVictim from "@/components/CurrentVictim";
+import UserProfileCard from "@/components/UserProfileCard";
 import MysteryGauge from "@/components/MysteryGauge";
 import TensionThermometer from "@/components/TensionThermometer";
 import VulnerabilityRadar from "@/components/VulnerabilityRadar";
@@ -11,16 +11,28 @@ import ScarcityIndex from "@/components/ScarcityIndex";
 import KPICards from "@/components/KPICards";
 import ActionBar from "@/components/ActionBar";
 import AlertBanner, { type AlertItem } from "@/components/AlertBanner";
+import StrategicInsights from "@/components/StrategicInsights";
+import BehaviorDiagnostic from "@/components/BehaviorDiagnostic";
+import PipelineFunnel from "@/components/PipelineFunnel";
+import ActiveContacts from "@/components/ActiveContacts";
 import { loadState } from "@/lib/store";
 import { generateProactiveAlerts } from "@/lib/alerts-engine";
+import { calculateUserScore, getDefaultUserScore, type UserScore } from "@/lib/user-scoring";
 
 export default function Dashboard() {
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [activeContact, setActiveContact] = useState<ReturnType<typeof loadState>["contacts"][number] | null>(null);
+  const [userScore, setUserScore] = useState<UserScore>(getDefaultUserScore());
 
   useEffect(() => {
     const state = loadState();
     if (!state) return;
+
+    // Calculate user score from all interactions
+    if (state.interactions.length > 0) {
+      const score = calculateUserScore(state.contacts, state.interactions, state.seducerArchetype);
+      setUserScore(score);
+    }
 
     // Use the active contact or first contact
     const contact = state.contacts.find((c) => c.id === state.activeContactId) || state.contacts[0];
@@ -69,7 +81,7 @@ export default function Dashboard() {
                 </span>
               </h1>
               <p className="text-sm text-[#737373] mt-1">
-                Inteligencia estrategica para seus relacionamentos
+                Inteligência estratégica para seus relacionamentos
               </p>
             </div>
 
@@ -102,102 +114,28 @@ export default function Dashboard() {
 
         {/* ===== BENTO GRID ===== */}
         <div className="grid grid-cols-4 gap-4 auto-rows-auto">
-          {/* Row 1: Victim Profile (2x2) + Mystery Gauge + Scarcity Index */}
-          <CurrentVictim />
-          <MysteryGauge />
-          <ScarcityIndex />
+          {/* Row 1: User Profile (2x2) + Pipeline Funnel (2 cols) */}
+          <UserProfileCard />
+          <PipelineFunnel />
 
-          {/* Row 2: Tension Thermometer (2 cols) + Vulnerability Radar */}
-          <TensionThermometer />
-          <VulnerabilityRadar />
+          {/* Row 2: Active Contacts (2 cols) + Strategic Insights (2 cols) */}
+          <ActiveContacts />
+          <StrategicInsights score={userScore} />
 
           {/* Row 3: KPI Cards (4 cols) */}
           <KPICards />
 
-          {/* Row 4: Enchantment Timeline (full width) */}
+          {/* Row 4: Behavior Diagnostic (2 cols) + Mystery Gauge + Scarcity Index */}
+          <BehaviorDiagnostic score={userScore} />
+          <MysteryGauge />
+          <ScarcityIndex />
+
+          {/* Row 5: Tension Thermometer (2 cols) + Vulnerability Radar */}
+          <TensionThermometer />
+          <VulnerabilityRadar />
+
+          {/* Row 6: Enchantment Timeline (full width) */}
           <EnchantmentTimeline />
-
-          {/* Row 5: Recent activity + Dopamine Engine */}
-          <div className="bento-card col-span-2">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-[#059669]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span className="text-xs font-medium tracking-widest uppercase text-[#737373]">
-                  Atividade Recente
-                </span>
-              </div>
-            </div>
-            <div className="space-y-3">
-              {[
-                { time: "2h atras", event: "Isabella visualizou seu story", color: "#059669" },
-                { time: "4h atras", event: "Recuo estrategico finalizado (48h)", color: "#8b5cf6" },
-                { time: "6h atras", event: "3 mensagens recebidas sem resposta", color: "#d97706" },
-                { time: "1d atras", event: "Livro pessoal entregue — sentimento +0.6", color: "#e11d48" },
-                { time: "2d atras", event: "Arquetipo reclassificado: Sonhador → Reformador", color: "#06b6d4" },
-              ].map((item, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-3 p-2.5 rounded-lg bg-[#0D0D0D]/50 border border-[#262626]/50 hover:border-[#262626] transition-colors"
-                >
-                  <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: item.color }} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-[#a3a3a3] truncate">{item.event}</p>
-                  </div>
-                  <span className="text-[10px] text-[#737373] flex-shrink-0">{item.time}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="bento-card col-span-2">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-[#e11d48]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.348 14.651a3.75 3.75 0 010-5.303m5.304 0a3.75 3.75 0 010 5.303m-7.425 2.122a6.75 6.75 0 010-9.546m9.546 0a6.75 6.75 0 010 9.546M5.106 18.894c-3.808-3.808-3.808-9.98 0-13.789m13.788 0c3.808 3.808 3.808 9.981 0 13.79M12 12h.008v.007H12V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                </svg>
-                <span className="text-xs font-medium tracking-widest uppercase text-[#737373]">
-                  Motor de Dopamina
-                </span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-1.5 h-1.5 rounded-full bg-[#059669] animate-pulse" />
-                <span className="text-[10px] text-[#059669]">Ativo</span>
-              </div>
-            </div>
-            <div className="space-y-3">
-              {[
-                { rule: "Reforco intermitente ativado", status: "ON", desc: "Delay aleatorio 2-12h entre respostas", color: "#8b5cf6" },
-                { rule: "Jejum de dopamina", status: "Standby", desc: "Proximo ciclo em 18h se interacao exceder limite", color: "#d97706" },
-                { rule: "Coquette Mode", status: "OFF", desc: "Bloqueio total de 48-72h — ativar manualmente", color: "#e11d48" },
-                { rule: "Alerta de Friendzone", status: "Safe", desc: "Tensao oscilando — sem plato detectado", color: "#059669" },
-                { rule: "Climax emocional", status: "92%", desc: "Proximidade ao ponto de inversao de perseguicao", color: "#06b6d4" },
-              ].map((item, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-3 p-2.5 rounded-lg bg-[#0D0D0D]/50 border border-[#262626]/50"
-                >
-                  <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: item.color }} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs text-[#a3a3a3]">{item.rule}</p>
-                      <span
-                        className="text-[9px] px-1.5 py-0.5 rounded font-mono"
-                        style={{
-                          background: `${item.color}10`,
-                          color: item.color,
-                        }}
-                      >
-                        {item.status}
-                      </span>
-                    </div>
-                    <p className="text-[10px] text-[#737373] mt-0.5">{item.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       </main>
 

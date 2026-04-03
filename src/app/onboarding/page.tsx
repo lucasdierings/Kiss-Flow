@@ -11,7 +11,7 @@ type Step = "identity" | "quiz" | "communication" | "result";
 const GENDER_OPTIONS = [
   { id: "male", label: "Homem" },
   { id: "female", label: "Mulher" },
-  { id: "non_binary", label: "Nao-binario" },
+  { id: "non_binary", label: "Não-binário" },
   { id: "other", label: "Outro" },
 ];
 
@@ -144,8 +144,8 @@ export default function OnboardingPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z" />
                   </svg>
                 </div>
-                <h1 className="text-2xl font-bold tracking-tighter">Quem e voce?</h1>
-                <p className="text-sm text-[#737373] mt-1">Precisamos conhecer voce para personalizar suas estrategias</p>
+                <h1 className="text-2xl font-bold tracking-tighter">Quem é você?</h1>
+                <p className="text-sm text-[#737373] mt-1">Precisamos conhecer você para personalizar suas estratégias</p>
               </div>
 
               <div className="bento-card space-y-5">
@@ -161,7 +161,7 @@ export default function OnboardingPage() {
 
                 {/* Gender */}
                 <div>
-                  <label className="text-xs text-[#737373] uppercase tracking-wider block mb-2">Genero</label>
+                  <label className="text-xs text-[#737373] uppercase tracking-wider block mb-2">Gênero</label>
                   <div className="grid grid-cols-2 gap-2">
                     {GENDER_OPTIONS.map((g) => (
                       <button key={g.id} onClick={() => setGender(g.id)}
@@ -177,7 +177,7 @@ export default function OnboardingPage() {
 
                 {/* Orientation */}
                 <div>
-                  <label className="text-xs text-[#737373] uppercase tracking-wider block mb-2">Orientacao sexual</label>
+                  <label className="text-xs text-[#737373] uppercase tracking-wider block mb-2">Orientação sexual</label>
                   <div className="grid grid-cols-2 gap-2">
                     {ORIENTATION_OPTIONS.map((o) => (
                       <button key={o.id} onClick={() => setOrientation(o.id)}
@@ -193,7 +193,7 @@ export default function OnboardingPage() {
 
                 {/* Age range */}
                 <div>
-                  <label className="text-xs text-[#737373] uppercase tracking-wider block mb-2">Faixa etaria</label>
+                  <label className="text-xs text-[#737373] uppercase tracking-wider block mb-2">Faixa etária</label>
                   <div className="grid grid-cols-4 gap-2">
                     {AGE_RANGES.map((a) => (
                       <button key={a.id} onClick={() => setAgeRange(a.id)}
@@ -268,8 +268,8 @@ export default function OnboardingPage() {
           {step === "communication" && (
             <div className="animate-float-up">
               <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold tracking-tighter">Quase la!</h1>
-                <p className="text-sm text-[#737373] mt-1">Mais algumas perguntas para calibrar o motor de sugestoes</p>
+                <h1 className="text-2xl font-bold tracking-tighter">Quase lá!</h1>
+                <p className="text-sm text-[#737373] mt-1">Mais algumas perguntas para calibrar o motor de sugestões</p>
               </div>
 
               <div className="bento-card space-y-5">
@@ -282,8 +282,8 @@ export default function OnboardingPage() {
                       "Iniciar conversas",
                       "Manter o interesse do outro",
                       "Saber a hora certa de agir",
-                      "Nao demonstrar interesse demais",
-                      "Lidar com rejeicao",
+                      "Não demonstrar interesse demais",
+                      "Lidar com rejeição",
                     ].map((opt) => (
                       <button key={opt} onClick={() => setCommAnswers({ ...commAnswers, difficulty: opt })}
                         className={`w-full text-left px-4 py-2.5 rounded-xl text-sm transition-all ${
@@ -298,10 +298,10 @@ export default function OnboardingPage() {
 
                 <div>
                   <label className="text-xs text-[#737373] uppercase tracking-wider block mb-2">
-                    Voce tende a demonstrar interesse rapido demais?
+                    Você tende a demonstrar interesse rápido demais?
                   </label>
                   <div className="grid grid-cols-3 gap-2">
-                    {["Sim, sempre", "As vezes", "Nao, sou cauteloso"].map((opt) => (
+                    {["Sim, sempre", "Às vezes", "Não, sou cauteloso"].map((opt) => (
                       <button key={opt} onClick={() => setCommAnswers({ ...commAnswers, shows_interest_fast: opt })}
                         className={`px-3 py-2.5 rounded-xl text-sm transition-all ${
                           commAnswers.shows_interest_fast === opt
@@ -315,7 +315,7 @@ export default function OnboardingPage() {
 
                 <div>
                   <label className="text-xs text-[#737373] uppercase tracking-wider block mb-2">
-                    Quando nao recebe resposta, o que faz?
+                    Quando não recebe resposta, o que faz?
                   </label>
                   <div className="space-y-2">
                     {[
@@ -354,7 +354,7 @@ export default function OnboardingPage() {
             return (
               <div className="animate-float-up">
                 <div className="text-center mb-6">
-                  <span className="text-[10px] text-[#737373] uppercase tracking-widest">Seu arquetipo sedutor</span>
+                  <span className="text-[10px] text-[#737373] uppercase tracking-widest">Seu arquétipo sedutor</span>
                 </div>
 
                 <div className="bento-card text-center mb-4">
@@ -377,7 +377,7 @@ export default function OnboardingPage() {
                   {/* Strengths & Weaknesses */}
                   <div className="grid grid-cols-2 gap-3 mb-6">
                     <div className="p-3 rounded-xl bg-[#059669]/5 border border-[#059669]/10">
-                      <span className="text-[10px] text-[#059669] uppercase tracking-wider block mb-2">Forcas</span>
+                      <span className="text-[10px] text-[#059669] uppercase tracking-wider block mb-2">Forças</span>
                       {archData.strengths.map((s) => (
                         <p key={s} className="text-xs text-[#a3a3a3] mb-1">+ {s}</p>
                       ))}
@@ -392,7 +392,7 @@ export default function OnboardingPage() {
 
                   {/* Ideal victims */}
                   <div className="p-3 rounded-xl bg-[#7c3aed]/5 border border-[#7c3aed]/10 mb-4">
-                    <span className="text-[10px] text-[#8b5cf6] uppercase tracking-wider block mb-2">Alvos ideais para voce</span>
+                    <span className="text-[10px] text-[#8b5cf6] uppercase tracking-wider block mb-2">Alvos ideais para você</span>
                     <div className="flex flex-wrap gap-2 justify-center">
                       {archData.ideal_victims.map((v) => (
                         <span key={v} className="text-xs px-2.5 py-1 rounded-full bg-[#7c3aed]/10 text-[#8b5cf6] border border-[#7c3aed]/20">
@@ -405,7 +405,7 @@ export default function OnboardingPage() {
                   {/* Secondary archetype */}
                   {secondaryData && (
                     <p className="text-[11px] text-[#737373]">
-                      Arquetipo secundario: <span style={{ color: secondaryData.color }}>{secondaryData.name}</span>
+                      Arquétipo secundário: <span style={{ color: secondaryData.color }}>{secondaryData.name}</span>
                     </p>
                   )}
                 </div>
@@ -415,7 +415,7 @@ export default function OnboardingPage() {
                   disabled={saving}
                   className="w-full py-3 rounded-xl bg-gradient-to-r from-[#7c3aed] to-[#e11d48] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-all"
                 >
-                  {saving ? "Salvando..." : "Comecar a conquistar →"}
+                  {saving ? "Salvando..." : "Começar a conquistar →"}
                 </button>
               </div>
             );

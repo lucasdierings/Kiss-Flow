@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { createSupabaseBrowser } from "@/lib/supabase";
+import { SEDUCER_ARCHETYPES } from "@/lib/types";
 
 const navItems = [
   {
@@ -54,7 +56,34 @@ const navItems = [
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(true);
+  const [userName, setUserName] = useState("Usuario");
+  const [userArchetype, setUserArchetype] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const pathname = usePathname();
+
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const supabase = createSupabaseBrowser();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data } = await supabase
+          .from("user_profiles")
+          .select("display_name, seducer_archetype, avatar_url")
+          .eq("id", user.id)
+          .single();
+        if (data) {
+          setUserName(data.display_name || "Usuario");
+          setUserArchetype(data.seducer_archetype || "");
+          setAvatarUrl(data.avatar_url || null);
+        }
+      } catch { /* silent */ }
+    }
+    loadProfile();
+  }, []);
+
+  const archetype = SEDUCER_ARCHETYPES.find((a) => a.id === userArchetype);
+  const initials = userName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -105,19 +134,27 @@ export default function Sidebar() {
       </nav>
 
       {/* Bottom - User */}
-      <div className="p-3 border-t border-[#262626]/50">
+      <Link href="/perfil" className="block p-3 border-t border-[#262626]/50 hover:bg-[#ffffff05] transition-colors">
         <div className="flex items-center gap-3 px-1">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#1a1a2e] to-[#16213e] flex items-center justify-center flex-shrink-0 border border-[#262626]">
-            <span className="text-xs font-semibold text-[#8b5cf6]">L</span>
+          <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-[#262626]">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt={userName} className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-[#1a1a2e] to-[#16213e] flex items-center justify-center">
+                <span className="text-xs font-semibold text-[#8b5cf6]">{initials}</span>
+              </div>
+            )}
           </div>
           {!collapsed && (
             <div className="animate-float-up">
-              <div className="text-xs font-medium">Lucas</div>
-              <div className="text-[9px] text-[#737373]">Arquetipo: Encantador</div>
+              <div className="text-xs font-medium">{userName}</div>
+              <div className="text-[9px] text-[#737373]">
+                {archetype ? `Arquetipo: ${archetype.name}` : "Configurar perfil"}
+              </div>
             </div>
           )}
         </div>
-      </div>
+      </Link>
     </aside>
   );
 }
