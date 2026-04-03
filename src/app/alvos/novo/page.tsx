@@ -24,7 +24,7 @@ export default function NovoAlvoPage() {
   const [primaryArchetype, setPrimaryArchetype] = useState<VictimType>("disappointed_dreamer");
   const [secondaryArchetype, setSecondaryArchetype] = useState<VictimType | "">("");
   const [loveLanguage, setLoveLanguage] = useState<LoveLanguage | "">("");
-  const [pipelineStage, setPipelineStage] = useState<PipelineStage>("lead_generation");
+  const [pipelineStage, setPipelineStage] = useState<PipelineStage>("prospeccao");
   const [closingGoal, setClosingGoal] = useState("");
   const [customClosingGoal, setCustomClosingGoal] = useState("");
   const [notes, setNotes] = useState("");
@@ -228,11 +228,11 @@ export default function NovoAlvoPage() {
           {/* Classificacao */}
           <section className="bento-card">
             <h2 className="text-sm font-medium tracking-widest uppercase text-[#737373] mb-4">
-              Classificacao (Greene)
+              Perfil do Alvo
             </h2>
 
             <div className="mb-4">
-              <label className="text-xs text-[#737373] mb-2 block">Arquetipo Primario da Vitima</label>
+              <label className="text-xs text-[#737373] mb-2 block">Qual o perfil dessa pessoa?</label>
               <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto pr-2">
                 {VICTIM_TYPES.map((vt) => (
                   <button
@@ -273,7 +273,7 @@ export default function NovoAlvoPage() {
                   className="w-full px-4 py-2.5 rounded-xl bg-[#0D0D0D] border border-[#262626] text-sm text-[#e5e5e5] focus:outline-none focus:border-[#7c3aed]/50 transition-colors"
                 >
                   {PIPELINE_STAGES.map((s) => (
-                    <option key={s.id} value={s.id}>{s.name} - {s.phase}</option>
+                    <option key={s.id} value={s.id}>{s.name}</option>
                   ))}
                 </select>
               </div>

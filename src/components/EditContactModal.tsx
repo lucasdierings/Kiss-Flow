@@ -111,9 +111,9 @@ export default function EditContactModal({
             />
           </div>
 
-          {/* Arquétipo Primário */}
+          {/* Perfil Primário */}
           <div>
-            <label className="text-xs text-[#737373] mb-1.5 block">Arquétipo Primário</label>
+            <label className="text-xs text-[#737373] mb-1.5 block">Perfil Principal</label>
             <div className="flex flex-wrap gap-1.5">
               {VICTIM_TYPES.map((vt) => (
                 <button
@@ -131,9 +131,9 @@ export default function EditContactModal({
             </div>
           </div>
 
-          {/* Arquétipo Secundário */}
+          {/* Perfil Secundário */}
           <div>
-            <label className="text-xs text-[#737373] mb-1 block">Arquétipo Secundário</label>
+            <label className="text-xs text-[#737373] mb-1 block">Perfil Secundário (opcional)</label>
             <select
               value={secondaryArchetype}
               onChange={(e) => setSecondaryArchetype(e.target.value as VictimType | "")}

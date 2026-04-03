@@ -20,19 +20,19 @@ interface ContactSummary {
 }
 
 const STAGE_LABELS: Record<string, string> = {
-  lead_generation: "Prospecção",
-  qualification: "Qualificação",
-  nurturing: "Nutrição",
-  closing: "Fechamento",
-  retention: "Retenção",
+  prospeccao: "Prospecção",
+  qualificado: "Qualificado(a)",
+  engajamento: "Engajamento",
+  agendamento: "Agendamento",
+  fechamento: "Fechamento",
 };
 
 const STAGE_COLORS: Record<string, string> = {
-  lead_generation: "#06b6d4",
-  qualification: "#8b5cf6",
-  nurturing: "#d97706",
-  closing: "#e11d48",
-  retention: "#059669",
+  prospeccao: "#06b6d4",
+  qualificado: "#8b5cf6",
+  engajamento: "#d97706",
+  agendamento: "#e11d48",
+  fechamento: "#059669",
 };
 
 export default function ActiveContacts() {
@@ -42,7 +42,7 @@ export default function ActiveContacts() {
     const state = loadState();
     if (!state) return;
 
-    const activeContacts = state.contacts.filter(c => c.status !== "lost");
+    const activeContacts = state.contacts.filter(c => c.status === "active");
 
     const summaries: ContactSummary[] = activeContacts.map((c) => {
       const contactInteractions = state.interactions.filter(

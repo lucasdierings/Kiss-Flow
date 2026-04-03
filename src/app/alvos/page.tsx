@@ -16,11 +16,17 @@ export default function AlvosPage() {
 
   if (!state) return null;
 
-  const activeContacts = state.contacts.filter((c) => c.status !== "lost");
+  const activeContacts = state.contacts.filter((c) => c.status === "active");
   const lostContacts = state.contacts.filter((c) => c.status === "lost");
+  const wonContacts = state.contacts.filter((c) => c.status === "won");
+  const frozenContacts = state.contacts.filter((c) => c.status === "frozen");
 
   const filtered = filter === "lost"
     ? lostContacts
+    : filter === "won"
+    ? wonContacts
+    : filter === "frozen"
+    ? frozenContacts
     : filter === "all"
     ? activeContacts
     : activeContacts.filter((c) => c.pipelineStage === filter);
@@ -33,11 +39,11 @@ export default function AlvosPage() {
 
   const getStageColor = (stage: string) => {
     switch (stage) {
-      case "lead_generation": return "#06b6d4";
-      case "qualification": return "#d97706";
-      case "nurturing": return "#8b5cf6";
-      case "closing": return "#e11d48";
-      case "retention": return "#059669";
+      case "prospeccao": return "#06b6d4";
+      case "qualificado": return "#8b5cf6";
+      case "engajamento": return "#d97706";
+      case "agendamento": return "#e11d48";
+      case "fechamento": return "#059669";
       default: return "#737373";
     }
   };
@@ -56,6 +62,12 @@ export default function AlvosPage() {
             </h1>
             <p className="text-sm text-[#737373] mt-1">
               {activeContacts.length} contato{activeContacts.length !== 1 ? "s" : ""} no pipeline
+              {wonContacts.length > 0 && (
+                <span className="text-[#059669]/60"> · {wonContacts.length} ganho{wonContacts.length !== 1 ? "s" : ""}</span>
+              )}
+              {frozenContacts.length > 0 && (
+                <span className="text-[#3b82f6]/60"> · {frozenContacts.length} na geladeira</span>
+              )}
               {lostContacts.length > 0 && (
                 <span className="text-[#ef4444]/60"> · {lostContacts.length} perdido{lostContacts.length !== 1 ? "s" : ""}</span>
               )}
@@ -109,6 +121,30 @@ export default function AlvosPage() {
               </button>
             );
           })}
+          {wonContacts.length > 0 && (
+            <button
+              onClick={() => setFilter("won")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                filter === "won"
+                  ? "bg-[#059669]/15 text-[#059669] border border-[#059669]/30"
+                  : "bg-[#161616] text-[#737373] border border-[#262626] hover:border-[#333]"
+              }`}
+            >
+              Ganhamos ({wonContacts.length})
+            </button>
+          )}
+          {frozenContacts.length > 0 && (
+            <button
+              onClick={() => setFilter("frozen")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+                filter === "frozen"
+                  ? "bg-[#3b82f6]/15 text-[#3b82f6] border border-[#3b82f6]/30"
+                  : "bg-[#161616] text-[#737373] border border-[#262626] hover:border-[#333]"
+              }`}
+            >
+              Geladeira ({frozenContacts.length})
+            </button>
+          )}
           {lostContacts.length > 0 && (
             <button
               onClick={() => setFilter("lost")}
@@ -150,6 +186,19 @@ export default function AlvosPage() {
                 Adicionar Alvo
               </Link>
             )}
+          </div>
+        ) : (filter === "won" || filter === "frozen") ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {filtered.map((contact) => (
+              <ContactCard
+                key={contact.id}
+                contact={contact}
+                interactionCount={state.interactions.filter((i) => i.contactId === contact.id).length}
+                getArchetypeName={getArchetypeName}
+                getStageName={getStageName}
+                getStageColor={getStageColor}
+              />
+            ))}
           </div>
         ) : filter === "lost" ? (
           /* Lost contacts grouped by reason */
@@ -274,11 +323,11 @@ function ContactCard({
 
         {/* Pipeline bar */}
         <div className="mt-4 flex gap-0.5">
-          {["lead_generation", "qualification", "nurturing", "closing", "retention"].map((stage, i) => {
-            const stageIdx = ["lead_generation", "qualification", "nurturing", "closing", "retention"].indexOf(contact.pipelineStage);
+          {PIPELINE_STAGES.map((stage, i) => {
+            const stageIdx = PIPELINE_STAGES.findIndex((s) => s.id === contact.pipelineStage);
             return (
               <div
-                key={stage}
+                key={stage.id}
                 className="flex-1 h-1 rounded-full"
                 style={{
                   background: i <= stageIdx ? stageColor : "#262626",
@@ -367,11 +416,11 @@ function LostContactCard({
 
       {/* Pipeline bar (dimmed) */}
       <div className="mt-4 flex gap-0.5 opacity-40">
-        {["lead_generation", "qualification", "nurturing", "closing", "retention"].map((stage, i) => {
-          const stageIdx = ["lead_generation", "qualification", "nurturing", "closing", "retention"].indexOf(contact.pipelineStage);
+        {PIPELINE_STAGES.map((stage, i) => {
+          const stageIdx = PIPELINE_STAGES.findIndex((s) => s.id === contact.pipelineStage);
           return (
             <div
-              key={stage}
+              key={stage.id}
               className="flex-1 h-1 rounded-full"
               style={{
                 background: i <= stageIdx ? stageColor : "#262626",

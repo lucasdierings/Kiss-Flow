@@ -4,22 +4,26 @@ import { useState } from "react";
 import { LostReason, LOST_REASON_LABELS } from "@/lib/types";
 
 const STAGE_COLORS: Record<string, string> = {
-  lead_generation: "#06b6d4",
-  qualification: "#8b5cf6",
-  nurturing: "#d97706",
-  closing: "#e11d48",
-  retention: "#059669",
+  prospeccao: "#06b6d4",
+  qualificado: "#8b5cf6",
+  engajamento: "#d97706",
+  agendamento: "#e11d48",
+  fechamento: "#059669",
   lost: "#ef4444",
+  frozen: "#3b82f6",
+  won: "#059669",
   none: "#737373",
 };
 
 const STAGE_LABELS: Record<string, string> = {
-  lead_generation: "Prospecção",
-  qualification: "Qualificação",
-  nurturing: "Nutrição",
-  closing: "Fechamento",
-  retention: "Retenção",
+  prospeccao: "Prospecção",
+  qualificado: "Qualificado(a)",
+  engajamento: "Engajamento",
+  agendamento: "Agendamento",
+  fechamento: "Fechamento",
   lost: "Perdido",
+  frozen: "Geladeira",
+  won: "Ganhamos!",
   none: "Novo",
 };
 

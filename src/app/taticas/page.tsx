@@ -6,11 +6,11 @@ import { TACTICS, RISK_COLORS, type Tactic } from "@/lib/tactics-data";
 import { PIPELINE_STAGES } from "@/lib/types";
 
 const PHASE_COLORS: Record<string, string> = {
-  lead_generation: "#06b6d4",
-  qualification: "#d97706",
-  nurturing: "#8b5cf6",
-  closing: "#e11d48",
-  retention: "#059669",
+  prospeccao: "#06b6d4",
+  qualificado: "#8b5cf6",
+  engajamento: "#d97706",
+  agendamento: "#e11d48",
+  fechamento: "#059669",
 };
 
 export default function TaticasPage() {

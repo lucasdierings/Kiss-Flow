@@ -24,7 +24,7 @@ export default function CurrentVictim() {
           </span>
         </div>
         <span className="text-[10px] px-2 py-1 rounded-full bg-[#7c3aed]/10 text-[#8b5cf6] border border-[#7c3aed]/20">
-          Fase: Nurturing
+          Fase: Engajamento
         </span>
       </div>
 
@@ -86,15 +86,21 @@ export default function CurrentVictim() {
 
       {/* Pipeline stage indicator */}
       <div className="mt-6 flex gap-1">
-        {["Lead", "Qualification", "Nurturing", "Closing", "Retention"].map((stage, i) => (
-          <div key={stage} className="flex-1 flex flex-col items-center gap-1.5">
+        {[
+          { name: "Prospecção", tooltip: "Conhecendo e despertando interesse" },
+          { name: "Qualificado(a)", tooltip: "Já demonstrou interesse" },
+          { name: "Engajamento", tooltip: "Conversas fluindo" },
+          { name: "Agendamento", tooltip: "Marcando um encontro" },
+          { name: "Fechamento", tooltip: "Momento decisivo" },
+        ].map((stage, i) => (
+          <div key={stage.name} className="flex-1 flex flex-col items-center gap-1.5" title={stage.tooltip}>
             <div
               className={`w-full h-1 rounded-full transition-all ${
                 i <= 2 ? "bg-[#7c3aed]" : "bg-[#262626]"
               }`}
             />
             <span className={`text-[9px] ${i <= 2 ? "text-[#8b5cf6]" : "text-[#737373]/50"}`}>
-              {stage}
+              {stage.name}
             </span>
           </div>
         ))}

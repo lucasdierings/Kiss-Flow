@@ -8,11 +8,11 @@ import { calculateAnalytics, generateBottleneckInsight, type AnalyticsSummary } 
 import { calculateUserScore, type UserScore } from "@/lib/user-scoring";
 
 const PHASE_COLORS: Record<string, string> = {
-  lead_generation: "#06b6d4",
-  qualification: "#d97706",
-  nurturing: "#8b5cf6",
-  closing: "#e11d48",
-  retention: "#059669",
+  prospeccao: "#06b6d4",
+  qualificado: "#8b5cf6",
+  engajamento: "#d97706",
+  agendamento: "#e11d48",
+  fechamento: "#059669",
 };
 
 export default function AnalyticsPage() {
@@ -183,7 +183,7 @@ export default function AnalyticsPage() {
 
           {/* Conversion by archetype */}
           <div className="col-span-2 bento-card">
-            <h3 className="text-xs font-medium tracking-widest uppercase text-[#737373] mb-4">Performance por Arquétipo</h3>
+            <h3 className="text-xs font-medium tracking-widest uppercase text-[#737373] mb-4">Performance por Perfil</h3>
             <div className="space-y-2.5">
               {archetypeStats.map((as) => (
                 <div key={as.archetype} className="flex items-center gap-3">

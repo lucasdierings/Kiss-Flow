@@ -48,18 +48,18 @@ export const LOVE_LANGUAGES = [
 export type LoveLanguage = typeof LOVE_LANGUAGES[number]["id"];
 
 export const PIPELINE_STAGES = [
-  { id: "lead_generation", name: "Lead Generation", phase: "Despertar Interesse" },
-  { id: "qualification", name: "Qualification", phase: "Liderar para o Desvio" },
-  { id: "nurturing", name: "Nurturing", phase: "Aprofundar o Vínculo" },
-  { id: "closing", name: "Closing", phase: "Movimento Ousado" },
-  { id: "retention", name: "Retention", phase: "Pós-Efeitos" },
+  { id: "prospeccao", name: "Prospecção", tooltip: "Conhecendo e despertando interesse" },
+  { id: "qualificado", name: "Qualificado(a)", tooltip: "Já demonstrou interesse, vale investir" },
+  { id: "engajamento", name: "Engajamento", tooltip: "Conversas fluindo, conexão crescendo" },
+  { id: "agendamento", name: "Agendamento", tooltip: "Marcando um encontro presencial" },
+  { id: "fechamento", name: "Fechamento", tooltip: "Quase lá — momento decisivo" },
 ] as const;
 
 export type PipelineStage = typeof PIPELINE_STAGES[number]["id"];
 
 // ===== Status e Conversão =====
 
-export type ContactStatus = "active" | "lost" | "won";
+export type ContactStatus = "active" | "lost" | "won" | "frozen";
 
 export type LostReason = "desistencia" | "rejeicao" | "sucesso_efemero";
 
@@ -69,6 +69,13 @@ export const LOST_REASON_LABELS: Record<LostReason, string> = {
   desistencia: "Desistência",
   rejeicao: "Rejeição",
   sucesso_efemero: "Sucesso Efêmero",
+};
+
+export const STATUS_LABELS: Record<ContactStatus, string> = {
+  active: "Ativo",
+  lost: "Perdido",
+  won: "Ganhamos!",
+  frozen: "Geladeira",
 };
 
 export const CLOSING_GOALS = [

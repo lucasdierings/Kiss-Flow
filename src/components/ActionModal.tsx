@@ -30,7 +30,7 @@ interface AIResponse {
   referencia: string;
 }
 
-// ===== Greene Tactic Reference Data =====
+// ===== Tactic Reference Data =====
 
 const TACTIC_REFERENCES: Record<number, { principle: string; quote: string }> = {
   4: {
@@ -296,7 +296,7 @@ export default function ActionModal({
                   {tactic.name}
                 </h2>
                 <p className="text-[11px] font-mono uppercase tracking-widest mt-0.5" style={{ color: accentColor }}>
-                  Tatica {tactic.tacticNumber} -- Robert Greene
+                  Estratégia de Influência #{tactic.tacticNumber}
                 </p>
               </div>
             </div>

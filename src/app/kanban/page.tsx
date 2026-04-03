@@ -12,15 +12,17 @@ import {
   type PipelineStage,
   type LostReason,
 } from "@/lib/types";
-import { loadState, manualStageChange, moveToLost } from "@/lib/store";
+import { loadState, manualStageChange, moveToLost, moveToFreezer } from "@/lib/store";
 
 const STAGE_COLORS: Record<string, string> = {
-  lead_generation: "#06b6d4",
-  qualification: "#d97706",
-  nurturing: "#8b5cf6",
-  closing: "#e11d48",
-  retention: "#059669",
+  prospeccao: "#06b6d4",
+  qualificado: "#8b5cf6",
+  engajamento: "#d97706",
+  agendamento: "#e11d48",
+  fechamento: "#059669",
   lost: "#ef4444",
+  frozen: "#3b82f6",
+  won: "#059669",
 };
 
 export default function KanbanPage() {
@@ -42,6 +44,8 @@ export default function KanbanPage() {
 
   const activeContacts = state.contacts.filter((c) => c.status === "active");
   const lostContacts = state.contacts.filter((c) => c.status === "lost");
+  const frozenContacts = state.contacts.filter((c) => c.status === "frozen");
+  const wonContacts = state.contacts.filter((c) => c.status === "won");
 
   const getContactsByStage = (stageId: string) =>
     activeContacts.filter((c) => c.pipelineStage === stageId);
@@ -79,6 +83,15 @@ export default function KanbanPage() {
     const contact = state.contacts.find((c) => c.id === draggedContact);
     if (!contact) return;
     if (contact.pipelineStage === targetStage) return;
+
+    if (targetStage === "frozen") {
+      const evidence = prompt("Por que está esfriando? (mínimo 10 caracteres)");
+      if (evidence && evidence.trim().length >= 10) {
+        const newState = moveToFreezer(state, draggedContact, evidence.trim());
+        setState(newState);
+      }
+      return;
+    }
 
     setPendingTransition({
       contactId: draggedContact,
@@ -172,7 +185,7 @@ export default function KanbanPage() {
                       {contacts.length}
                     </span>
                   </div>
-                  <p className="text-[9px] text-[#737373] mt-1">{stage.phase}</p>
+                  <p className="text-[9px] text-[#737373] mt-1">{stage.tooltip}</p>
                 </div>
 
                 {/* Cards */}
@@ -281,6 +294,86 @@ export default function KanbanPage() {
               )}
             </div>
           </div>
+
+          {/* Geladeira column */}
+          <div
+            className={`flex-shrink-0 w-64 rounded-2xl border transition-colors ${
+              dragOverStage === "frozen"
+                ? "border-[#3b82f6]/50 bg-[#3b82f6]/5"
+                : "border-[#262626] bg-[#161616]"
+            }`}
+            onDragOver={(e) => handleDragOver(e, "frozen")}
+            onDragLeave={handleDragLeave}
+            onDrop={() => handleDrop("frozen")}
+          >
+            <div className="p-3 border-b border-[#262626]">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-[#3b82f6]" />
+                  <span className="text-xs font-medium text-[#3b82f6]">Geladeira</span>
+                </div>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-[#3b82f6]/15 text-[#3b82f6]">
+                  {frozenContacts.length}
+                </span>
+              </div>
+              <p className="text-[9px] text-[#737373] mt-1">Esfriou, mas não está perdido</p>
+            </div>
+            <div className="p-2 space-y-2 min-h-[100px]">
+              {frozenContacts.map((contact) => (
+                <Link
+                  key={contact.id}
+                  href={`/alvos/${contact.id}`}
+                  className="block p-3 rounded-xl bg-[#0D0D0D] border border-[#3b82f6]/10 hover:border-[#3b82f6]/30 transition-colors opacity-70"
+                >
+                  <div className="text-xs font-medium text-[#e5e5e5]">
+                    {contact.firstName} {contact.lastName}
+                  </div>
+                  <div className="text-[9px] text-[#3b82f6] mt-1">
+                    🧊 Na geladeira
+                  </div>
+                </Link>
+              ))}
+              {frozenContacts.length === 0 && (
+                <div className="text-center py-6 text-[10px] text-[#737373]/50">
+                  Arraste alvos aqui
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Ganhamos column */}
+          {wonContacts.length > 0 && (
+            <div className="flex-shrink-0 w-64 rounded-2xl border border-[#262626] bg-[#161616]">
+              <div className="p-3 border-b border-[#262626]">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-[#059669]" />
+                    <span className="text-xs font-medium text-[#059669]">Ganhamos!</span>
+                  </div>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium bg-[#059669]/15 text-[#059669]">
+                    {wonContacts.length}
+                  </span>
+                </div>
+                <p className="text-[9px] text-[#737373] mt-1">Objetivo alcançado</p>
+              </div>
+              <div className="p-2 space-y-2 min-h-[100px]">
+                {wonContacts.map((contact) => (
+                  <Link
+                    key={contact.id}
+                    href={`/alvos/${contact.id}`}
+                    className="block p-3 rounded-xl bg-[#0D0D0D] border border-[#059669]/10 hover:border-[#059669]/30 transition-colors"
+                  >
+                    <div className="text-xs font-medium text-[#e5e5e5]">
+                      {contact.firstName} {contact.lastName}
+                    </div>
+                    <div className="text-[9px] text-[#059669] mt-1">
+                      🏆 Ganhamos!
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </main>
 

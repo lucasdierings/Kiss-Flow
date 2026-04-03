@@ -473,7 +473,7 @@ export default function PerfilPage() {
                 </div>
                 <div>
                   <label className="block text-xs text-[#737373] mb-1.5">
-                    Arquétipo de Sedutor
+                    Estilo de Sedução
                   </label>
                   <select
                     value={seducerArchetype}
@@ -495,7 +495,7 @@ export default function PerfilPage() {
             {archetypeResult && (
               <div className="bento-card">
                 <h3 className="text-sm font-medium tracking-widest uppercase text-[#737373] mb-4">
-                  Seu Arquétipo: {archetype?.name}
+                  Seu Estilo: {archetype?.name}
                 </h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -543,7 +543,7 @@ export default function PerfilPage() {
                   archetypeResult.ideal_victims.length > 0 && (
                     <div className="mt-4 pt-4 border-t border-[#262626]">
                       <span className="text-[10px] font-medium tracking-widest uppercase text-[#d97706]">
-                        Vítimas Ideais
+                        Alvos Ideais
                       </span>
                       <div className="flex flex-wrap gap-2 mt-2">
                         {archetypeResult.ideal_victims.map(

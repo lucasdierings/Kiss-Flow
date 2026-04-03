@@ -17,7 +17,7 @@ import {
   type LostReason,
   type PipelineStage,
 } from "@/lib/types";
-import { loadState, addInteraction, getContactInteractions, saveState, updateContact, deleteContact, updateInteraction, deleteInteraction, manualStageChange, moveToLost, markGoalAchieved } from "@/lib/store";
+import { loadState, addInteraction, getContactInteractions, saveState, updateContact, deleteContact, updateInteraction, deleteInteraction, manualStageChange, moveToLost, moveToFreezer, markGoalAchieved } from "@/lib/store";
 import { generateAlerts, calculateKPIs, calculateTemperature, type Alert } from "@/lib/engine";
 import type { ContactTemperature } from "@/lib/types";
 import { generateProactiveAlerts } from "@/lib/alerts-engine";
@@ -91,16 +91,16 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
   const getArchetypeName = (archId: string) => VICTIM_TYPES.find((v) => v.id === archId)?.name || archId;
   const getArchetypeDesc = (archId: string) => VICTIM_TYPES.find((v) => v.id === archId)?.desc || "";
   const getStageName = (stageId: string) => PIPELINE_STAGES.find((s) => s.id === stageId)?.name || stageId;
-  const getStagePhase = (stageId: string) => PIPELINE_STAGES.find((s) => s.id === stageId)?.phase || "";
+  const getStageTooltip = (stageId: string) => PIPELINE_STAGES.find((s) => s.id === stageId)?.tooltip || "";
   const getLoveLanguageName = (llId: string) => LOVE_LANGUAGES.find((l) => l.id === llId)?.name || "";
 
   const getStageColor = (stage: string) => {
     switch (stage) {
-      case "lead_generation": return "#06b6d4";
-      case "qualification": return "#d97706";
-      case "nurturing": return "#8b5cf6";
-      case "closing": return "#e11d48";
-      case "retention": return "#059669";
+      case "prospeccao": return "#06b6d4";
+      case "qualificado": return "#8b5cf6";
+      case "engajamento": return "#d97706";
+      case "agendamento": return "#e11d48";
+      case "fechamento": return "#059669";
       default: return "#737373";
     }
   };
@@ -237,7 +237,7 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
   };
 
   const stageColor = getStageColor(contact.pipelineStage);
-  const stageIndex = ["lead_generation", "qualification", "nurturing", "closing", "retention"].indexOf(contact.pipelineStage);
+  const stageIndex = PIPELINE_STAGES.findIndex((s) => s.id === contact.pipelineStage);
 
   return (
     <div className="min-h-screen bg-[#0D0D0D]">
@@ -288,7 +288,7 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
                     className="text-[10px] px-2 py-0.5 rounded-full font-medium"
                     style={{ background: `${stageColor}15`, color: stageColor, border: `1px solid ${stageColor}30` }}
                   >
-                    {getStageName(contact.pipelineStage)} - {getStagePhase(contact.pipelineStage)}
+                    {getStageName(contact.pipelineStage)} - {getStageTooltip(contact.pipelineStage)}
                   </span>
                   {/* Meta de Fechamento badge */}
                   <div className="relative">
@@ -371,7 +371,7 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
                   {/* Objetivo Alcançado button */}
                   {contact.status === "active" &&
                     contact.closingGoal &&
-                    (contact.pipelineStage === "closing" || contact.pipelineStage === "retention") && (
+                    (contact.pipelineStage === "fechamento" || contact.pipelineStage === "agendamento") && (
                       <button
                         onClick={() => setShowGoalAchievedModal(true)}
                         className="text-[10px] px-2.5 py-1 rounded-full font-medium flex items-center gap-1 transition-colors bg-[#059669]/15 text-[#059669] border border-[#059669]/30 hover:bg-[#059669]/25"
@@ -418,13 +418,33 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
 
           {/* Pipeline bar */}
           <div className="mt-4 flex gap-1">
-            {["Lead", "Qualification", "Nurturing", "Closing", "Retention"].map((stage, i) => (
-              <div key={stage} className="flex-1 flex flex-col items-center gap-1.5">
-                <div className="w-full h-1.5 rounded-full" style={{ background: i <= stageIndex ? stageColor : "#262626" }} />
-                <span className="text-[9px]" style={{ color: i <= stageIndex ? stageColor : "#737373" }}>{stage}</span>
+            {PIPELINE_STAGES.map((stage, i) => (
+              <div key={stage.id} className="flex-1 flex flex-col items-center gap-1.5" title={stage.tooltip}>
+                <div className={`w-full h-1.5 rounded-full`} style={{ background: i <= stageIndex ? stageColor : "#262626" }} />
+                <span className="text-[9px]" style={{ color: i <= stageIndex ? stageColor : "#737373" }}>{stage.name}</span>
               </div>
             ))}
           </div>
+
+          {/* Won celebration header */}
+          {contact.status === "won" && (
+            <div className="mt-3 px-4 py-2.5 rounded-xl bg-[#059669]/10 border border-[#059669]/30 flex items-center gap-2">
+              <span className="text-lg">🏆</span>
+              <span className="text-sm font-semibold text-[#059669]">Ganhamos!</span>
+              {contact.goalEvidence && (
+                <span className="text-xs text-[#059669]/70 ml-2">{contact.goalEvidence}</span>
+              )}
+            </div>
+          )}
+
+          {/* Frozen badge */}
+          {contact.status === "frozen" && (
+            <div className="mt-3 px-4 py-2.5 rounded-xl bg-[#3b82f6]/10 border border-[#3b82f6]/30 flex items-center gap-2">
+              <span className="text-lg">🧊</span>
+              <span className="text-sm font-semibold text-[#3b82f6]">Geladeira</span>
+              <span className="text-xs text-[#3b82f6]/70 ml-2">Esfriou, mas não está perdido</span>
+            </div>
+          )}
 
           {/* Pipeline controls */}
           <div className="mt-3 flex items-center gap-2">
@@ -464,6 +484,23 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
                 </div>
               )}
             </div>
+            {contact.status === "active" && (
+              <button
+                onClick={() => {
+                  const evidence = prompt("Por que está esfriando? (mínimo 10 caracteres)");
+                  if (evidence && evidence.trim().length >= 10) {
+                    const newState = moveToFreezer(state, id, evidence.trim());
+                    setState(newState);
+                  }
+                }}
+                className="px-3 py-1.5 rounded-lg text-[10px] font-medium bg-[#3b82f6]/10 border border-[#3b82f6]/20 text-[#3b82f6] hover:bg-[#3b82f6]/20 transition-colors flex items-center gap-1.5"
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20.893 13.393l-1.135-1.135a2.252 2.252 0 01-.421-.585l-1.08-2.16a.414.414 0 00-.663-.107.827.827 0 01-.812.21l-1.273-.363a.89.89 0 00-.738 1.595l.587.39c.59.395.674 1.23.172 1.732l-.2.2c-.212.212-.33.498-.33.796v.41c0 .409-.11.809-.32 1.158l-1.315 2.191a2.11 2.11 0 01-1.81 1.025 1.055 1.055 0 01-1.055-1.055v-1.172c0-.92-.56-1.747-1.414-2.089l-.655-.261a2.25 2.25 0 01-1.383-2.46l.007-.042a2.25 2.25 0 01.29-.787l.09-.15a2.25 2.25 0 012.37-1.048l1.178.236a1.125 1.125 0 001.302-.795l.208-.73a1.125 1.125 0 00-.578-1.315l-.665-.332-.091.091a2.25 2.25 0 01-1.591.659h-.18c-.249 0-.487.1-.662.274a.931.931 0 01-1.458-1.137l1.411-2.353a2.25 2.25 0 00.286-.76m11.928 9.869A9 9 0 008.965 3.525m11.928 9.868A9 9 0 118.965 3.525" />
+                </svg>
+                Mover para Geladeira
+              </button>
+            )}
             <button
               onClick={() =>
                 setPendingTransition({
@@ -776,7 +813,7 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
             <h3 className="text-xs font-medium tracking-widest uppercase text-[#737373] mb-4">Perfil</h3>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-xs text-[#737373]">Arquetipo</span>
+                <span className="text-xs text-[#737373]">Perfil</span>
                 <span className="text-xs text-[#8b5cf6]">{getArchetypeName(contact.primaryArchetype)}</span>
               </div>
               {contact.phone && (
@@ -794,7 +831,7 @@ export default function AlvoDetailPage({ params }: { params: Promise<{ id: strin
               )}
               {contact.secondaryArchetype && (
                 <div className="flex justify-between">
-                  <span className="text-xs text-[#737373]">Secundario</span>
+                  <span className="text-xs text-[#737373]">Perfil secundário</span>
                   <span className="text-xs text-[#a3a3a3]">{getArchetypeName(contact.secondaryArchetype)}</span>
                 </div>
               )}

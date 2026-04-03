@@ -52,19 +52,19 @@ export interface AnalyticsSummary {
 }
 
 const PHASE_LABELS: Record<string, string> = {
-  lead_generation: "Prospecção",
-  qualification: "Qualificação",
-  nurturing: "Nutrição",
-  closing: "Fechamento",
-  retention: "Retenção",
+  prospeccao: "Prospecção",
+  qualificado: "Qualificado(a)",
+  engajamento: "Engajamento",
+  agendamento: "Agendamento",
+  fechamento: "Fechamento",
 };
 
 const PHASE_ORDER: PipelineStage[] = [
-  "lead_generation",
-  "qualification",
-  "nurturing",
-  "closing",
-  "retention",
+  "prospeccao",
+  "qualificado",
+  "engajamento",
+  "agendamento",
+  "fechamento",
 ];
 
 /**
@@ -281,7 +281,7 @@ export function calculateAnalytics(state: AppState): AnalyticsSummary {
   const totalContacts = state.contacts.length || 1;
   const closedOrRetained = state.contacts.filter(
     (c) =>
-      c.pipelineStage === "closing" || c.pipelineStage === "retention"
+      c.pipelineStage === "fechamento" || c.status === "won"
   ).length;
   const overallConversionRate = Math.round(
     (closedOrRetained / totalContacts) * 100
@@ -289,7 +289,7 @@ export function calculateAnalytics(state: AppState): AnalyticsSummary {
 
   // Tempo médio até closing
   const closingTransitions = state.phaseHistory.filter(
-    (t) => t.newPhase === "closing"
+    (t) => t.newPhase === "fechamento"
   );
   let avgTimeToClose: number | null = null;
   if (closingTransitions.length > 0) {

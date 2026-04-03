@@ -8,26 +8,26 @@ import { type Contact, PIPELINE_STAGES, LOST_REASON_LABELS, type LostReason } fr
 interface FunnelStage {
   id: string;
   name: string;
-  phase: string;
+  tooltip: string;
   count: number;
   contacts: { id: string; name: string; score: number }[];
   color: string;
 }
 
 const STAGE_COLORS: Record<string, string> = {
-  lead_generation: "#06b6d4",
-  qualification: "#8b5cf6",
-  nurturing: "#d97706",
-  closing: "#e11d48",
-  retention: "#059669",
+  prospeccao: "#06b6d4",
+  qualificado: "#8b5cf6",
+  engajamento: "#d97706",
+  agendamento: "#e11d48",
+  fechamento: "#059669",
 };
 
 const STAGE_LABELS: Record<string, string> = {
-  lead_generation: "Prospecção",
-  qualification: "Qualificação",
-  nurturing: "Nutrição",
-  closing: "Fechamento",
-  retention: "Retenção",
+  prospeccao: "Prospecção",
+  qualificado: "Qualificado(a)",
+  engajamento: "Engajamento",
+  agendamento: "Agendamento",
+  fechamento: "Fechamento",
 };
 
 interface LostGroup {
@@ -40,13 +40,17 @@ export default function PipelineFunnel() {
   const [stages, setStages] = useState<FunnelStage[]>([]);
   const [totalContacts, setTotalContacts] = useState(0);
   const [lostContacts, setLostContacts] = useState<{ id: string; name: string; lostReason?: LostReason }[]>([]);
+  const [wonContacts, setWonContacts] = useState<{ id: string; name: string }[]>([]);
+  const [frozenContacts, setFrozenContacts] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     const state = loadState();
     if (!state) return;
 
-    const activeContacts = state.contacts.filter((c) => c.status !== "lost");
+    const activeContacts = state.contacts.filter((c) => c.status === "active");
     const lost = state.contacts.filter((c) => c.status === "lost");
+    const won = state.contacts.filter((c) => c.status === "won");
+    const frozen = state.contacts.filter((c) => c.status === "frozen");
 
     setTotalContacts(activeContacts.length);
     setLostContacts(
@@ -54,6 +58,18 @@ export default function PipelineFunnel() {
         id: c.id,
         name: `${c.firstName} ${c.lastName || ""}`.trim(),
         lostReason: c.lostReason,
+      }))
+    );
+    setWonContacts(
+      won.map((c) => ({
+        id: c.id,
+        name: `${c.firstName} ${c.lastName || ""}`.trim(),
+      }))
+    );
+    setFrozenContacts(
+      frozen.map((c) => ({
+        id: c.id,
+        name: `${c.firstName} ${c.lastName || ""}`.trim(),
       }))
     );
 
@@ -64,7 +80,7 @@ export default function PipelineFunnel() {
       return {
         id: stage.id,
         name: STAGE_LABELS[stage.id] || stage.name,
-        phase: stage.phase,
+        tooltip: stage.tooltip,
         count: contactsInStage.length,
         contacts: contactsInStage.map((c) => ({
           id: c.id,
@@ -287,6 +303,102 @@ export default function PipelineFunnel() {
                   </div>
                 );
               })}
+            </>
+          )}
+
+          {/* Ganhamos section */}
+          {wonContacts.length > 0 && (
+            <>
+              <div className="border-t border-[#059669]/30 my-3" />
+              <div className="flex items-center gap-3">
+                <div className="w-20 text-right">
+                  <span className="text-[10px] font-medium text-[#059669]">
+                    Ganhamos
+                  </span>
+                </div>
+                <div className="flex-1 relative">
+                  <div
+                    className="h-8 rounded-lg flex items-center justify-between px-3"
+                    style={{
+                      background: "#05966915",
+                      border: "1px solid #05966930",
+                    }}
+                  >
+                    <span className="text-sm font-bold text-[#059669]">
+                      {wonContacts.length}
+                    </span>
+                    <div className="flex -space-x-1.5">
+                      {wonContacts.slice(0, 4).map((contact) => (
+                        <Link
+                          key={contact.id}
+                          href={`/alvos/${contact.id}`}
+                          className="w-5 h-5 rounded-full bg-[#0D0D0D] border border-[#059669]/30 flex items-center justify-center hover:scale-125 transition-transform z-10"
+                          title={contact.name}
+                        >
+                          <span className="text-[7px] font-semibold text-[#059669]/70">
+                            {contact.name[0]}
+                          </span>
+                        </Link>
+                      ))}
+                      {wonContacts.length > 4 && (
+                        <div className="w-5 h-5 rounded-full bg-[#0D0D0D] border border-[#059669]/30 flex items-center justify-center">
+                          <span className="text-[7px] text-[#059669]/50">
+                            +{wonContacts.length - 4}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Geladeira section */}
+          {frozenContacts.length > 0 && (
+            <>
+              <div className="border-t border-[#3b82f6]/30 my-3" />
+              <div className="flex items-center gap-3">
+                <div className="w-20 text-right">
+                  <span className="text-[10px] font-medium text-[#3b82f6]">
+                    Geladeira
+                  </span>
+                </div>
+                <div className="flex-1 relative">
+                  <div
+                    className="h-8 rounded-lg flex items-center justify-between px-3"
+                    style={{
+                      background: "#3b82f615",
+                      border: "1px solid #3b82f630",
+                    }}
+                  >
+                    <span className="text-sm font-bold text-[#3b82f6]">
+                      {frozenContacts.length}
+                    </span>
+                    <div className="flex -space-x-1.5">
+                      {frozenContacts.slice(0, 4).map((contact) => (
+                        <Link
+                          key={contact.id}
+                          href={`/alvos/${contact.id}`}
+                          className="w-5 h-5 rounded-full bg-[#0D0D0D] border border-[#3b82f6]/30 flex items-center justify-center hover:scale-125 transition-transform z-10 opacity-70"
+                          title={contact.name}
+                        >
+                          <span className="text-[7px] font-semibold text-[#3b82f6]/70">
+                            {contact.name[0]}
+                          </span>
+                        </Link>
+                      ))}
+                      {frozenContacts.length > 4 && (
+                        <div className="w-5 h-5 rounded-full bg-[#0D0D0D] border border-[#3b82f6]/30 flex items-center justify-center opacity-70">
+                          <span className="text-[7px] text-[#3b82f6]/50">
+                            +{frozenContacts.length - 4}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </>
           )}
         </div>

@@ -1,6 +1,7 @@
 import {
   AppState,
   Contact,
+  ContactStatus,
   Interaction,
   PhaseTransition,
   PipelineStage,
@@ -9,6 +10,15 @@ import {
 import { applyInteractionImpact } from "./engine";
 
 const STORAGE_KEY = "kissflow_state";
+
+// Migração de IDs antigos de pipeline para os novos
+const STAGE_MIGRATION: Record<string, string> = {
+  lead_generation: "prospeccao",
+  qualification: "qualificado",
+  nurturing: "engajamento",
+  closing: "fechamento",
+  retention: "fechamento", // retention removido; contatos "won" recebem status "won"
+};
 
 const DEFAULT_STATE: AppState = {
   contacts: [],
@@ -31,8 +41,9 @@ export function loadState(): AppState {
     if (!parsed.phaseHistory) parsed.phaseHistory = [];
     parsed.contacts = parsed.contacts.map((c) => ({
       ...c,
-      status: c.status || "active",
-    }));
+      status: (c.status || "active") as ContactStatus,
+      pipelineStage: (STAGE_MIGRATION[c.pipelineStage] || c.pipelineStage) as PipelineStage,
+    })) as Contact[];
 
     return parsed;
   } catch {
@@ -279,6 +290,29 @@ export function moveToLost(
   return newState;
 }
 
+export function moveToFreezer(
+  state: AppState,
+  contactId: string,
+  evidence: string
+): AppState {
+  const contact = state.contacts.find((c) => c.id === contactId);
+  if (!contact) return state;
+
+  const transition: Omit<PhaseTransition, "id" | "timestamp"> = {
+    contactId,
+    oldPhase: contact.pipelineStage,
+    newPhase: contact.pipelineStage,
+    evidence: `Geladeira: ${evidence}`,
+  };
+
+  let newState = addPhaseTransition(state, transition);
+  newState = updateContact(newState, contactId, {
+    status: "frozen",
+  });
+
+  return newState;
+}
+
 export function markGoalAchieved(state: AppState, contactId: string, evidence: string): AppState {
   const contact = state.contacts.find(c => c.id === contactId);
   if (!contact) return state;
@@ -286,8 +320,8 @@ export function markGoalAchieved(state: AppState, contactId: string, evidence: s
   const transition: Omit<PhaseTransition, "id" | "timestamp"> = {
     contactId,
     oldPhase: contact.pipelineStage,
-    newPhase: "retention",
-    evidence,
+    newPhase: contact.pipelineStage,
+    evidence: `Meta alcançada: ${evidence}`,
   };
 
   let newState = addPhaseTransition(state, transition);
@@ -295,7 +329,6 @@ export function markGoalAchieved(state: AppState, contactId: string, evidence: s
     status: "won",
     goalAchievedAt: new Date().toISOString(),
     goalEvidence: evidence,
-    pipelineStage: "retention",
   });
   return newState;
 }
@@ -311,14 +344,14 @@ export function reactivateContact(
   const transition: Omit<PhaseTransition, "id" | "timestamp"> = {
     contactId,
     oldPhase: "lost",
-    newPhase: "nurturing",
+    newPhase: "engajamento",
     evidence,
   };
 
   let newState = addPhaseTransition(state, transition);
   newState = updateContact(newState, contactId, {
     status: "active",
-    pipelineStage: "nurturing",
+    pipelineStage: "engajamento",
     lostReason: undefined,
     lostAt: undefined,
     postMortem: undefined,

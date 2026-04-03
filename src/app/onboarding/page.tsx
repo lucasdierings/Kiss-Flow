@@ -354,7 +354,7 @@ export default function OnboardingPage() {
             return (
               <div className="animate-float-up">
                 <div className="text-center mb-6">
-                  <span className="text-[10px] text-[#737373] uppercase tracking-widest">Seu arquétipo sedutor</span>
+                  <span className="text-[10px] text-[#737373] uppercase tracking-widest">Seu estilo de sedução</span>
                 </div>
 
                 <div className="bento-card text-center mb-4">
@@ -405,7 +405,7 @@ export default function OnboardingPage() {
                   {/* Secondary archetype */}
                   {secondaryData && (
                     <p className="text-[11px] text-[#737373]">
-                      Arquétipo secundário: <span style={{ color: secondaryData.color }}>{secondaryData.name}</span>
+                      Estilo secundário: <span style={{ color: secondaryData.color }}>{secondaryData.name}</span>
                     </p>
                   )}
                 </div>

@@ -158,7 +158,7 @@ export default function Sidebar() {
             <div className="animate-float-up">
               <div className="text-xs font-medium">{userName}</div>
               <div className="text-[9px] text-[#737373]">
-                {archetype ? `Arquetipo: ${archetype.name}` : "Configurar perfil"}
+                {archetype ? `Estilo: ${archetype.name}` : "Configurar perfil"}
               </div>
             </div>
           )}

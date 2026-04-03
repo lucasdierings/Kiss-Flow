@@ -221,7 +221,7 @@ export function generateProactiveAlerts(
 
   // 7. Extended Silence
   const lastInteraction = contactInteractions[0];
-  if (lastInteraction && contact.pipelineStage !== "retention") {
+  if (lastInteraction && contact.status !== "won") {
     const daysSince =
       (now - new Date(lastInteraction.date).getTime()) / (24 * 60 * 60 * 1000);
     if (daysSince > 5) {
@@ -246,8 +246,8 @@ export function generateProactiveAlerts(
   // 8. High Enchantment
   if (
     contact.enchantmentScore > 0.8 &&
-    contact.pipelineStage !== "closing" &&
-    contact.pipelineStage !== "retention"
+    contact.pipelineStage !== "fechamento" &&
+    contact.status !== "won"
   ) {
     const tactic = GREENE_TACTICS[23];
     alerts.push({
@@ -268,7 +268,7 @@ export function generateProactiveAlerts(
   }
 
   // 9. Stagnation Warning
-  if (phaseHistory.length > 0 && contact.status !== "lost") {
+  if (phaseHistory.length > 0 && contact.status === "active") {
     const currentPhaseTransitions = phaseHistory
       .filter((t) => t.contactId === contact.id && t.newPhase === contact.pipelineStage)
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
@@ -279,10 +279,11 @@ export function generateProactiveAlerts(
         (now - new Date(lastTransition.timestamp).getTime()) / (24 * 60 * 60 * 1000);
 
       const stagnationThresholds: Record<string, number> = {
-        lead_generation: 5,
-        qualification: 7,
-        nurturing: 10,
-        closing: 5,
+        prospeccao: 5,
+        qualificado: 7,
+        engajamento: 10,
+        agendamento: 5,
+        fechamento: 5,
       };
 
       const threshold = stagnationThresholds[contact.pipelineStage];
@@ -304,15 +305,21 @@ export function generateProactiveAlerts(
     }
   }
 
-  // 10. Post-Mortem Available
-  if (contact.status === "lost" && !contact.postMortem) {
+  // 10. Post-Mortem Available (lost ou frozen)
+  if ((contact.status === "lost" || contact.status === "frozen") && !contact.postMortem) {
     alerts.push({
       contact_id: contact.id,
       alert_type: "post_mortem_available",
-      title: "Análise Pós-Operação Disponível",
-      description: `Solicite uma análise completa da operação com ${contact.firstName} para extrair lições estratégicas.`,
+      title: contact.status === "frozen"
+        ? "Análise de Congelamento Disponível"
+        : "Análise Pós-Operação Disponível",
+      description: contact.status === "frozen"
+        ? `${contact.firstName} está na geladeira. Solicite uma análise para entender o esfriamento e planejar reativação futura.`
+        : `Solicite uma análise completa da operação com ${contact.firstName} para extrair lições estratégicas.`,
       priority: "medium",
-      action_suggested: "Solicitar análise pós-operação à IA",
+      action_suggested: contact.status === "frozen"
+        ? "Solicitar análise de congelamento à IA"
+        : "Solicitar análise pós-operação à IA",
     });
   }
 
@@ -320,7 +327,7 @@ export function generateProactiveAlerts(
   if (
     contact.status === "active" &&
     contact.closingGoal &&
-    (contact.pipelineStage === "closing" || contact.pipelineStage === "retention") &&
+    (contact.pipelineStage === "fechamento" || contact.pipelineStage === "agendamento") &&
     contact.victimScore > 70 &&
     contact.enchantmentScore > 0.6 &&
     !contact.goalAchievedAt

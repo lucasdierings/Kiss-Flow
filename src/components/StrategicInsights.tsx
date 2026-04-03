@@ -31,10 +31,10 @@ export default function StrategicInsights({ score }: StrategicInsightsProps) {
       </div>
 
       <div className="space-y-3">
-        {/* Greene insight */}
+        {/* Seduction insight */}
         <InsightCard
           icon="chess"
-          label="A Arte da Sedução"
+          label="Estratégia de Sedução"
           text={score.greeneInsight}
           color="#8b5cf6"
         />

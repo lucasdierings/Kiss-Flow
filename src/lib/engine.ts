@@ -127,17 +127,17 @@ function evaluatePipelineProgression(
   interactionCount: number
 ): Contact["pipelineStage"] {
   // Critérios para avançar (com gates de interação)
-  if (currentStage === "lead_generation" && victimScore > 30 && enchantment > 0.15 && interactionCount >= 3) {
-    return "qualification";
+  if (currentStage === "prospeccao" && victimScore > 30 && enchantment > 0.15 && interactionCount >= 3) {
+    return "qualificado";
   }
-  if (currentStage === "qualification" && victimScore > 50 && enchantment > 0.35 && interactionCount >= 5) {
-    return "nurturing";
+  if (currentStage === "qualificado" && victimScore > 50 && enchantment > 0.35 && interactionCount >= 5) {
+    return "engajamento";
   }
-  if (currentStage === "nurturing" && victimScore > 70 && enchantment > 0.6 && tension > 40 && interactionCount >= 8) {
-    return "closing";
+  if (currentStage === "engajamento" && victimScore > 65 && enchantment > 0.5 && tension > 35 && interactionCount >= 7) {
+    return "agendamento";
   }
-  if (currentStage === "closing" && victimScore > 85 && enchantment > 0.8) {
-    return "retention";
+  if (currentStage === "agendamento" && victimScore > 80 && enchantment > 0.7 && tension > 45 && interactionCount >= 10) {
+    return "fechamento";
   }
 
   return currentStage as Contact["pipelineStage"];
@@ -226,7 +226,7 @@ export function generateAlerts(contact: Contact, interactions: Interaction[]): A
   const lastInteraction = recentInteractions[0];
   if (lastInteraction) {
     const daysSince = (Date.now() - new Date(lastInteraction.date).getTime()) / (24 * 60 * 60 * 1000);
-    if (daysSince > 5 && contact.pipelineStage !== "retention") {
+    if (daysSince > 5 && contact.pipelineStage !== "fechamento") {
       alerts.push({
         type: "info",
         title: "Silencio Prolongado",
