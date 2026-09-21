@@ -59,6 +59,8 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
 - D1 remoto com 17 tabelas, em sincronia com `src/server/db/schema.ts`
 - Histórico de migrations íntegro em `drizzle/` (baseline conferida objeto a
   objeto contra o `sqlite_master` do remoto)
+- **Build para o Cloudflare passando** (`npx opennextjs-cloudflare build` gera
+  `.open-next/worker.js`); runbook de publicação em `docs/deploy.md`
 - **Login e cadastro na web** em `/login` e `/signup`, falando com o Better
   Auth; testados pela interface no navegador, não só por curl
 - **Autenticação funcionando:** `/api/auth/[...all]` responde; cadastro cria
@@ -126,7 +128,7 @@ conteúdo bruto de prints ou áudios nos eventos.**
 ## Arquitetura
 
 ```
-/                      app web (Next.js 16) — landing page + API. NÃO é cliente do D1.
+/                      app web (Next.js 16) — cliente completo, espelho do app
   src/app/api/         rotas de API (consumidas pelo mobile) — todas mock ainda
   src/server/          D1 + Better Auth + repositórios  ← órfã
   src/lib/             motores puros e tipos
@@ -174,9 +176,13 @@ funcionalidades web que não existem mais, aponta para `/login`, é gendrada
 - **D1 não tem RLS.** Multi-tenancy é responsabilidade da aplicação. Todo índice
   composto começa por `userId`, e `userId` **nunca** vem do corpo da requisição —
   vem sempre da sessão, via `requireUser()`.
-- **`withApi()` é o portão.** Toda rota que toca dado passa por ele (sessão +
-  validação Zod). O `src/proxy.ts` só faz redirecionamento otimista pela
-  assinatura do cookie, sem I/O — não é autorização.
+- **`withApi()` é o portão** das rotas de API (sessão + validação Zod), e
+  `requireSession()` em `src/server/session.ts` protege as páginas.
+- **Não existe proxy/middleware, e não pode existir.** No Next 16 o Proxy roda
+  só no runtime Node, e o @opennextjs/cloudflare **aborta o build** ao
+  encontrar middleware Node — com `src/proxy.ts` no lugar não havia deploy
+  possível. Ele também nunca funcionou: a lista de rotas públicas começava com
+  "/" e era conferida com `startsWith`. Proteção de página é server-side.
 - **Cotas:** reserva atômica (`INSERT ... ON CONFLICT DO UPDATE ... WHERE count <
   limite`), porque o D1 não tem transação interativa. Sem cron: mês novo é chave
   nova em `usage_counters`.
