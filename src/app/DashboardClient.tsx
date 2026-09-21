@@ -22,6 +22,7 @@ import { generateProactiveAlerts } from "@/lib/alerts-engine";
 import { calculateUserScore, getDefaultUserScore, type UserScore } from "@/lib/user-scoring";
 import { calculateKPIs } from "@/lib/engine";
 import RecursoBloqueado from "@/components/RecursoBloqueado";
+import { montarEixos, type EixoExibicao, type Traco } from "@/lib/traits";
 import {
   avaliarRecurso,
   medirProgresso,
@@ -46,6 +47,7 @@ export default function DashboardClient() {
   const [allInteractions, setAllInteractions] = useState<AppState["interactions"]>([]);
   const [userScore, setUserScore] = useState<UserScore | null>(null);
   const [estado, setEstado] = useState<AppState | null>(null);
+  const [eixos, setEixos] = useState<EixoExibicao[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [progresso, setProgresso] = useState<DadosProgresso>({
     alvos: 0,
@@ -108,6 +110,17 @@ export default function DashboardClient() {
       }
 
       setCarregando(false);
+
+      // Traços vêm em requisição própria: dependem da pessoa em foco e não
+      // fazem parte da carga inicial.
+      if (contact) {
+        const rt = await fetch(`/api/crm/contacts/${contact.id}/traits`);
+        if (rt.ok && !cancelado) {
+          const { traits } = (await rt.json()) as { traits: Traco[] };
+          const daPessoa = state.interactions.filter((i) => i.contactId === contact.id).length;
+          setEixos(montarEixos(traits, daPessoa));
+        }
+      }
     })();
 
     return () => {
@@ -268,8 +281,14 @@ export default function DashboardClient() {
           <ScarcityIndex value={activeContact?.scarcityScore} />
 
           {/* Row 5: Tension Thermometer (2 cols) + Vulnerability Radar */}
-          <TensionThermometer value={activeContact?.tensionLevel} />
-          <VulnerabilityRadar vulnerabilities={activeContact?.vulnerabilities} />
+          <TensionThermometer
+            interactions={
+              activeContact
+                ? allInteractions.filter((i) => i.contactId === activeContact.id)
+                : []
+            }
+          />
+          <VulnerabilityRadar eixos={eixos} />
 
           {/* Row 6: Enchantment Timeline (full width) */}
           <EnchantmentTimeline

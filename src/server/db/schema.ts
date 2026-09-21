@@ -146,6 +146,16 @@ export const userProfile = sqliteTable("user_profile", {
   ageRange: text("age_range"),
   avatarUrl: text("avatar_url"),
 
+  // Cidade alimenta o alerta de proximidade (duas pessoas na mesma cidade).
+  city: text("city"),
+  // O que a pessoa busca — muda o TOM das sugestões, não só o conteúdo.
+  relationshipGoal: text("relationship_goal"),
+  // Como ela própria recebe afeto; ajuda a IA a calibrar o que sugerir.
+  loveLanguage: text("love_language", {
+    enum: ["words", "gifts", "acts", "time", "touch"],
+  }),
+  bio: text("bio"),
+
   // Vinha de DUAS fontes que já estavam dessincronizadas:
   // AppState.seducerArchetype (localStorage) e user_profiles (Supabase).
   seducerArchetype: text("seducer_archetype").notNull().default("charmer"),
@@ -398,6 +408,62 @@ export const systemAlerts = sqliteTable(
 );
 
 /* ────────────────────────────────────────────────────────────────
+ * TRAÇOS OBSERVADOS DO ALVO
+ *
+ * As seis vulnerabilidades viviam como colunas fixas em `contacts`, com
+ * valor 50 por padrão — e NADA jamais as atualizava. O radar mostrava um
+ * hexágono cheio em 50% que parecia medição e era só o padrão do sistema.
+ *
+ * Aqui cada eixo passa a ser um registro com procedência, exatamente o que o
+ * contrato de dados do Gate 0 exige de atributo derivado: "Origem, timestamp,
+ * confiança, correção e exclusão individual".
+ *
+ * Eixo sem linha nesta tabela significa NÃO MEDIDO, e a interface mostra
+ * lacuna — não meio-termo.
+ * ──────────────────────────────────────────────────────────────── */
+
+export const contactTraits = sqliteTable(
+  "contact_traits",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    contactId: text("contact_id")
+      .notNull()
+      .references(() => contacts.id, { onDelete: "cascade" }),
+
+    // fantasy | snobbery | loneliness | ego | adventure | rebellion
+    axis: text("axis").notNull(),
+    value: integer("value").notNull(), // 0-100
+
+    /**
+     * De onde veio o número. `declarado` é o usuário afirmando; `inferido` é
+     * a IA lendo as notas das interações. Inferência NUNCA sobrescreve o que
+     * foi declarado — vira sugestão pendente até o usuário aceitar.
+     */
+    source: text("source", { enum: ["declarado", "inferido"] }).notNull(),
+
+    /** 0..1. Declaração do usuário entra como 1. */
+    confidence: real("confidence").notNull().default(1),
+
+    /** Em que a inferência se baseou, para o usuário poder discordar. */
+    evidence: text("evidence"),
+
+    /** Quantas interações existiam quando foi medido — envelhece o dado. */
+    observedAt: integer("observed_at", { mode: "timestamp_ms" })
+      .notNull()
+      .default(now),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+      .notNull()
+      .default(now),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.contactId, t.axis] }),
+    index("traits_user_contact_idx").on(t.userId, t.contactId),
+  ]
+);
+
+/* ────────────────────────────────────────────────────────────────
  * MÍDIA (R2)
  * ──────────────────────────────────────────────────────────────── */
 
@@ -598,6 +664,7 @@ export const schema = {
   interactions,
   phaseTransitions,
   systemAlerts,
+  contactTraits,
   mediaUploads,
   usageCounters,
   usageEvents,

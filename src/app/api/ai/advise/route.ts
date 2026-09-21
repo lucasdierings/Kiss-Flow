@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { generateWithRetry, isAiConfigured } from "@/lib/gemini";
+import { extrairJson, generateWithRetry, isAiConfigured } from "@/lib/gemini";
 import { buildMentorSystemPrompt, retrieveKnowledgeChunks } from "@/lib/rag-engine";
 import { withApi } from "@/server/guard";
 import { getContact } from "@/server/repo/crm";
@@ -136,9 +136,7 @@ export const POST = withApi(adviseSchema, async ({ body, ctx }) => {
 
   let advice: z.infer<typeof adviceShape>;
   try {
-    advice = adviceShape.parse(
-      JSON.parse(raw.replace(/```json/gi, "").replace(/```/g, "").trim())
-    );
+    advice = adviceShape.parse(extrairJson(raw));
   } catch {
     // Sem inventar opções: um texto solto é diagnóstico, não sugestão pronta.
     advice = { diagnosis: raw.trim(), options: [{ title: "Leitura da situação", text: raw.trim() }] };

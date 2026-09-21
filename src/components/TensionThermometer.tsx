@@ -2,18 +2,34 @@
 
 import { useEffect, useRef } from "react";
 
-const defaultData = [
-  { day: "Seg", anxiety: 0, desire: 0 },
-  { day: "Ter", anxiety: 0, desire: 0 },
-  { day: "Qua", anxiety: 0, desire: 0 },
-  { day: "Qui", anxiety: 0, desire: 0 },
-  { day: "Sex", anxiety: 0, desire: 0 },
-  { day: "Sab", anxiety: 0, desire: 0 },
-  { day: "Dom", anxiety: 0, desire: 0 },
-];
+import type { Interaction } from "@/lib/types";
+
+/**
+ * Tensão e encantamento ao longo do tempo.
+ *
+ * O QUE ESTE GRÁFICO ERA
+ *
+ * Ele recebia UM número — a tensão atual — e desenhava duas retas por sete
+ * dias fixos (Seg a Dom) aplicando `jitter = (i - 3) * 5` com o comentário
+ * "variação para interesse visual". Não havia série temporal nenhuma: os dias
+ * eram decorativos e a subida do gráfico era artefato do jitter. As legendas
+ * "Ansiedade" e "Desejo" também não existiam no motor, que tem um único
+ * escalar de tensão.
+ *
+ * O QUE ELE É AGORA
+ *
+ * Cada interação grava `tensionAfter` e `enchantmentAfter` junto com a data.
+ * Isso É uma série temporal real, e estava no banco desde a migração sem que
+ * ninguém a usasse. O gráfico passa a lê-la: um ponto por interação, na ordem
+ * em que aconteceram.
+ *
+ * Encantamento é guardado de -1 a 1 e aqui vira 0 a 100 só para caber no
+ * mesmo eixo.
+ */
 
 interface TensionThermometerProps {
-  value?: number; // 0-100 overall tension level
+  /** Interações da pessoa em foco, com os instantâneos de métrica. */
+  interactions?: Interaction[];
 }
 
 function bezierPath(points: { x: number; y: number }[]): string {
@@ -29,20 +45,37 @@ function bezierPath(points: { x: number; y: number }[]): string {
   return path;
 }
 
-export default function TensionThermometer({ value }: TensionThermometerProps) {
+export default function TensionThermometer({ interactions = [] }: TensionThermometerProps) {
   const canvasRef = useRef<SVGSVGElement>(null);
 
-  // Generate data from tension value: desire = value, anxiety = 100 - value (capped)
-  const tensionVal = value ?? 0;
-  const data = tensionVal > 0
-    ? defaultData.map((d, i) => {
-        // Create slight variation around the tension value for visual interest
-        const jitter = (i - 3) * 5;
-        const desire = Math.max(0, Math.min(100, tensionVal + jitter));
-        const anxiety = Math.max(0, Math.min(100, (100 - tensionVal) + jitter * 0.7));
-        return { ...d, desire, anxiety };
-      })
-    : defaultData;
+  // Só interações que carregam instantâneo. As antigas, gravadas antes de o
+  // servidor passar a calcular, não têm — e são omitidas em vez de zeradas.
+  const serie = [...interactions]
+    .filter((i) => typeof i.tensionAfter === "number")
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(-12);
+
+  const data = serie.map((i) => ({
+    day: new Date(i.date).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
+    anxiety: Math.max(0, Math.min(100, i.tensionAfter ?? 0)),
+    desire: Math.max(0, Math.min(100, ((i.enchantmentAfter ?? 0) + 1) * 50)),
+  }));
+
+  // Uma linha precisa de pelo menos dois pontos para ter direção.
+  if (data.length < 2) {
+    return (
+      <div className="bento-card col-span-2">
+        <h3 className="text-xs uppercase tracking-widest text-[#737373]">
+          Tensão e encantamento
+        </h3>
+        <p className="mt-3 text-sm leading-relaxed text-[#737373]">
+          {data.length === 0
+            ? "Registre interações para acompanhar como a tensão e o encantamento evoluem."
+            : "Falta uma interação para a linha ter direção. Com um ponto só não há tendência."}
+        </p>
+      </div>
+    );
+  }
 
   const width = 320;
   const height = 160;
@@ -81,17 +114,17 @@ export default function TensionThermometer({ value }: TensionThermometerProps) {
             <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
           <span className="text-xs font-medium tracking-widest uppercase text-[#737373]">
-            Tensao Emocional
+            Tensão e encantamento
           </span>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-full bg-[#e11d48]" />
-            <span className="text-[10px] text-[#737373]">Ansiedade</span>
+            <span className="text-[10px] text-[#737373]">Tensão</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-full bg-[#8b5cf6]" />
-            <span className="text-[10px] text-[#737373]">Desejo</span>
+            <span className="text-[10px] text-[#737373]">Encantamento</span>
           </div>
         </div>
       </div>
@@ -171,14 +204,17 @@ export default function TensionThermometer({ value }: TensionThermometerProps) {
           <div className={`w-2 h-2 rounded-full ${tensionDelta > 15 ? "bg-[#059669]" : tensionDelta > 0 ? "bg-[#d97706]" : "bg-[#e11d48]"}`} />
           <span className="text-[11px] text-[#737373]">
             {tensionDelta > 15
-              ? "Tensao ideal: desejo supera ansiedade"
+              ? "Encantamento à frente da tensão: o ritmo está bom"
               : tensionDelta > 0
-              ? "Tensao moderada: manter ritmo"
-              : "Alerta: ansiedade excessiva, suavizar abordagem"}
+              ? "Os dois caminham juntos: manter o ritmo"
+              : "Tensão à frente do encantamento: vale suavizar"}
           </span>
         </div>
         <span className="text-xs font-mono text-[#8b5cf6]">
-          +{tensionDelta}pt
+          {/* Arredondado: a diferença entre dois REAL vazava como
+              "+-18.699999999999996pt" na tela. O sinal também era fixo em "+". */}
+          {tensionDelta >= 0 ? "+" : "−"}
+          {Math.abs(Math.round(tensionDelta))} pt
         </span>
       </div>
     </div>

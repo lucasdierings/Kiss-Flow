@@ -65,6 +65,16 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
   ALLOWED_EMAILS 403
 - **Build para o Cloudflare passando** (`npx opennextjs-cloudflare build` gera
   `.open-next/worker.js`); runbook de publicação em `docs/deploy.md`
+- **Foto de perfil e campos novos** (cidade, objetivo, linguagem do amor,
+  bio): upload no R2 por `/api/media/upload`, servido por `/api/media/<chave>`
+  com o dono conferido pelo prefixo — o bucket é privado
+- **Traços do alvo com procedência** (`contact_traits`): cada eixo guarda
+  origem, confiança, evidência e quando foi medido. Eixo sem registro é
+  **lacuna**, não 50
+- **Leitura de traços por IA** em `/api/ai/infer-traits`, lendo só as
+  anotações do usuário e nunca sobrescrevendo o que foi declarado
+- **Gráfico de tensão usando a série real** gravada em `tension_after` e
+  `enchantment_after`
 - **Liberação progressiva** (`src/lib/progression.ts`): cada gráfico abre
   quando passa a ter dado suficiente para ser confiável, e o painel mostra o
   que falta para o próximo. Os limiares saem da auditoria, não de palpite
@@ -110,6 +120,8 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
 
 | O quê | Onde | Situação |
 |---|---|---|
+| Cota do Gemini no nível gratuito | Google Cloud | `GenerateRequestsPerDayPerProjectPerModel-FreeTier`, **20 requisições/dia**. O projeto `dev-vs-code-and-antropic` não foi promovido ao pago. Existe outra chave em projeto com faturamento. |
+| Inferência de traços na interface | `/alvos/[id]` | A rota existe e foi exercitada, mas não há botão para pedir a leitura nem tela para declarar eixo à mão. |
 | Latência da IA acima do critério | `/api/ai/advise` | Medido 6,8s / 15,5s / 22,1s. O Gate 0 exige resposta em até 15s. Caminhos: streaming, prompt menor, ou modelo lite. |
 | URLs de retorno do OAuth do Google | Google Cloud Console | Não registradas para o domínio publicado; o botão \"Continuar com Google\" falha até isso ser feito. Ver `docs/deploy.md`. |
 | Login/signup do mobile | `apps/mobile/app/login.tsx` | Grava `'mock_token'` no AsyncStorage. |
@@ -214,6 +226,25 @@ funcionalidades web que não existem mais, aponta para `/login`, é gendrada
   nova em `usage_counters`.
 - **Métricas 0–100 são `REAL`, não `INTEGER`.** O `engine.ts` arredonda para uma
   casa decimal; `INTEGER` truncaria e deslocaria todos os limiares de progressão.
+
+### Métricas — de onde vêm os números
+
+Regra: **meio da escala não significa "médio", significa que ninguém olhou.**
+
+Dois gráficos foram auditados em 21/09/2026 e os dois mostravam invenção com
+cara de medição:
+
+- **Tensão** recebia UM número e desenhava duas retas por sete dias fixos, com
+  `jitter = (i - 3) * 5` e o comentário "variação para interesse visual". Os
+  dias eram decorativos e a subida era artefato. "Ansiedade" e "Desejo" nem
+  existiam no motor. Hoje lê a série real de `tension_after` /
+  `enchantment_after`.
+- **Vulnerabilidades** eram seis colunas com padrão 50, escritas na criação do
+  alvo e **nunca atualizadas por nada**. Hoje vivem em `contact_traits` com
+  origem, confiança, evidência e data.
+
+Regras completas, incluindo com que frequência cada coisa muda e o que passa
+por IA: `docs/metricas.md`. Leia antes de criar qualquer métrica nova.
 
 ### Liberação progressiva
 
@@ -331,8 +362,10 @@ mudar um sem o outro faz o wrangler aplicar um conjunto vazio sem reclamar.
 - **Transição de fase** exige evidência textual. Perda exige motivo
   (`desistencia`, `rejeicao`, `sucesso_efemero`). Histórico em
   `phase_transitions`.
-- **Planos:** free (1 pessoa ativa, 5 análises/mês, 3 uploads) e premium
-  (ilimitado, 100 análises). Definidos em `src/lib/plans.ts`, não no banco.
+- **Planos:** free (3 pessoas ativas, 5 análises/mês, 3 uploads) e Pro a
+  R$ 29,90/mês (pessoas ilimitadas, 100 análises). Em `src/lib/plans.ts`.
+- **Traços do alvo:** seis eixos em `contact_traits`, com origem e confiança.
+  Ver `src/lib/traits.ts` e `docs/metricas.md`.
 
 ## Design system
 

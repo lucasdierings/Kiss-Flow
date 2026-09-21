@@ -128,3 +128,33 @@ export async function generateWithRetry(
 
   throw lastError;
 }
+
+/**
+ * Extrai o objeto JSON de uma resposta do modelo.
+ *
+ * Modelos de texto não garantem formato, por mais explícita que seja a
+ * instrução: às vezes envolvem o JSON em cerca de código, às vezes escrevem
+ * uma frase antes ("Aqui está a análise:"). O `JSON.parse` direto quebrava
+ * nos dois casos, e a rota respondia "formato que não consegui aproveitar"
+ * com um JSON perfeitamente válido no meio do texto.
+ *
+ * Estratégia: tira as cercas, tenta o texto inteiro e, falhando, recorta do
+ * primeiro `{` até o último `}`.
+ */
+export function extrairJson(bruto: string): unknown {
+  const limpo = bruto
+    .replace(/```json/gi, "")
+    .replace(/```/g, "")
+    .trim();
+
+  try {
+    return JSON.parse(limpo);
+  } catch {
+    const inicio = limpo.indexOf("{");
+    const fim = limpo.lastIndexOf("}");
+    if (inicio === -1 || fim <= inicio) {
+      throw new Error("Resposta sem JSON reconhecível");
+    }
+    return JSON.parse(limpo.slice(inicio, fim + 1));
+  }
+}

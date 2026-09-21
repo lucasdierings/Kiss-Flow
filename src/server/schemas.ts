@@ -93,6 +93,13 @@ export const transitionSchema = z.discriminatedUnion("action", [
 
 export const updateProfileSchema = z.object({
   displayName: z.string().nullable().optional(),
+  city: z.string().max(80).nullable().optional(),
+  relationshipGoal: z.string().max(40).nullable().optional(),
+  loveLanguage: z
+    .enum(["words", "gifts", "acts", "time", "touch"])
+    .nullable()
+    .optional(),
+  bio: z.string().max(500).nullable().optional(),
   gender: z.string().nullable().optional(),
   orientation: z.string().nullable().optional(),
   ageRange: z.string().nullable().optional(),

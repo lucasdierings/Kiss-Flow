@@ -29,6 +29,13 @@
       "when": 1790004142422,
       "tag": "0003_better_auth_issuer",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1790022258078,
+      "tag": "0004_perfil_e_tracos",
+      "breakpoints": true
     }
   ]
 }

@@ -3,16 +3,37 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { SEDUCER_ARCHETYPES } from "@/lib/types";
+import { LOVE_LANGUAGES, SEDUCER_ARCHETYPES } from "@/lib/types";
+import FotoPerfil from "@/components/FotoPerfil";
 
 interface Perfil {
   displayName: string;
   gender: string;
   orientation: string;
   ageRange: string;
+  avatarUrl: string | null;
+  /** Alimenta o alerta de proximidade entre pessoas da mesma cidade. */
+  city: string;
+  /** Muda o TOM das sugestões, não só o conteúdo. */
+  relationshipGoal: string;
+  /** Como o próprio usuário recebe afeto — ajuda a IA a calibrar. */
+  loveLanguage: string;
+  bio: string;
   seducerArchetype: string;
   plan: string;
 }
+
+/**
+ * O que a pessoa busca. Não é o mesmo que o objetivo com cada alvo: aqui é a
+ * intenção geral, e ela muda o tom de tudo que a IA sugere.
+ */
+const OBJETIVOS = [
+  { id: "relacionamento", label: "Relacionamento sério" },
+  { id: "conhecer", label: "Conhecer pessoas" },
+  { id: "reconquista", label: "Reconquistar alguém" },
+  { id: "amizade", label: "Amizades e convívio" },
+  { id: "sem_definir", label: "Ainda descobrindo" },
+];
 
 const GENEROS = ["masculino", "feminino", "nao_binario", "outro"];
 const ORIENTACOES = ["mulheres", "homens", "ambos"];
@@ -48,6 +69,11 @@ export default function PerfilClient() {
         gender: profile.gender ?? "",
         orientation: profile.orientation ?? "",
         ageRange: profile.ageRange ?? "",
+        avatarUrl: profile.avatarUrl ?? null,
+        city: profile.city ?? "",
+        relationshipGoal: profile.relationshipGoal ?? "",
+        loveLanguage: profile.loveLanguage ?? "",
+        bio: profile.bio ?? "",
         seducerArchetype: profile.seducerArchetype ?? "charmer",
         plan: profile.plan ?? "free",
       });
@@ -71,6 +97,10 @@ export default function PerfilClient() {
         gender: perfil.gender || null,
         orientation: perfil.orientation || null,
         ageRange: perfil.ageRange || null,
+        city: perfil.city.trim() || null,
+        relationshipGoal: perfil.relationshipGoal || null,
+        loveLanguage: perfil.loveLanguage || null,
+        bio: perfil.bio.trim() || null,
       }),
     });
 
@@ -93,6 +123,12 @@ export default function PerfilClient() {
       <h1 className="mt-4 text-3xl font-semibold tracking-tighter">Meu perfil</h1>
 
       <div className="bento-card mt-6 flex flex-col gap-5">
+        <FotoPerfil
+          urlAtual={perfil.avatarUrl}
+          nome={perfil.displayName}
+          aoEnviar={(url) => setPerfil({ ...perfil, avatarUrl: url })}
+        />
+
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium text-[var(--muted)]">Como quer ser chamado</span>
           <input
@@ -120,6 +156,54 @@ export default function PerfilClient() {
           valor={perfil.ageRange}
           aoEscolher={(v) => setPerfil({ ...perfil, ageRange: v })}
         />
+
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium text-[var(--muted)]">Cidade</span>
+          <input
+            value={perfil.city}
+            onChange={(e) => setPerfil({ ...perfil, city: e.target.value })}
+            placeholder="Onde você vive"
+            className="rounded-lg border border-[var(--card-border)] bg-[#0D0D0D] px-3 py-2.5 text-sm outline-none placeholder:text-[#4a4a4a] focus:border-[var(--accent-violet)]"
+          />
+          <span className="text-[11px] text-[var(--muted)]">
+            Usada para avisar quando duas pessoas suas são da mesma cidade.
+          </span>
+        </label>
+
+        <Grupo
+          titulo="O que você busca"
+          opcoes={OBJETIVOS}
+          valor={perfil.relationshipGoal}
+          aoEscolher={(v) => setPerfil({ ...perfil, relationshipGoal: v })}
+        />
+
+        <div className="flex flex-col gap-1.5">
+          <Grupo
+            titulo="Como você recebe afeto"
+            opcoes={LOVE_LANGUAGES.map((l) => ({ id: l.id, label: l.name }))}
+            valor={perfil.loveLanguage}
+            aoEscolher={(v) => setPerfil({ ...perfil, loveLanguage: v })}
+          />
+          <span className="text-[11px] text-[var(--muted)]">
+            Ajuda a IA a calibrar o que sugerir — o que funciona com você costuma
+            informar o que você percebe nos outros.
+          </span>
+        </div>
+
+        <label className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium text-[var(--muted)]">Sobre você</span>
+          <textarea
+            value={perfil.bio}
+            onChange={(e) => setPerfil({ ...perfil, bio: e.target.value })}
+            rows={3}
+            maxLength={500}
+            placeholder="O que você faz, o que gosta, o que te trouxe aqui"
+            className="resize-y rounded-lg border border-[var(--card-border)] bg-[#0D0D0D] px-3 py-2.5 text-sm outline-none placeholder:text-[#4a4a4a] focus:border-[var(--accent-violet)]"
+          />
+          <span className="text-[11px] text-[var(--muted)]">
+            {perfil.bio.length}/500 · entra no contexto das sugestões
+          </span>
+        </label>
 
         <button
           onClick={salvar}
