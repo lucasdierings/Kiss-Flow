@@ -11,6 +11,11 @@ com D1 e R2 ligados por binding (ver `wrangler.jsonc`).
 >
 > Deploys seguintes: `npm run deploy`, só isso.
 >
+> **Sempre `npm run deploy`, nunca `npx opennextjs-cloudflare deploy` sozinho.**
+> O script do package.json é `build && deploy`; chamar só o `deploy` publica o
+> conteúdo antigo de `.open-next/` e relata sucesso. Aconteceu em 21/09/2026:
+> as rotas novas responderam 404 em produção com o deploy dado como concluído.
+>
 > **Pendente:** registrar as URLs de retorno no Google Cloud Console (seção
 > "OAuth do Google" abaixo). Enquanto isso não for feito, o botão "Continuar
 > com Google" falha; o login por e-mail e senha funciona normalmente.
