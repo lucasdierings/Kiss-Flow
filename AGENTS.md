@@ -69,9 +69,12 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
   (`/alvos`), registrar interação e pedir leitura da IA (`/alvos/[id]`).
   Verificado ponta a ponta: as métricas são recalculadas pelo servidor
   (receptividade 10→13, mistério 85→84, tensão 30→36) e a IA responde
-- **Onboarding obrigatório** (regra nº 1 do produto) finalmente existe:
-  `/onboarding` com o quiz de 10 perguntas, arquétipo calculado **no
-  servidor**, e `requireOnboarded()` barrando o app antes da conclusão
+- **Onboarding guiado e obrigatório** (regra nº 1 do produto): `/onboarding`
+  explica os quatro passos, colhe identidade, aplica o quiz de **18
+  perguntas** e termina apontando a próxima ação. O arquétipo é calculado
+  **no servidor**, e `requireOnboarded()` barra o app antes da conclusão
+- **Quiz equilibrado e auditável.** `npm run auditar:quiz` mede a
+  distribuição e falha se ela se perder
 - **Dashboard com dados reais**, vindos de `/api/crm/state` e `/api/profile`.
   Sem interações, os widgets dizem que não há dados em vez de exibir padrões
 - **Login e cadastro na web** em `/login` e `/signup`, falando com o Better
@@ -205,6 +208,29 @@ funcionalidades web que não existem mais, aponta para `/login`, é gendrada
 - **Métricas 0–100 são `REAL`, não `INTEGER`.** O `engine.ts` arredonda para uma
   casa decimal; `INTEGER` truncaria e deslocaria todos os limiares de progressão.
 
+### Quiz de arquétipo
+
+O arquétipo alimenta a persona da IA e o scoring do usuário, então um quiz
+enviesado contamina tudo o que vem depois. A versão de 10 perguntas dava
+**29,1% de "Estrela" contra 2,5% de "Encantador"** — 11,6 vezes de diferença,
+qualquer que fosse a resposta.
+
+O desenho atual tem 18 perguntas e é equilibrado **por construção**: 72
+posições, cada arquétipo dominante 8 vezes e secundário 8 vezes, 32 pontos
+disponíveis para cada um. A razão caiu para 1,41x.
+
+Duas armadilhas que já apareceram e estão cobertas pela auditoria:
+
+- **Resposta uniforme.** Como as perguntas seguem a rotação dos arquétipos,
+  clicar sempre na mesma posição produzia empate perfeito entre os nove, e o
+  desempate entregava "Sereia" a todo mundo. As opções são giradas de forma
+  determinística para desfazer isso.
+- **Auditar pelo texto do arquivo.** A primeira versão do script lia o
+  código-fonte e não enxergava a rotação aplicada em tempo de carga,
+  concluindo errado. Agora importa o módulo.
+
+Rode `npm run auditar:quiz` sempre que mexer nas perguntas.
+
 ### Modelo de IA
 
 `MODEL_CHAIN` em `src/lib/gemini.ts` é uma **cadeia**, não um nome. Duas coisas
@@ -288,6 +314,8 @@ npx tsc --noEmit            # typecheck
 npm run preview             # build OpenNext + preview no runtime do Worker
 npm run deploy              # deploy Cloudflare
 npm run cf-typegen          # regenera cloudflare-env.d.ts após mudar bindings
+
+npm run auditar:quiz        # mede o equilíbrio do quiz de arquétipo
 
 npx drizzle-kit generate --name=<nome>              # gera migration
 npx wrangler d1 migrations apply kissflow --local   # aplica local (sempre antes)

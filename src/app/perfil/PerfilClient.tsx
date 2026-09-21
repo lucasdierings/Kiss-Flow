@@ -134,10 +134,17 @@ export default function PerfilClient() {
         <p className="text-xs uppercase tracking-widest text-[var(--muted)]">Seu arquétipo</p>
         <p className="mt-2 text-lg font-medium">{arquetipo?.name ?? perfil.seducerArchetype}</p>
         {arquetipo?.desc && <p className="mt-1 text-sm text-[var(--muted)]">{arquetipo.desc}</p>}
-        <p className="mt-3 text-xs text-[var(--muted)]">
-          Definido pelo quiz e calculado a partir das suas respostas — por isso não
-          é editável aqui.
+        <p className="mt-3 text-xs leading-relaxed text-[var(--muted)]">
+          Calculado a partir das suas respostas, por isso não é editável na mão.
+          Mas seu jeito de se relacionar muda — refaça quando sentir que o
+          diagnóstico não descreve mais você.
         </p>
+        <Link
+          href="/onboarding?refazer=1"
+          className="mt-4 inline-block rounded-lg border border-[var(--accent-violet)] px-4 py-2 text-xs transition-colors hover:bg-[var(--accent-purple)]/15"
+        >
+          Refazer diagnóstico
+        </Link>
       </div>
 
       <div className="bento-card mt-4">
