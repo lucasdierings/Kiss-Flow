@@ -17,51 +17,94 @@ import BehaviorDiagnostic from "@/components/BehaviorDiagnostic";
 import PipelineFunnel from "@/components/PipelineFunnel";
 import ActiveContacts from "@/components/ActiveContacts";
 import ConversionAnalytics from "@/components/ConversionAnalytics";
-import DemoDataLoader from "@/components/DemoDataLoader";
-import { loadState } from "@/lib/store";
-import type { Interaction } from "@/lib/types";
+import type { AppState, Contact } from "@/lib/types";
 import { generateProactiveAlerts } from "@/lib/alerts-engine";
 import { calculateUserScore, getDefaultUserScore, type UserScore } from "@/lib/user-scoring";
 import { calculateKPIs } from "@/lib/engine";
 
+/**
+ * Dados reais, vindos da API.
+ *
+ * Antes isto lia `loadState()` do localStorage — por dispositivo, sem dono e
+ * vazio numa conta recém-criada. O efeito era pior que a ausência de dados:
+ * o painel exibia os padrões de `getDefaultUserScore()` (poder 45, barras em
+ * 50) como se fossem medições do usuário.
+ *
+ * Agora, enquanto a carga não termina, `carregando` segura a renderização
+ * dos números. Nada de valor padrão travestido de resultado.
+ */
+/** Estado vazio honesto: diz que não há dados, em vez de exibir padrões. */
+function SemDados({ titulo, texto }: { titulo: string; texto: string }) {
+  return (
+    <div className="bento-card col-span-2 flex flex-col justify-center">
+      <h3 className="text-xs uppercase tracking-widest text-[var(--muted)]">{titulo}</h3>
+      <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">{texto}</p>
+    </div>
+  );
+}
+
 export default function DashboardClient() {
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
-  const [activeContact, setActiveContact] = useState<ReturnType<typeof loadState>["contacts"][number] | null>(null);
-  const [allInteractions, setAllInteractions] = useState<Interaction[]>([]);
-  const [userScore, setUserScore] = useState<UserScore>(getDefaultUserScore());
+  const [activeContact, setActiveContact] = useState<Contact | null>(null);
+  const [allInteractions, setAllInteractions] = useState<AppState["interactions"]>([]);
+  const [userScore, setUserScore] = useState<UserScore | null>(null);
+  const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
-    const state = loadState();
-    if (!state) return;
+    let cancelado = false;
 
-    setAllInteractions(state.interactions);
+    (async () => {
+      const resposta = await fetch("/api/crm/state");
+      if (!resposta.ok || cancelado) {
+        if (!cancelado) setCarregando(false);
+        return;
+      }
 
-    // Calculate user score from all interactions
-    if (state.interactions.length > 0) {
-      const score = calculateUserScore(state.contacts, state.interactions, state.seducerArchetype);
-      setUserScore(score);
-    }
+      const state: AppState = await resposta.json();
+      if (cancelado) return;
 
-    // Use the active contact or first contact
-    const contact = state.contacts.find((c) => c.id === state.activeContactId) || state.contacts[0];
-    if (contact) {
-      setActiveContact(contact);
-      const proactiveAlerts = generateProactiveAlerts(contact, state.interactions, state.phaseHistory || []);
-      setAlerts(
-        proactiveAlerts.map((a, i) => ({
-          id: `local-${i}`,
-          alert_type: a.alert_type,
-          title: a.title,
-          description: a.description,
-          priority: a.priority,
-          action_suggested: a.action_suggested,
-          contact_id: a.contact_id,
-          contact_name: contact.firstName,
-          dismissed: false,
-          created_at: new Date().toISOString(),
-        }))
+      setAllInteractions(state.interactions);
+
+      // Sem interações não há o que medir: o score fica nulo e a UI mostra
+      // o estado inicial em vez de números inventados.
+      setUserScore(
+        state.interactions.length > 0
+          ? calculateUserScore(state.contacts, state.interactions, state.seducerArchetype)
+          : null
       );
-    }
+
+      // Use the active contact or first contact
+      const contact =
+        state.contacts.find((c) => c.id === state.activeContactId) || state.contacts[0];
+      if (contact) {
+        setActiveContact(contact);
+        const proactiveAlerts = generateProactiveAlerts(
+          contact,
+          state.interactions,
+          state.phaseHistory || []
+        );
+        setAlerts(
+          proactiveAlerts.map((a, i) => ({
+            id: `local-${i}`,
+            alert_type: a.alert_type,
+            title: a.title,
+            description: a.description,
+            priority: a.priority,
+            action_suggested: a.action_suggested,
+            contact_id: a.contact_id,
+            contact_name: contact.firstName,
+            dismissed: false,
+            created_at: new Date().toISOString(),
+          }))
+        );
+      }
+
+      setCarregando(false);
+    })();
+
+    return () => {
+      cancelado = true;
+    };
   }, []);
 
   const handleExecuteAlert = useCallback((alertId: string, action: string) => {
@@ -115,7 +158,6 @@ export default function DashboardClient() {
 
         {/* Demo Data Bar */}
         <div className="mb-6">
-          <DemoDataLoader />
         </div>
 
         {/* Proactive Alerts */}
@@ -133,7 +175,14 @@ export default function DashboardClient() {
 
           {/* Row 2: Active Contacts (2 cols) + Strategic Insights (2 cols) */}
           <ActiveContacts />
-          <StrategicInsights score={userScore} />
+          {userScore ? (
+            <StrategicInsights score={userScore} />
+          ) : (
+            <SemDados
+              titulo="Insights estratégicos"
+              texto="Registre suas primeiras interações. Os insights saem da sua conduta — sem histórico, qualquer número aqui seria chute."
+            />
+          )}
 
           {/* Row 3: Conversion Analytics (full width) */}
           <ConversionAnalytics />
@@ -152,7 +201,14 @@ export default function DashboardClient() {
           />
 
           {/* Row 4: Behavior Diagnostic (2 cols) + Mystery Gauge + Scarcity Index */}
-          <BehaviorDiagnostic score={userScore} />
+          {userScore ? (
+            <BehaviorDiagnostic score={userScore} />
+          ) : (
+            <SemDados
+              titulo="Diagnóstico comportamental"
+              texto="Ainda não há interações registradas para analisar."
+            />
+          )}
           <MysteryGauge value={activeContact?.mysteryCoefficient} />
           <ScarcityIndex value={activeContact?.scarcityScore} />
 

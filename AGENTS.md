@@ -65,6 +65,11 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
   ALLOWED_EMAILS 403
 - **Build para o Cloudflare passando** (`npx opennextjs-cloudflare build` gera
   `.open-next/worker.js`); runbook de publicação em `docs/deploy.md`
+- **Onboarding obrigatório** (regra nº 1 do produto) finalmente existe:
+  `/onboarding` com o quiz de 10 perguntas, arquétipo calculado **no
+  servidor**, e `requireOnboarded()` barrando o app antes da conclusão
+- **Dashboard com dados reais**, vindos de `/api/crm/state` e `/api/profile`.
+  Sem interações, os widgets dizem que não há dados em vez de exibir padrões
 - **Login e cadastro na web** em `/login` e `/signup`, falando com o Better
   Auth; testados pela interface no navegador, não só por curl
 - **Autenticação funcionando:** `/api/auth/[...all]` responde; cadastro cria
@@ -99,8 +104,10 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
 | RevenueCat | `apps/mobile/app/paywall.tsx` | SDK comentado. |
 | Consentimento LGPD | `apps/mobile/app/onboarding.tsx` | Só grava flag local, não escreve em `user_consents`. |
 | Termos e privacidade | `apps/mobile/app/{terms,privacy}.tsx` | Rascunhos. Citam Supabase, sem base legal/DPO/retenção. Reprovam nas lojas. |
-| Resíduo de Supabase | `AvatarUpload`, `Sidebar`, `UserProfileCard`, `store.ts` | `store.ts` ainda é localStorage. |
-| Componentes órfãos | `src/components/` | `ActionModal`, `AvatarUpload`, `ConfirmDeleteModal`, `EditContactModal`, `EditInteractionModal`, `EncounterPlanner`, `SalesToRelationshipMatrix`, `WhatsAppStudio` |
+| Resíduo de Supabase | `AvatarUpload` | `Sidebar` e `UserProfileCard` já migraram para `/api/profile`. `src/lib/store.ts` (localStorage) só é usado por componentes ainda não religados. |
+| Componentes órfãos | `src/components/` | `ActionModal`, `AvatarUpload`, `ConfirmDeleteModal`, `EditContactModal`, `EditInteractionModal`, `EncounterPlanner`, `SalesToRelationshipMatrix`, `WhatsAppStudio`, `DemoDataLoader` |
+| Widgets ainda em localStorage | `PipelineFunnel`, `ActiveContacts`, `ConversionAnalytics`, `QuickLogFAB` | Leem `src/lib/store.ts`. Numa conta nova aparecem vazios (correto por acidente), mas não refletem o banco. |
+| Telas do app na web | — | Só existe o dashboard. Faltam alvos, kanban, chat, táticas, analytics e perfil para a web ser mesmo espelho do app. |
 
 ---
 
@@ -237,7 +244,11 @@ mudar um sem o outro faz o wrangler aplicar um conjunto vazio sem reclamar.
 4. **Toda sugestão explica o porquê** — contexto + princípio aplicado.
 5. **Inclusão.** Todos os gêneros e orientações. Personas: Don Juan (masculino),
    Cleópatra (feminino), Neutro (não-binário/outros).
-6. **LGPD.** Prints e áudios só para a finalidade informada, pelo menor tempo
+6. **Nunca mostrar valor padrão como se fosse medição.** Uma conta nova exibia
+   "Seducer Pro", poder 45 e barras em 50 — números de `getDefaultUserScore()`
+   apresentados como diagnóstico do usuário. Num produto sobre autoconhecimento
+   isso destrói a confiança. Sem dado, o widget diz que não há dado.
+7. **LGPD.** Prints e áudios só para a finalidade informada, pelo menor tempo
    necessário, com consentimento antes do upload e exclusão pelo usuário.
    Eventos de produto nunca carregam conteúdo bruto.
 

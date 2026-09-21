@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { createSupabaseBrowser } from "@/lib/supabase";
 import { SEDUCER_ARCHETYPES } from "@/lib/types";
 
 const navItems = [
@@ -83,29 +82,26 @@ const navItems = [
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(true);
-  const [userName, setUserName] = useState("Seducer Pro");
-  const [userArchetype, setUserArchetype] = useState("O Encantador");
+  const [userName, setUserName] = useState("");
+  // Vazio até a carga: o padrão anterior era o rótulo "O Encantador", que
+  // nunca casava com SEDUCER_ARCHETYPES (a busca é por id, tipo "charmer").
+  const [userArchetype, setUserArchetype] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const pathname = usePathname();
 
   useEffect(() => {
     async function loadProfile() {
       try {
-        const supabase = createSupabaseBrowser();
-        if (supabase) {
-          const { data: { user } } = await supabase.auth.getUser();
-          if (user) {
-            const { data } = await supabase
-              .from("user_profiles")
-              .select("display_name, seducer_archetype, avatar_url")
-              .eq("id", user.id)
-              .single();
-            if (data) {
-              setUserName(data.display_name || "Seducer Pro");
-              setUserArchetype(data.seducer_archetype || "O Encantador");
-              setAvatarUrl(data.avatar_url || null);
-            }
-          }
+        const resposta = await fetch("/api/profile");
+        if (resposta.ok) {
+          const { profile } = (await resposta.json()) as {
+            profile: { displayName: string | null; seducerArchetype: string | null; avatarUrl: string | null };
+          };
+          // Sem nome no perfil, o componente mostra o estado vazio em vez de
+          // um rótulo inventado.
+          setUserName(profile.displayName ?? "");
+          if (profile.seducerArchetype) setUserArchetype(profile.seducerArchetype);
+          if (profile.avatarUrl) setAvatarUrl(profile.avatarUrl);
         }
       } catch { /* silent fallback */ }
     }

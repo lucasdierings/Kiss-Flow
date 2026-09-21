@@ -2,14 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { loadState } from "@/lib/store";
-import { SEDUCER_ARCHETYPES } from "@/lib/types";
-import {
-  calculateUserScore,
-  getDefaultUserScore,
-  type UserScore,
-} from "@/lib/user-scoring";
-import { createSupabaseBrowser } from "@/lib/supabase";
+import { SEDUCER_ARCHETYPES, type AppState } from "@/lib/types";
+import { calculateUserScore, type UserScore } from "@/lib/user-scoring";
 
 interface UserProfile {
   displayName: string;
@@ -30,67 +24,67 @@ const ARCHETYPE_COLORS: Record<string, string> = {
   star: "#a855f7",
 };
 
+/**
+ * Perfil real do usuário.
+ *
+ * Este componente era a origem do "Seducer Pro" que aparecia para todo mundo:
+ * consultava o **Supabase**, que desde a migração devolve `null` por falta de
+ * variáveis, e caía num objeto fixo no código. O score vinha de
+ * `getDefaultUserScore()` — poder 45, barras em 50 — apresentado como
+ * medição.
+ *
+ * Agora lê /api/profile e /api/crm/state. Sem interações, `score` fica nulo e
+ * as barras não são desenhadas.
+ */
 export default function UserProfileCard() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [score, setScore] = useState<UserScore>(getDefaultUserScore());
+  const [score, setScore] = useState<UserScore | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function loadProfile() {
+    let cancelado = false;
+
+    (async () => {
       try {
-        const supabase = createSupabaseBrowser();
-        if (supabase) {
-          const {
-            data: { user },
-          } = await supabase.auth.getUser();
+        const [respPerfil, respEstado] = await Promise.all([
+          fetch("/api/profile"),
+          fetch("/api/crm/state"),
+        ]);
 
-          if (user) {
-            const { data: profileData } = await supabase
-              .from("user_profiles")
-              .select("*")
-              .eq("id", user.id)
-              .single();
+        if (cancelado) return;
 
-            if (profileData) {
-              setProfile({
-                displayName:
-                  profileData.display_name ||
-                  user.user_metadata?.display_name ||
-                  "Seducer Pro",
-                gender: profileData.gender || "other",
-                seducerArchetype: profileData.seducer_archetype || "charmer",
-                avatarUrl: profileData.avatar_url || null,
-              });
-            }
-          }
-        }
-        if (!profile) {
+        if (respPerfil.ok) {
+          const { profile: p } = (await respPerfil.json()) as { profile: Record<string, string | null> };
           setProfile({
-            displayName: "Seducer Pro",
-            gender: "male",
-            seducerArchetype: "charmer",
-            avatarUrl: null,
+            displayName: p.displayName ?? "",
+            gender: p.gender ?? "",
+            seducerArchetype: p.seducerArchetype ?? "charmer",
+            avatarUrl: p.avatarUrl ?? null,
           });
         }
 
-        // Calculate scores from local state
-        const state = loadState();
-        if (state && state.interactions.length > 0) {
-          const userScore = calculateUserScore(
-            state.contacts,
-            state.interactions,
-            state.seducerArchetype
-          );
-          setScore(userScore);
+        if (respEstado.ok) {
+          const state: AppState = await respEstado.json();
+          if (!cancelado && state.interactions.length > 0) {
+            setScore(
+              calculateUserScore(
+                state.contacts,
+                state.interactions,
+                state.seducerArchetype
+              )
+            );
+          }
         }
       } catch {
-        // fallback silently
+        // Falha de rede não inventa perfil: a UI mostra o estado de carga.
       } finally {
-        setLoading(false);
+        if (!cancelado) setLoading(false);
       }
-    }
+    })();
 
-    loadProfile();
+    return () => {
+      cancelado = true;
+    };
   }, []);
 
   const archetype = SEDUCER_ARCHETYPES.find(
@@ -193,68 +187,81 @@ export default function UserProfileCard() {
         </p>
 
         {/* Power Score (circular) */}
+        {score ? (
+          <>
         <div className="relative w-20 h-20 mb-4">
-          <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-            <path
-              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              fill="none"
-              stroke="#262626"
-              strokeWidth="3"
-            />
-            <path
-              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-              fill="none"
-              stroke={archetypeColor}
-              strokeWidth="3"
-              strokeDasharray={`${score.overallPower}, 100`}
-              strokeLinecap="round"
-              className="transition-all duration-1000"
-            />
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span
-              className="text-lg font-bold tracking-tighter"
-              style={{ color: archetypeColor }}
-            >
-              {score.overallPower}
-            </span>
-            <span className="text-[8px] text-[#737373] uppercase tracking-wider">
-              Poder
-            </span>
+            <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+              <path
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                fill="none"
+                stroke="#262626"
+                strokeWidth="3"
+              />
+              <path
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                fill="none"
+                stroke={archetypeColor}
+                strokeWidth="3"
+                strokeDasharray={`${score.overallPower}, 100`}
+                strokeLinecap="round"
+                className="transition-all duration-1000"
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span
+                className="text-lg font-bold tracking-tighter"
+                style={{ color: archetypeColor }}
+              >
+                {score.overallPower}
+              </span>
+              <span className="text-[8px] text-[#737373] uppercase tracking-wider">
+                Poder
+              </span>
+            </div>
           </div>
-        </div>
-
-        {/* Score bars */}
-        <div className="w-full space-y-2">
-          <ScoreBar
-            label="Mistério"
-            value={score.mysteryMaintenance}
-            color="#8b5cf6"
-          />
-          <ScoreBar
-            label="Controle"
-            value={score.emotionalControl}
-            color="#06b6d4"
-          />
-          <ScoreBar
-            label="Paciência"
-            value={score.strategicPatience}
-            color="#059669"
-          />
-          <ScoreBar
-            label="Prova Social"
-            value={score.socialProofAwareness}
-            color="#d97706"
-          />
-          <ScoreBar
-            label="Adaptabilidade"
-            value={score.adaptability}
-            color="#e11d48"
-          />
-        </div>
+  
+          {/* Score bars */}
+          <div className="w-full space-y-2">
+            <ScoreBar
+              label="Mistério"
+              value={score.mysteryMaintenance}
+              color="#8b5cf6"
+            />
+            <ScoreBar
+              label="Controle"
+              value={score.emotionalControl}
+              color="#06b6d4"
+            />
+            <ScoreBar
+              label="Paciência"
+              value={score.strategicPatience}
+              color="#059669"
+            />
+            <ScoreBar
+              label="Prova Social"
+              value={score.socialProofAwareness}
+              color="#d97706"
+            />
+            <ScoreBar
+              label="Adaptabilidade"
+              value={score.adaptability}
+              color="#e11d48"
+            />
+          </div>
+          </>
+        ) : (
+          <div className="w-full rounded-xl border border-[#262626] bg-[#0D0D0D] p-3 text-center">
+            <p className="text-[11px] leading-relaxed text-[#737373]">
+              {loading
+                ? "Carregando seu perfil…"
+                : "Seus índices aparecem depois das primeiras interações registradas."}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Neediness indicator */}
+      {score && (
       <div className="mt-4 p-2.5 rounded-xl bg-[#0D0D0D] border border-[#262626]">
         <div className="flex items-center justify-between mb-1">
           <span className="text-[10px] text-[#737373] uppercase tracking-wider">
@@ -289,6 +296,7 @@ export default function UserProfileCard() {
           />
         </div>
       </div>
+      )}
     </div>
   );
 }

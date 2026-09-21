@@ -1,7 +1,10 @@
+import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { getAuth } from "./auth";
+import { getDb } from "./db/client";
+import { userProfile } from "./db/schema";
 
 /**
  * Sessão em Server Components.
@@ -35,5 +38,26 @@ export async function requireSession(redirectTo = "/") {
   if (!session?.user) {
     redirect(`/login?redirectTo=${encodeURIComponent(redirectTo)}`);
   }
+  return session;
+}
+
+/**
+ * Exige sessão E onboarding concluído.
+ *
+ * A regra nº 1 do produto é que o quiz de arquétipo vem antes do uso. Sem
+ * este portão o usuário entrava direto e via um perfil padrão — "Seducer
+ * Pro", poder 45, barras em 50 — como se fossem números dele.
+ */
+export async function requireOnboarded(redirectTo = "/") {
+  const session = await requireSession(redirectTo);
+
+  const db = await getDb();
+  const [perfil] = await db
+    .select({ onboardingCompleted: userProfile.onboardingCompleted })
+    .from(userProfile)
+    .where(eq(userProfile.userId, session.user.id));
+
+  if (!perfil?.onboardingCompleted) redirect("/onboarding");
+
   return session;
 }
