@@ -33,7 +33,19 @@ export async function isAiConfigured(): Promise<boolean> {
   return (await geminiKey()).length > 0;
 }
 
-export const FLASH_MODEL = "gemini-2.0-flash";
+/**
+ * Alias, não versão fixa, de propósito.
+ *
+ * O código vinha preso em "gemini-2.0-flash", que o Google aposentou: a API
+ * passou a responder 404 e a rota quebrou sem ninguém mudar uma linha. Este
+ * projeto não tem operação para perseguir depreciação de modelo, então o
+ * alias — que o Google move para o flash atual — troca uma quebra silenciosa
+ * por uma variação de comportamento visível.
+ *
+ * Se algum dia a estabilidade do prompt passar a importar mais que isso,
+ * fixe uma versão E crie um lembrete para revisá-la.
+ */
+export const FLASH_MODEL = "gemini-flash-latest";
 
 export async function getFlashModel() {
   const key = await geminiKey();

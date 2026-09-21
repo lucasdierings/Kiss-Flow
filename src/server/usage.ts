@@ -154,6 +154,65 @@ export async function reserveAnalysis(
 }
 
 /**
+ * Devolve a unidade reservada.
+ *
+ * A reserva acontece ANTES da chamada ao modelo, senão o custo ocorreria sem
+ * saldo. Mas quando o modelo falha por motivo nosso ou do provedor — 502, 503
+ * de capacidade, chave inválida — a análise não foi entregue, e cobrar por ela
+ * é errado. Sem isto, cinco 503 seguidos do Gemini zeravam a franquia mensal
+ * de um usuário do plano free (aconteceu em teste).
+ *
+ * Só estorna falha de infraestrutura. Resposta ruim do modelo é entrega.
+ */
+export async function refundReservation(
+  ctx: Ctx,
+  reservation: Reservation,
+  feature: MonthlyFeature = "ai_analysis"
+): Promise<void> {
+  try {
+    if (reservation.source === "plan") {
+      // O guarda `count > 0` evita contador negativo se algo já tiver zerado.
+      await ctx.db
+        .update(usageCounters)
+        .set({ count: sql`${usageCounters.count} - 1`, updatedAt: new Date() })
+        .where(
+          and(
+            eq(usageCounters.userId, ctx.userId),
+            eq(usageCounters.period, currentPeriod()),
+            eq(usageCounters.feature, feature),
+            sql`${usageCounters.count} > 0`
+          )
+        );
+      return;
+    }
+
+    if (reservation.source === "credit") {
+      await ctx.db.batch([
+        ctx.db.insert(aiCreditTransactions).values({
+          id: newId(),
+          userId: ctx.userId,
+          amount: 1,
+          reason: "refund",
+          // Sem referenceId: o índice único de concessão é por evento de
+          // compra, e um estorno não é uma compra.
+          referenceId: null,
+        }),
+        ctx.db
+          .update(aiCreditWallets)
+          .set({
+            balance: sql`${aiCreditWallets.balance} + 1`,
+            updatedAt: new Date(),
+          })
+          .where(eq(aiCreditWallets.userId, ctx.userId)),
+      ]);
+    }
+  } catch (error) {
+    // Um estorno perdido é melhor que uma requisição derrubada; fica no log.
+    console.error("refundReservation falhou:", error);
+  }
+}
+
+/**
  * Telemetria. Append-only e analítica — não é trilha de auditoria.
  *
  * Nunca receba conteúdo bruto de conversa, print ou áudio: o contrato de

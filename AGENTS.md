@@ -68,6 +68,10 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
   telemetria)
 - **Cotas com reserva atômica** em `src/server/usage.ts`: verificado que a 6ª
   reserva é recusada quando o limite é 5, sem janela de corrida
+- **Geração com o Gemini funcionando** de ponta a ponta, com `GEMINI_API_KEY`
+  configurada localmente. O nível gratuito devolve 503 de capacidade com
+  frequência; quando isso acontece a cota é **estornada**, então falha do
+  provedor não custa análise ao usuário
 - **Webhook da loja** creditando de verdade e idempotente: reentrega do mesmo
   evento não credita duas vezes, e a cadeia assinatura → plano → limites foi
   exercitada de ponta a ponta
@@ -79,7 +83,6 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
 
 | O quê | Onde | Situação |
 |---|---|---|
-| Chamada real ao Gemini | `src/app/api/ai/advise/` | Caminho ligado e testado até a borda do modelo, mas `GEMINI_API_KEY` está vazia no `.dev.vars` — a geração em si nunca rodou. |
 | Segredo do webhook em produção | Cloudflare | `.dev.vars` tem só um placeholder. Definir com `wrangler secret put REVENUECAT_WEBHOOK_AUTH_KEY` antes de apontar a loja para cá. |
 | Login/signup do mobile | `apps/mobile/app/login.tsx` | Grava `'mock_token'` no AsyncStorage. |
 | Dados do mobile | `apps/mobile/context/AppContext.tsx` | `INITIAL_TARGETS` fixos. Só `mentor.tsx` chama a API. |
@@ -169,6 +172,16 @@ funcionalidades web que não existem mais, aponta para `/login`, é gendrada
   nova em `usage_counters`.
 - **Métricas 0–100 são `REAL`, não `INTEGER`.** O `engine.ts` arredonda para uma
   casa decimal; `INTEGER` truncaria e deslocaria todos os limiares de progressão.
+
+### Modelo de IA
+
+`FLASH_MODEL` em `src/lib/gemini.ts` é um **alias** (`gemini-flash-latest`),
+não uma versão fixa. O código estava preso em `gemini-2.0-flash`, que o Google
+aposentou: a API passou a responder 404 e a rota quebrou sem ninguém mexer numa
+linha. Não há operação aqui para perseguir depreciação de modelo.
+
+O nível gratuito da API sofre 503 de capacidade com frequência. A rota estorna
+a cota nesses casos — ver `refundReservation` em `src/server/usage.ts`.
 
 ### Migrations — regras
 

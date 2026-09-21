@@ -5,7 +5,7 @@ import { FLASH_MODEL, getFlashModel, isAiConfigured } from "@/lib/gemini";
 import { buildMentorSystemPrompt, retrieveKnowledgeChunks } from "@/lib/rag-engine";
 import { withApi } from "@/server/guard";
 import { getContact } from "@/server/repo/crm";
-import { logUsage, reserveAnalysis } from "@/server/usage";
+import { logUsage, refundReservation, reserveAnalysis } from "@/server/usage";
 
 /**
  * Conselho do mentor.
@@ -115,6 +115,9 @@ export const POST = withApi(adviseSchema, async ({ body, ctx }) => {
     raw = result.response.text();
   } catch (error) {
     console.error("Gemini falhou:", error);
+    // A análise não foi entregue: devolve a unidade cobrada. Sem isto, uma
+    // sequência de 503 do provedor zera a franquia do mês do usuário.
+    await refundReservation(ctx, reservation);
     await logUsage(ctx, {
       feature: "ai_analysis",
       featureDetail: "ai/advise",
