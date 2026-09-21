@@ -59,6 +59,10 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
 - D1 remoto com 17 tabelas, em sincronia com `src/server/db/schema.ts`
 - Histórico de migrations íntegro em `drizzle/` (baseline conferida objeto a
   objeto contra o `sqlite_master` do remoto)
+- **PUBLICADO** em https://kissflow.lucasdierings.workers.dev, com os sete
+  segredos definidos. Conferido no ar: API sem sessão 401, /login e /signup
+  200, / redireciona para o login, webhook sem segredo 401, cadastro fora do
+  ALLOWED_EMAILS 403
 - **Build para o Cloudflare passando** (`npx opennextjs-cloudflare build` gera
   `.open-next/worker.js`); runbook de publicação em `docs/deploy.md`
 - **Login e cadastro na web** em `/login` e `/signup`, falando com o Better
@@ -88,7 +92,7 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
 | O quê | Onde | Situação |
 |---|---|---|
 | Latência da IA acima do critério | `/api/ai/advise` | Medido 6,8s / 15,5s / 22,1s. O Gate 0 exige resposta em até 15s. Caminhos: streaming, prompt menor, ou modelo lite. |
-| Segredo do webhook em produção | Cloudflare | `.dev.vars` tem só um placeholder. Definir com `wrangler secret put REVENUECAT_WEBHOOK_AUTH_KEY` antes de apontar a loja para cá. |
+| URLs de retorno do OAuth do Google | Google Cloud Console | Não registradas para o domínio publicado; o botão \"Continuar com Google\" falha até isso ser feito. Ver `docs/deploy.md`. |
 | Login/signup do mobile | `apps/mobile/app/login.tsx` | Grava `'mock_token'` no AsyncStorage. |
 | Dados do mobile | `apps/mobile/context/AppContext.tsx` | `INITIAL_TARGETS` fixos. Só `mentor.tsx` chama a API. |
 | URL da API no mobile | `apps/mobile/services/api.ts` | IP local fixo (`192.168.3.35`). |

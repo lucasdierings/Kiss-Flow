@@ -3,9 +3,17 @@
 Runbook do deploy. A stack é Next.js sobre Workers via `@opennextjs/cloudflare`,
 com D1 e R2 ligados por binding (ver `wrangler.jsonc`).
 
-> **Estado:** o Worker `kissflow` ainda **não existe** na conta. A sequência de
-> primeiro deploy abaixo é diferente dos deploys seguintes, porque `wrangler
-> secret put` exige que o Worker já exista.
+> **Estado:** publicado em **https://kissflow.lucasdierings.workers.dev**
+> (primeiro deploy em 21/09/2026). Os sete segredos já estão definidos no
+> Worker. A sequência de primeiro deploy abaixo fica registrada porque é
+> diferente dos deploys seguintes — `wrangler secret put` exige que o Worker
+> já exista — e vale para recriar o ambiente do zero.
+>
+> Deploys seguintes: `npm run deploy`, só isso.
+>
+> **Pendente:** registrar as URLs de retorno no Google Cloud Console (seção
+> "OAuth do Google" abaixo). Enquanto isso não for feito, o botão "Continuar
+> com Google" falha; o login por e-mail e senha funciona normalmente.
 
 ## Antes de publicar
 
@@ -26,7 +34,7 @@ deploy. A primeira publicação sobe sem segredos e falha em tempo de execução
 npm run deploy
 ```
 
-Anote a URL da saída (`https://kissflow.<subdominio>.workers.dev`). Ela é o
+Anote a URL da saída (`https://kissflow.lucasdierings.workers.dev`). Ela é o
 valor de `BETTER_AUTH_URL` no passo seguinte.
 
 ### 2. Definir os segredos
@@ -65,9 +73,9 @@ npm run deploy
 O Google recusa o retorno se a URL não estiver registrada. No Google Cloud
 Console → Credenciais → o OAuth Client usado:
 
-- **Origem JavaScript autorizada:** `https://kissflow.<subdominio>.workers.dev`
+- **Origem JavaScript autorizada:** `https://kissflow.lucasdierings.workers.dev`
 - **URI de redirecionamento autorizado:**
-  `https://kissflow.<subdominio>.workers.dev/api/auth/callback/google`
+  `https://kissflow.lucasdierings.workers.dev/api/auth/callback/google`
 
 Ao trocar por domínio próprio, repetir com o domínio novo **antes** de mudar o
 `BETTER_AUTH_URL`, senão o login social quebra entre um passo e outro.
@@ -75,7 +83,7 @@ Ao trocar por domínio próprio, repetir com o domínio novo **antes** de mudar 
 ## Depois de publicar — conferir
 
 ```bash
-BASE=https://kissflow.<subdominio>.workers.dev
+BASE=https://kissflow.lucasdierings.workers.dev
 
 # rota protegida sem sessão deve dar 401
 curl -s -o /dev/null -w "%{http_code}\n" $BASE/api/crm/contacts
