@@ -1,22 +1,29 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { loadState } from "@/lib/store";
 import {
   calculateAnalytics,
   generateBottleneckInsight,
   type AnalyticsSummary,
 } from "@/lib/analytics";
 import { LOST_REASON_LABELS, type LostReason } from "@/lib/types";
+import type { AppState } from "@/lib/types";
 
-export default function ConversionAnalytics() {
+/**
+ * Recebe o estado por propriedade em vez de ler o localStorage.
+ *
+ * Antes este componente chamava `loadState()` direto: dado por dispositivo,
+ * sem dono, e que ficou vazio quando o backend passou a ser o D1 — o painel
+ * dizia "nenhum alvo cadastrado" com alvos cadastrados no banco.
+ */
+export default function ConversionAnalytics({ state }: { state: AppState | null }) {
   const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null);
 
   useEffect(() => {
-    const state = loadState();
+    if (!state) return;
     if (!state || state.phaseHistory.length < 1) return;
     setAnalytics(calculateAnalytics(state));
-  }, []);
+  }, [state]);
 
   if (!analytics) return null;
 

@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { loadState } from "@/lib/store";
 import { type Contact, VICTIM_TYPES } from "@/lib/types";
+import type { AppState } from "@/lib/types";
 
 interface ContactSummary {
   id: string;
@@ -35,11 +35,17 @@ const STAGE_COLORS: Record<string, string> = {
   fechamento: "#059669",
 };
 
-export default function ActiveContacts() {
+/**
+ * Recebe o estado por propriedade em vez de ler o localStorage.
+ *
+ * Antes este componente chamava `loadState()` direto: dado por dispositivo,
+ * sem dono, e que ficou vazio quando o backend passou a ser o D1 — o painel
+ * dizia "nenhum alvo cadastrado" com alvos cadastrados no banco.
+ */
+export default function ActiveContacts({ state }: { state: AppState | null }) {
   const [contacts, setContacts] = useState<ContactSummary[]>([]);
 
   useEffect(() => {
-    const state = loadState();
     if (!state) return;
 
     const activeContacts = state.contacts.filter(c => c.status === "active");
@@ -81,7 +87,7 @@ export default function ActiveContacts() {
     // Sort by victim score descending (most promising first)
     summaries.sort((a, b) => b.victimScore - a.victimScore);
     setContacts(summaries);
-  }, []);
+  }, [state]);
 
   if (contacts.length === 0) {
     return null; // PipelineFunnel already handles empty state

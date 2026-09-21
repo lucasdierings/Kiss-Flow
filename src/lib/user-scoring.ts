@@ -1,4 +1,8 @@
-import { Interaction, Contact, SEDUCER_ARCHETYPES } from "./types";
+// Tipos e valores separados de propósito: com tudo num import só, quem
+// apaga tipos em tempo de execução (o Node, nos scripts de auditoria) tenta
+// importar `Interaction` e `Contact` como valores e quebra.
+import type { Contact, Interaction } from "./types";
+import { SEDUCER_ARCHETYPES } from "./types";
 
 // ===== Motor de Scoring do Usuario =====
 // Analisa o comportamento do usuario (sedutor) com base nas interações registradas

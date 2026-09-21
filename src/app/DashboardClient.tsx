@@ -21,6 +21,13 @@ import type { AppState, Contact } from "@/lib/types";
 import { generateProactiveAlerts } from "@/lib/alerts-engine";
 import { calculateUserScore, getDefaultUserScore, type UserScore } from "@/lib/user-scoring";
 import { calculateKPIs } from "@/lib/engine";
+import RecursoBloqueado from "@/components/RecursoBloqueado";
+import {
+  avaliarRecurso,
+  medirProgresso,
+  proximosRecursos,
+  type DadosProgresso,
+} from "@/lib/progression";
 
 /**
  * Dados reais, vindos da API.
@@ -33,22 +40,19 @@ import { calculateKPIs } from "@/lib/engine";
  * Agora, enquanto a carga não termina, `carregando` segura a renderização
  * dos números. Nada de valor padrão travestido de resultado.
  */
-/** Estado vazio honesto: diz que não há dados, em vez de exibir padrões. */
-function SemDados({ titulo, texto }: { titulo: string; texto: string }) {
-  return (
-    <div className="bento-card col-span-2 flex flex-col justify-center">
-      <h3 className="text-xs uppercase tracking-widest text-[var(--muted)]">{titulo}</h3>
-      <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">{texto}</p>
-    </div>
-  );
-}
-
 export default function DashboardClient() {
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [activeContact, setActiveContact] = useState<Contact | null>(null);
   const [allInteractions, setAllInteractions] = useState<AppState["interactions"]>([]);
   const [userScore, setUserScore] = useState<UserScore | null>(null);
+  const [estado, setEstado] = useState<AppState | null>(null);
   const [carregando, setCarregando] = useState(true);
+  const [progresso, setProgresso] = useState<DadosProgresso>({
+    alvos: 0,
+    interacoes: 0,
+    maiorHistorico: 0,
+    transicoes: 0,
+  });
 
   useEffect(() => {
     let cancelado = false;
@@ -63,7 +67,11 @@ export default function DashboardClient() {
       const state: AppState = await resposta.json();
       if (cancelado) return;
 
+      setEstado(state);
       setAllInteractions(state.interactions);
+      setProgresso(
+        medirProgresso(state.contacts, state.interactions, state.phaseHistory ?? [])
+      );
 
       // Sem interações não há o que medir: o score fica nulo e a UI mostra
       // o estado inicial em vez de números inventados.
@@ -114,6 +122,11 @@ export default function DashboardClient() {
   const handleDismissAlert = useCallback((alertId: string) => {
     setAlerts((prev) => prev.filter((a) => a.id !== alertId));
   }, []);
+
+  const diagnostico = avaliarRecurso("diagnostico", progresso);
+  const funil = avaliarRecurso("funil", progresso);
+  const conversao = avaliarRecurso("analytics_conversao", progresso);
+  const aSeguir = proximosRecursos(progresso, 3);
 
   return (
     <div className="min-h-screen bg-[#0D0D0D]">
@@ -167,25 +180,66 @@ export default function DashboardClient() {
           onDismiss={handleDismissAlert}
         />
 
+        {aSeguir.length > 0 && !carregando && (
+          <section className="bento-card mb-4">
+            <h2 className="text-xs uppercase tracking-widest text-[var(--muted)]">
+              Seu percurso
+            </h2>
+            <p className="mt-1.5 text-xs text-[var(--muted)]">
+              Cada recurso abre quando passa a ter dado suficiente para ser confiável.
+            </p>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              {aSeguir.map(({ recurso, estado }) => (
+                <div key={recurso.id}>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-[var(--foreground)]">{recurso.nome}</span>
+                    <span className="tabular-nums text-[var(--muted)]">
+                      {Math.round(estado.progresso * 100)}%
+                    </span>
+                  </div>
+                  <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-[var(--card-border)]">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-[#7c3aed] to-[#8b5cf6] transition-all duration-500"
+                      style={{ width: `${Math.max(estado.progresso * 100, 3)}%` }}
+                    />
+                  </div>
+                  <p className="mt-1.5 text-[11px] text-[var(--muted)]">
+                    {estado.falta[0]}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         {/* ===== BENTO GRID ===== */}
         <div className="grid grid-cols-4 gap-4 auto-rows-auto">
           {/* Row 1: User Profile (2x2) + Pipeline Funnel (2 cols) */}
           <UserProfileCard />
-          <PipelineFunnel />
+          {funil.liberado ? (
+            <PipelineFunnel state={estado} />
+          ) : (
+            <RecursoBloqueado titulo="Funil de conquista" estado={funil} className="col-span-2" />
+          )}
 
           {/* Row 2: Active Contacts (2 cols) + Strategic Insights (2 cols) */}
-          <ActiveContacts />
-          {userScore ? (
+          <ActiveContacts state={estado} />
+          {diagnostico.liberado && userScore ? (
             <StrategicInsights score={userScore} />
           ) : (
-            <SemDados
+            <RecursoBloqueado
               titulo="Insights estratégicos"
-              texto="Registre suas primeiras interações. Os insights saem da sua conduta — sem histórico, qualquer número aqui seria chute."
+              estado={diagnostico}
+              className="col-span-2"
             />
           )}
 
           {/* Row 3: Conversion Analytics (full width) */}
-          <ConversionAnalytics />
+          {conversao.liberado ? (
+            <ConversionAnalytics state={estado} />
+          ) : (
+            <RecursoBloqueado titulo="Análise de conversão" estado={conversao} className="col-span-4" />
+          )}
 
           {/* Row 4: KPI Cards (4 cols) */}
           <KPICards
@@ -201,12 +255,13 @@ export default function DashboardClient() {
           />
 
           {/* Row 4: Behavior Diagnostic (2 cols) + Mystery Gauge + Scarcity Index */}
-          {userScore ? (
+          {diagnostico.liberado && userScore ? (
             <BehaviorDiagnostic score={userScore} />
           ) : (
-            <SemDados
+            <RecursoBloqueado
               titulo="Diagnóstico comportamental"
-              texto="Ainda não há interações registradas para analisar."
+              estado={diagnostico}
+              className="col-span-2"
             />
           )}
           <MysteryGauge value={activeContact?.mysteryCoefficient} />

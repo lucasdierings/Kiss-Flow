@@ -65,6 +65,13 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
   ALLOWED_EMAILS 403
 - **Build para o Cloudflare passando** (`npx opennextjs-cloudflare build` gera
   `.open-next/worker.js`); runbook de publicação em `docs/deploy.md`
+- **Liberação progressiva** (`src/lib/progression.ts`): cada gráfico abre
+  quando passa a ter dado suficiente para ser confiável, e o painel mostra o
+  que falta para o próximo. Os limiares saem da auditoria, não de palpite
+- **Quadro de gestão** em `/kanban`, com a transição de fase **aplicada**
+  (evidência obrigatória), e não apenas sugerida
+- **Widgets do dashboard lendo o banco**: PipelineFunnel, ActiveContacts e
+  ConversionAnalytics recebem o estado por propriedade
 - **O loop do Gate 0 fecha na web**: cadastrar alvo (`/alvos/novo`), listar
   (`/alvos`), registrar interação e pedir leitura da IA (`/alvos/[id]`).
   Verificado ponta a ponta: as métricas são recalculadas pelo servidor
@@ -113,9 +120,9 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
 | Termos e privacidade | `apps/mobile/app/{terms,privacy}.tsx` | Rascunhos. Citam Supabase, sem base legal/DPO/retenção. Reprovam nas lojas. |
 | Resíduo de Supabase | `AvatarUpload` | `Sidebar` e `UserProfileCard` já migraram para `/api/profile`. `src/lib/store.ts` (localStorage) só é usado por componentes ainda não religados. |
 | Componentes órfãos | `src/components/` | `ActionModal`, `AvatarUpload`, `ConfirmDeleteModal`, `EditContactModal`, `EditInteractionModal`, `EncounterPlanner`, `SalesToRelationshipMatrix`, `WhatsAppStudio`, `DemoDataLoader` |
-| Widgets ainda em localStorage | `PipelineFunnel`, `ActiveContacts`, `ConversionAnalytics`, `QuickLogFAB` | Leem `src/lib/store.ts`. Numa conta nova aparecem vazios (correto por acidente), mas **não mostram os alvos já cadastrados** — o dashboard segue dizendo "nenhum alvo" depois de criar um. |
-| Telas do app na web | — | Faltam kanban, chat, táticas, analytics, WhatsApp Studio, Matriz de Vendas e Encontros. Estão **ocultas da sidebar** (`ativo: false`) em vez de dar 404 — ao construir a tela, vire a chave. |
-| Transição de fase na UI | `/alvos/[id]` | A rota `POST /api/crm/contacts/[id]/transition` existe e exige evidência, mas não há tela: a sugestão de avanço só é exibida como aviso. |
+| `QuickLogFAB` em localStorage | `src/components/QuickLogFAB.tsx` | Único widget que ainda lê `src/lib/store.ts`. |
+| Telas do app na web | — | Faltam chat, táticas, analytics, WhatsApp Studio, Matriz de Vendas e Encontros. Estão **ocultas da sidebar** (`ativo: false`) em vez de dar 404 — ao construir a tela, vire a chave. |
+| Transição de fase em `/alvos/[id]` | `/alvos/[id]` | O Kanban já aplica transições; na tela de detalhe a sugestão ainda é só um aviso. |
 
 ---
 
@@ -207,6 +214,36 @@ funcionalidades web que não existem mais, aponta para `/login`, é gendrada
   nova em `usage_counters`.
 - **Métricas 0–100 são `REAL`, não `INTEGER`.** O `engine.ts` arredonda para uma
   casa decimal; `INTEGER` truncaria e deslocaria todos os limiares de progressão.
+
+### Liberação progressiva
+
+`src/lib/progression.ts` decide quais gráficos aparecem. **Não confundir com
+plano**: limite comercial vive em `plans.ts`; aqui é maturidade de dado, e
+vale igual para quem paga e quem não paga.
+
+Os limiares vêm de medição, não de palpite. `npm run auditar:scoring` mostrou
+que, abaixo de 20 interações, o Poder geral oscila cerca de 9 pontos entre
+históricos do MESMO perfil de comportamento — o número muda por acaso. Daí o
+diagnóstico só abrir aos 20 registros.
+
+Efeito colateral desejado: a evolução vira percurso, e o painel mostra o que
+falta para o próximo recurso. Progressão honesta — nada é escondido para
+forçar uso.
+
+Ao criar um gráfico novo, registre o recurso em `RECURSOS` com o motivo do
+limiar em uma frase que o usuário entenda.
+
+### Planos e créditos
+
+Duas camadas que se somam: franquia mensal do plano, e carteira de créditos
+avulsos usada só depois que a franquia acaba. Gratuito: 3 pessoas ativas e 5
+análises/mês. Pro: R$ 29,90/mês, pessoas ilimitadas e 100 análises/mês.
+
+O plano pago **não** dá análises ilimitadas de propósito: cada uma custa API
+de verdade, e franquia infinita por preço fixo é apostar contra o usuário
+mais pesado.
+
+Preparação de pagamento e o que falta decidir: `docs/pagamentos.md`.
 
 ### Quiz de arquétipo
 
@@ -316,6 +353,7 @@ npm run deploy              # deploy Cloudflare
 npm run cf-typegen          # regenera cloudflare-env.d.ts após mudar bindings
 
 npm run auditar:quiz        # mede o equilíbrio do quiz de arquétipo
+npm run auditar:scoring     # mede se o diagnóstico comportamental tem sinal
 
 npx drizzle-kit generate --name=<nome>              # gera migration
 npx wrangler d1 migrations apply kissflow --local   # aplica local (sempre antes)

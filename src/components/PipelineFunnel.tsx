@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { loadState } from "@/lib/store";
 import { type Contact, PIPELINE_STAGES, LOST_REASON_LABELS, type LostReason } from "@/lib/types";
+import type { AppState } from "@/lib/types";
 
 interface FunnelStage {
   id: string;
@@ -36,7 +36,14 @@ interface LostGroup {
   contacts: { id: string; name: string }[];
 }
 
-export default function PipelineFunnel() {
+/**
+ * Recebe o estado por propriedade em vez de ler o localStorage.
+ *
+ * Antes este componente chamava `loadState()` direto: dado por dispositivo,
+ * sem dono, e que ficou vazio quando o backend passou a ser o D1 — o painel
+ * dizia "nenhum alvo cadastrado" com alvos cadastrados no banco.
+ */
+export default function PipelineFunnel({ state }: { state: AppState | null }) {
   const [stages, setStages] = useState<FunnelStage[]>([]);
   const [totalContacts, setTotalContacts] = useState(0);
   const [lostContacts, setLostContacts] = useState<{ id: string; name: string; lostReason?: LostReason }[]>([]);
@@ -44,7 +51,6 @@ export default function PipelineFunnel() {
   const [frozenContacts, setFrozenContacts] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
-    const state = loadState();
     if (!state) return;
 
     const activeContacts = state.contacts.filter((c) => c.status === "active");
@@ -92,7 +98,7 @@ export default function PipelineFunnel() {
     });
 
     setStages(funnelStages);
-  }, []);
+  }, [state]);
 
   const maxCount = Math.max(1, ...stages.map((s) => s.count));
 
