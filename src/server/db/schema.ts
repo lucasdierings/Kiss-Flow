@@ -77,6 +77,12 @@ export const account = sqliteTable(
   "account",
   {
     id: text("id").primaryKey(),
+    /**
+     * Exigido pelo Better Auth a partir da 1.7. Sem ele o cadastro falha em
+     * tempo de execução ("The field issuer does not exist"), e o typecheck
+     * não acusa — o adapter resolve os campos por nome, não por tipo.
+     */
+    issuer: text("issuer").notNull().default(""),
     accountId: text("account_id").notNull(),
     providerId: text("provider_id").notNull(),
     userId: text("user_id")
@@ -102,7 +108,7 @@ export const account = sqliteTable(
   },
   (t) => [
     index("account_user_idx").on(t.userId),
-    uniqueIndex("account_provider_idx").on(t.providerId, t.accountId),
+    uniqueIndex("account_provider_idx").on(t.issuer, t.accountId),
   ]
 );
 
@@ -529,7 +535,21 @@ export const aiCreditTransactions = sqliteTable(
       .notNull()
       .default(now),
   },
-  (t) => [index("credit_tx_user_created_idx").on(t.userId, t.createdAt)]
+  (t) => [
+    index("credit_tx_user_created_idx").on(t.userId, t.createdAt),
+    /**
+     * Idempotência do webhook da loja. A RevenueCat reentrega o mesmo evento
+     * quando não recebe 2xx; sem esta trava, um retry creditaria de novo.
+     *
+     * Parcial de propósito: 'consumption' repete o referenceId (é o id da
+     * pessoa analisada), então só as entradas de crédito são únicas.
+     */
+    uniqueIndex("credit_tx_grant_ref_idx")
+      .on(t.referenceId)
+      .where(
+        sql`${t.reason} in ('purchase','bonus','refund') and ${t.referenceId} is not null`
+      ),
+  ]
 );
 
 /* ────────────────────────────────────────────────────────────────

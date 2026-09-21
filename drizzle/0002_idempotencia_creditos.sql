@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `credit_tx_grant_ref_idx` ON `ai_credit_transactions` (`reference_id`) WHERE "ai_credit_transactions"."reason" in ('purchase','bonus','refund') and "ai_credit_transactions"."reference_id" is not null;

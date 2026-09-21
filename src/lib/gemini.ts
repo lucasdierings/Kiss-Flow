@@ -1,8 +1,21 @@
-import { GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+import {
+  GoogleGenerativeAI,
+  HarmBlockThreshold,
+  HarmCategory,
+} from "@google/generative-ai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "");
+/**
+ * Cliente do Gemini.
+ *
+ * Construído POR REQUISIÇÃO. A versão anterior fazia
+ * `new GoogleGenerativeAI(process.env.GEMINI_API_KEY || "")` no escopo do
+ * módulo — mesma armadilha descrita em src/server/db/client.ts. No Worker o
+ * módulo é avaliado no cold start, quando as variáveis do Cloudflare ainda
+ * não estão em `process.env`; o cliente nascia com chave vazia e toda chamada
+ * falhava. Era o motivo de a rota responder 503 com a chave configurada.
+ */
 
-// Safety settings - relaxed for relationship context
 const safetySettings = [
   { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
   { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
@@ -10,15 +23,25 @@ const safetySettings = [
   { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_ONLY_HIGH },
 ];
 
-// Gemini Flash - fast & cheap (~$0.001 per analysis)
-export function getFlashModel() {
-  return genAI.getGenerativeModel({
-    model: "gemini-2.0-flash",
+async function geminiKey(): Promise<string> {
+  const { env } = await getCloudflareContext({ async: true });
+  return env.GEMINI_API_KEY || process.env.GEMINI_API_KEY || "";
+}
+
+/** Permite recusar a requisição antes de cobrar cota do usuário. */
+export async function isAiConfigured(): Promise<boolean> {
+  return (await geminiKey()).length > 0;
+}
+
+export const FLASH_MODEL = "gemini-2.0-flash";
+
+export async function getFlashModel() {
+  const key = await geminiKey();
+  if (!key) throw new Error("GEMINI_API_KEY ausente");
+
+  return new GoogleGenerativeAI(key).getGenerativeModel({
+    model: FLASH_MODEL,
     safetySettings,
-    generationConfig: {
-      temperature: 0.7,
-      topP: 0.95,
-      maxOutputTokens: 2048,
-    },
+    generationConfig: { temperature: 0.7, topP: 0.95, maxOutputTokens: 2048 },
   });
 }

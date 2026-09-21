@@ -2,7 +2,7 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { APIError } from "better-auth/api";
-import { sql } from "drizzle-orm";
+
 
 import { getDb } from "./db/client";
 import { account, session, user, userProfile, verification } from "./db/schema";

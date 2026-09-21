@@ -15,6 +15,20 @@
       "when": 1789992974832,
       "tag": "0001_ai_credits_and_knowledge_base",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1790003932913,
+      "tag": "0002_idempotencia_creditos",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1790004142422,
+      "tag": "0003_better_auth_issuer",
+      "breakpoints": true
     }
   ]
 }

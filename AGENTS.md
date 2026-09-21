@@ -4,7 +4,7 @@
 > Não duplique conteúdo entre os dois: a duplicação foi a causa de este arquivo
 > ter passado meses descrevendo um projeto que não existia mais.
 >
-> **Estado verificado em:** 21/09/2026, commit `c4bb20d`, branch `feat/cloudflare-d1`.
+> **Estado verificado em:** 21/09/2026, commit `6daf0c8`, branch `feat/cloudflare-d1`.
 
 ---
 
@@ -14,12 +14,14 @@
 evoluir um vínculo, registra interações, e uma IA devolve leitura da situação +
 sugestões de próxima ação justificadas.
 
-**Onde estamos:** antes do Gate 0. Existe muito código construído — backend,
-mobile, motores de análise — mas **o loop de valor não fecha ponta a ponta**.
-Nenhuma rota de API toca o banco ainda. Ver "Estado real do código" abaixo.
+**Onde estamos:** antes do Gate 0. O backend está ligado — as rotas de API
+autenticam, leem e escrevem no D1, e respeitam as cotas do plano. O que ainda
+falta para o loop fechar ponta a ponta é o **app mobile**, que continua com
+login falso e dados fixos no código.
 
-**Se você for escrever código:** a próxima coisa a fazer é ligar `src/server/`
-às rotas de API. Nada de features novas antes disso.
+**Se você for escrever código:** a próxima coisa é tirar os mocks do mobile
+(login de verdade contra `/api/auth`, dados vindos de `/api/crm/contacts`).
+Nada de features novas antes disso.
 
 ---
 
@@ -57,8 +59,18 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
 - D1 remoto com 17 tabelas, em sincronia com `src/server/db/schema.ts`
 - Histórico de migrations íntegro em `drizzle/` (baseline conferida objeto a
   objeto contra o `sqlite_master` do remoto)
-- `/api/ai/advise` chama o Gemini de verdade — mas sem autenticação, sem cota e
-  sem persistência
+- **Autenticação funcionando:** `/api/auth/[...all]` responde; cadastro cria
+  `user` + `account` + `user_profile`; `ALLOWED_EMAILS` barra quem não está na
+  lista; rota protegida sem sessão devolve 401
+- **Rotas ligadas ao D1**, todas atrás de `withApi`: `/api/crm/contacts` (lista
+  e cria, respeitando o limite de pessoas ativas do plano), `/api/billing/wallet`
+  (plano, consumo do mês e saldo reais), `/api/ai/advise` (sessão + cota +
+  telemetria)
+- **Cotas com reserva atômica** em `src/server/usage.ts`: verificado que a 6ª
+  reserva é recusada quando o limite é 5, sem janela de corrida
+- **Webhook da loja** creditando de verdade e idempotente: reentrega do mesmo
+  evento não credita duas vezes, e a cadeia assinatura → plano → limites foi
+  exercitada de ponta a ponta
 - Motores puros, sem dependência de I/O e prontos para uso: `engine.ts`,
   `analytics.ts`, `user-scoring.ts`, `alerts-engine.ts`, `rag-engine.ts`,
   `tactics-data.ts`, `archetype-quiz.ts`, `persona.ts`, `prompts.ts`
@@ -67,11 +79,8 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
 
 | O quê | Onde | Situação |
 |---|---|---|
-| Camada de servidor (~1.950 linhas) | `src/server/` | Órfã. Nenhuma rota a importa. É o melhor código do repo. |
-| Handler do Better Auth | não existe | Falta `src/app/api/auth/[...all]/route.ts`. Sem ele não há login. |
-| `/api/crm/contacts` | `src/app/api/crm/` | Retorna 3 contatos demo fixos. O POST não salva. |
-| `/api/billing/wallet` | `src/app/api/billing/` | Plano e saldo fixos no código. |
-| `/api/webhooks/revenuecat` | `src/app/api/webhooks/` | Só faz `console.log`. Não credita nada. |
+| Chamada real ao Gemini | `src/app/api/ai/advise/` | Caminho ligado e testado até a borda do modelo, mas `GEMINI_API_KEY` está vazia no `.dev.vars` — a geração em si nunca rodou. |
+| Segredo do webhook em produção | Cloudflare | `.dev.vars` tem só um placeholder. Definir com `wrangler secret put REVENUECAT_WEBHOOK_AUTH_KEY` antes de apontar a loja para cá. |
 | Login/signup do mobile | `apps/mobile/app/login.tsx` | Grava `'mock_token'` no AsyncStorage. |
 | Dados do mobile | `apps/mobile/context/AppContext.tsx` | `INITIAL_TARGETS` fixos. Só `mentor.tsx` chama a API. |
 | URL da API no mobile | `apps/mobile/services/api.ts` | IP local fixo (`192.168.3.35`). |
@@ -96,7 +105,8 @@ autoriza construir mais.
 | Etapa | Escopo | Estado |
 |---|---|---|
 | 1 | Salvar trabalho, reconstruir migrations | ✅ concluída em 21/09/2026 |
-| 2 | Ligar `src/server/` às rotas, criar o handler de auth, tirar os mocks do mobile, landing page | ⬜ próxima |
+| 2a | Ligar `src/server/` às rotas e criar o handler de auth | ✅ concluída em 21/09/2026 |
+| 2b | Tirar os mocks do mobile e construir a landing | ⬜ próxima |
 | 3 | Instrumentar eventos e rodar o Gate 0 com 10 usuários | ⬜ |
 | 4 | RevenueCat real, webhook creditando, jurídico de verdade | ⬜ só depois do Gate 0 |
 

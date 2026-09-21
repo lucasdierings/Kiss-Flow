@@ -68,7 +68,7 @@ export function applyInteractionImpact(
   let newTension = contact.tensionLevel + tensionDelta * 0.3;
 
   // 3. ENCHANTMENT: sentimento positivo aumenta, negativo diminui
-  let enchantmentDelta = impact.enchantment * (sentiment > 0 ? sentiment : sentiment * 0.5);
+  const enchantmentDelta = impact.enchantment * (sentiment > 0 ? sentiment : sentiment * 0.5);
   let newEnchantment = contact.enchantmentScore + enchantmentDelta;
 
   // 4. SCARCITY: baseado na frequencia de interacao do usuario

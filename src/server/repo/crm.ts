@@ -10,7 +10,7 @@
  * db.batch(), senão aplica pela metade.
  */
 
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 
 import { applyInteractionImpact } from "@/lib/engine";
 import type {
@@ -68,6 +68,16 @@ export async function loadState(ctx: Ctx): Promise<AppState> {
     seducerArchetype: (profile?.seducerArchetype ??
       "charmer") as SeducerArchetype,
   };
+}
+
+/** Lista dos contatos do usuário, mais recentes primeiro. */
+export async function listContacts(ctx: Ctx): Promise<Contact[]> {
+  const rows = await ctx.db
+    .select()
+    .from(contacts)
+    .where(eq(contacts.userId, ctx.userId))
+    .orderBy(desc(contacts.updatedAt));
+  return rows.map(toContact);
 }
 
 export async function getContact(ctx: Ctx, id: string) {
