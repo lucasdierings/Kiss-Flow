@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURA — Plano Diretor de Engenharia e Execução Operacional</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+        :root {
+            --cor-primaria: #1a1a2e;
+            --cor-secundaria: #16213e;
+            --cor-acento: #0f3460;
+            --cor-destaque: #e94560;
+            --cor-texto: #1f2937;
+            --cor-texto-leve: #4b5563;
+            --cor-fundo-pagina: #ffffff;
+            --cor-fundo-codigo: #0d1117;
+            --cor-borda: #d1d5db;
+            --cor-alerta-info: #eff6ff;
+            --cor-alerta-info-borda: #3b82f6;
+            --cor-alerta-sucesso: #f0fdf4;
+            --cor-alerta-sucesso-borda: #22c55e;
+            --cor-alerta-aviso: #fffbeb;
+            --cor-alerta-aviso-borda: #f59e0b;
+            --cor-alerta-perigo: #fef2f2;
+            --cor-alerta-perigo-borda: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Crimson Pro', 'Times New Roman', Georgia, serif;
+            font-size: 12pt;
+            line-height: 1.5;
+            color: var(--cor-texto);
+            background-color: #f1f5f9;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* === MARGENS ABNT NBR 14724 === */
+        @page {
+            size: A4;
+            margin: 3cm 2cm 2cm 3cm;
+        }
+
+        @media print {
+            body { background: #fff !important; }
+            .no-print { display: none !important; }
+            .documento { box-shadow: none !important; border: none !important; margin: 0 !important; padding: 3cm 2cm 2cm 3cm !important; max-width: 100% !important; }
+            .page-break { page-break-before: always; }
+            .avoid-break { page-break-inside: avoid; }
+            a { color: var(--cor-texto) !important; text-decoration: none !important; }
+        }
+
+        /* === BARRA SUPERIOR === */
+        .barra-superior {
+            position: sticky; top: 0; z-index: 100;
+            background: linear-gradient(135deg, var(--cor-primaria), var(--cor-secundaria));
+            padding: 14px 24px;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .barra-superior h1 { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 700; color: #fff; letter-spacing: 0.5px; }
+        .barra-superior p { font-size: 11px; color: #94a3b8; margin-top: 2px; }
+        .btn-imprimir {
+            font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 700;
+            padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer;
+            background: var(--cor-destaque); color: #fff;
+            transition: all 0.2s; letter-spacing: 0.3px;
+        }
+        .btn-imprimir:hover { background: #d63851; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(233,69,96,0.4); }
+
+        /* === DOCUMENTO PRINCIPAL === */
+        .documento {
+            max-width: 850px; margin: 30px auto; padding: 60px 55px;
+            background: var(--cor-fundo-pagina);
+            box-shadow: 0 2px 40px rgba(0,0,0,0.12);
+            border: 1px solid #e2e8f0;
+        }
+
+        /* === TIPOGRAFIA ABNT === */
+        h1.titulo-capa {
+            font-family: 'Inter', sans-serif; font-size: 22pt; font-weight: 900;
+            text-transform: uppercase; letter-spacing: -0.5px;
+            color: var(--cor-primaria); text-align: center; line-height: 1.25;
+        }
+        h2.titulo-secao {
+            font-family: 'Inter', sans-serif; font-size: 14pt; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 0.3px;
+            color: var(--cor-primaria); margin-top: 36px; margin-bottom: 12px;
+            padding-bottom: 8px; border-bottom: 2px solid var(--cor-primaria);
+        }
+        h3.titulo-subsecao {
+            font-family: 'Inter', sans-serif; font-size: 12pt; font-weight: 700;
+            color: var(--cor-acento); margin-top: 24px; margin-bottom: 8px;
+        }
+        h4.titulo-item {
+            font-family: 'Inter', sans-serif; font-size: 11pt; font-weight: 600;
+            color: var(--cor-texto); margin-top: 16px; margin-bottom: 6px;
+        }
+
+        p { text-align: justify; margin-bottom: 10px; }
+        p + p { text-indent: 1.25cm; }
+
+        /* === BLOCOS ESPECIAIS === */
+        .bloco-fase {
+            border: 1px solid var(--cor-borda); border-radius: 6px; padding: 24px;
+            margin: 20px 0; background: #fafbfc;
+        }
+        .bloco-fase-header {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            border-bottom: 1px solid var(--cor-borda); padding-bottom: 12px; margin-bottom: 16px;
+        }
+        .bloco-fase-header h3 {
+            font-family: 'Inter', sans-serif; font-size: 13pt; font-weight: 800;
+            color: var(--cor-primaria); margin: 0;
+        }
+        .badge {
+            font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px;
+            padding: 4px 12px; border-radius: 20px; white-space: nowrap;
+        }
+        .badge-fundacao { background: #dbeafe; color: #1e40af; }
+        .badge-ia { background: #f3e8ff; color: #7c3aed; }
+        .badge-validacao { background: #fce7f3; color: #be185d; }
+        .badge-controle { background: #fef3c7; color: #92400e; }
+        .badge-monetizacao { background: #d1fae5; color: #065f46; }
+        .badge-mobile { background: #e0e7ff; color: #3730a3; }
+        .badge-beta { background: #fae8ff; color: #86198f; }
+        .badge-lancamento { background: #ffe4e6; color: #9f1239; }
+        .badge-escala { background: #ccfbf1; color: #115e59; }
+
+        .alerta {
+            padding: 14px 18px; border-radius: 6px; margin: 14px 0;
+            border-left: 4px solid; font-size: 11pt;
+        }
+        .alerta-info { background: var(--cor-alerta-info); border-color: var(--cor-alerta-info-borda); }
+        .alerta-sucesso { background: var(--cor-alerta-sucesso); border-color: var(--cor-alerta-sucesso-borda); }
+        .alerta-aviso { background: var(--cor-alerta-aviso); border-color: var(--cor-alerta-aviso-borda); }
+        .alerta-perigo { background: var(--cor-alerta-perigo); border-color: var(--cor-alerta-perigo-borda); }
+        .alerta strong { font-family: 'Inter', sans-serif; font-size: 10pt; display: block; margin-bottom: 4px; }
+
+        .prompt-box {
+            background: var(--cor-fundo-codigo); color: #c9d1d9; padding: 18px 20px;
+            border-radius: 6px; margin: 12px 0; font-family: 'JetBrains Mono', monospace;
+            font-size: 9.5pt; line-height: 1.6; overflow-x: auto; white-space: pre-wrap;
+            border: 1px solid #30363d;
+        }
+        .prompt-label {
+            font-family: 'Inter', sans-serif; font-size: 9px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1.5px;
+            color: #8b949e; margin-bottom: 8px; display: block;
+        }
+        .prompt-box .destaque { color: #79c0ff; }
+        .prompt-box .string { color: #a5d6ff; }
+        .prompt-box .comentario { color: #8b949e; font-style: italic; }
+        .prompt-box .alerta-inline { color: #ffa657; font-weight: 700; }
+
+        .checklist { list-style: none; padding: 0; margin: 12px 0; }
+        .checklist li {
+            font-size: 11pt; padding: 6px 0 6px 28px; position: relative;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .checklist li::before {
+            content: "☐"; position: absolute; left: 4px; top: 6px;
+            font-size: 13pt; color: var(--cor-acento);
+        }
+        .checklist li strong { font-family: 'Inter', sans-serif; font-size: 10pt; }
+
+        table {
+            width: 100%; border-collapse: collapse; margin: 16px 0;
+            font-size: 10pt;
+        }
+        th {
+            font-family: 'Inter', sans-serif; font-weight: 700; font-size: 9pt;
+            text-transform: uppercase; letter-spacing: 0.5px;
+            background: var(--cor-primaria); color: #fff;
+            padding: 10px 12px; text-align: left;
+        }
+        td { padding: 10px 12px; border-bottom: 1px solid var(--cor-borda); vertical-align: top; }
+        tr:nth-child(even) td { background: #f9fafb; }
+
+        .rotulo-agente {
+            font-family: 'Inter', sans-serif; font-size: 8pt; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 1px;
+            display: inline-block; padding: 3px 8px; border-radius: 4px; margin: 2px 0;
+        }
+        .agente-dba { background: #dbeafe; color: #1e40af; }
+        .agente-devops { background: #f3e8ff; color: #7c3aed; }
+        .agente-ia { background: #fce7f3; color: #be185d; }
+        .agente-mobile { background: #e0e7ff; color: #3730a3; }
+        .agente-navegador { background: #ccfbf1; color: #115e59; }
+        .agente-qa { background: #fef3c7; color: #92400e; }
+        .agente-marketing { background: #ffe4e6; color: #9f1239; }
+
+        .divisor { border: none; border-top: 1px solid var(--cor-borda); margin: 30px 0; }
+
+        .capa-meta {
+            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;
+            font-family: 'Inter', sans-serif; font-size: 9pt; color: var(--cor-texto-leve);
+            border-top: 1px solid var(--cor-borda); padding-top: 12px; margin-top: 20px;
+        }
+
+        .sumario { margin: 24px 0; }
+        .sumario a {
+            display: block; padding: 5px 0; font-size: 11pt; color: var(--cor-acento);
+            text-decoration: none; border-bottom: 1px dotted #e5e7eb;
+        }
+        .sumario a:hover { color: var(--cor-destaque); }
+        .sumario .nivel-2 { padding-left: 20px; font-size: 10.5pt; color: var(--cor-texto-leve); }
+    </style>
+</head>
+<body>
+
+<!-- FONTE EDITORIAL: consulte e atualize docs/manual-execucao-10-semanas.md antes deste HTML. -->
+
+<!-- BARRA DE AÇÕES (NÃO IMPRIME) -->
+<div class="barra-superior no-print">
+    <div>
+        <h1>📋 Plano Diretor de Engenharia — AURA / Kiss-Flow OS</h1>
+        <p>Documento Corporativo • Layout inspirado na ABNT NBR 15287 • Versão 3.0</p>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;">
+        <a href="manual-execucao-10-semanas.md" style="font-family:'Inter';font-size:12px;font-weight:600;color:#a5b4fc;text-decoration:none;">Ler Markdown primeiro →</a>
+        <a href="prototipo.html" style="font-family:'Inter';font-size:12px;font-weight:600;color:#94a3b8;text-decoration:none;">Ver Protótipo →</a>
+        <button class="btn-imprimir" onclick="window.print()">⎙ Imprimir / Salvar PDF</button>
+    </div>
+</div>
+
+<!-- DOCUMENTO PRINCIPAL -->
+<div class="documento">
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--                        CAPA                           -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div style="text-align:center;padding:40px 0 30px;">
+        <p style="font-family:'Inter';font-size:9pt;text-transform:uppercase;letter-spacing:3px;color:var(--cor-texto-leve);text-align:center;">Confidencial • Uso Interno do Fundador</p>
+        <h1 class="titulo-capa" style="margin:20px 0;">
+            Plano Diretor de Engenharia, Automação Agêntica e Execução Operacional
+        </h1>
+        <p style="font-size:13pt;color:var(--cor-texto-leve);text-align:center;font-style:italic;">
+            Manual Técnico Corporativo para Construção Autônoma do Aplicativo AURA<br>
+            Da Fundação Técnica à Decisão do Gate 0 em até 10 Semanas<br>
+            <span style="font-size:11pt;">Os demais blocos são condicionais à evidência.</span>
+        </p>
+        <p style="font-size:10pt;color:var(--cor-destaque);text-align:center;margin-top:16px;">
+            Fonte editorial: <a href="manual-execucao-10-semanas.md">manual-execucao-10-semanas.md</a> · este HTML é a versão visual.
+        </p>
+        <div class="capa-meta">
+            <span><strong>Versão:</strong> 3.0 (Enterprise)</span>
+            <span style="text-align:center;"><strong>Data:</strong> Agosto 2026</span>
+            <span style="text-align:right;"><strong>Classificação:</strong> Estratégico</span>
+        </div>
+    </div>
+
+    <hr class="divisor">
+
+    <div class="alerta alerta-aviso" id="revisao-executiva">
+        <strong>Revisão executiva — 15/08/2026</strong>
+        Este manual descreve uma direção de execução, não comprova que as integrações, custos, políticas de loja ou métricas já estejam validados. O Gate 0 vem antes de mobile, pagamentos e tráfego: 10 usuários reais devem concluir o ciclo <em>capturar contexto → receber sugestão → agir → registrar resultado</em>. Só avance quando houver evidência de utilidade, custo por análise conhecido e guardrails testados.
+    </div>
+
+    <div class="alerta alerta-perigo">
+        <strong>Risco de escopo</strong>
+        O documento contém Fase 1.5 além das Fases 1–10. Para manter a promessa de 10 semanas, as fases precisam ser executadas com sobreposição explícita; se forem sequenciais, o prazo deve ser recalculado após cada gate. Não tratar “10 semanas” como compromisso de lançamento.
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--                      SUMÁRIO                          -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2 class="titulo-secao">Sumário</h2>
+    <nav class="sumario">
+        <a href="#cap1">1. Premissas Estratégicas e Matriz de Inteligência Artificial</a>
+        <a href="#cap1-1" class="nivel-2">1.1 Modelos para Desenvolvimento (ambiente e assinatura disponíveis)</a>
+        <a href="#cap1-2" class="nivel-2">1.2 Modelo para Produção (API Escalável)</a>
+        <a href="#cap1-3" class="nivel-2">1.3 Catálogo de Agentes Autônomos</a>
+        <a href="#cap2">2. Fase 1 — Fundação Técnica e Banco de Dados</a>
+        <a href="#cap2-5" class="nivel-2">2.1 Fase 1.5 — Autenticação, Onboarding e LGPD</a>
+        <a href="#cap3">3. Fase 2 — Cérebro Secreto: RAG e Ingestão de Conhecimento</a>
+        <a href="#cap4">4. Fase 3 — API Multimodal (Áudio, Prints, Análise Tática)</a>
+        <a href="#cap5">5. Fase 4 — MVP Web Funcional para Testes do Fundador</a>
+        <a href="#cap6">6. Fase 5 — Painel Administrativo do Fundador (/admin)</a>
+        <a href="#cap7">7. Fase 6 — Gateway de Pagamentos (PIX, Stripe, Tokens)</a>
+        <a href="#cap8">8. Fase 7 — Aplicativo Mobile Nativo (React Native / Expo / Xcode)</a>
+        <a href="#cap9">9. Fase 8 — Beta Inicial com 10–30 Usuários (TestFlight)</a>
+        <a href="#cap10">10. Fase 9 — Publicação nas Lojas (App Store e Google Play)</a>
+        <a href="#cap11">11. Fase 10 — Ativação de Tráfego Pago e Máquina de Escala</a>
+        <a href="#gate0">0. Gate 0 — Evidência mínima antes de escalar</a>
+        <a href="#cap12">12. Protocolo de Riscos, Inerências e Contingências</a>
+    </nav>
+
+    <hr class="divisor">
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--   GATE 0: MATRIZ DE VALIDAÇÃO                         -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2 class="titulo-secao" id="gate0">0. Gate 0 — Evidência mínima antes de escalar</h2>
+
+    <p>O protótipo deve ser tratado como instrumento de validação, não como prova de que a aplicação já está operacional. Antes de mobile nativo, IAP ou tráfego pago, execute a mesma tarefa com 10 usuários reais e registre evidências observáveis.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Etapa</th>
+                <th>Evento a instrumentar</th>
+                <th>Critério de passagem</th>
+                <th>Se falhar</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Capturar</strong></td>
+                <td>Usuário cria contato e envia texto/print/áudio com finalidade informada.</td>
+                <td>8/10 concluem sem ajuda em até 2 minutos.</td>
+                <td>Reduzir campos, melhorar explicação e remover upload não essencial.</td>
+            </tr>
+            <tr>
+                <td><strong>Receber</strong></td>
+                <td>Tempo até primeira resposta, custo e erro por tipo de entrada.</td>
+                <td>Resposta em até 15s no texto e erro recuperável no multimodal.</td>
+                <td>Limitar formato, adicionar retry/estado de erro e ajustar orçamento.</td>
+            </tr>
+            <tr>
+                <td><strong>Agir</strong></td>
+                <td>Sugestão copiada, editada ou descartada; ação marcada pelo usuário.</td>
+                <td>Ao menos 6/10 consideram uma sugestão útil e 5/10 a adaptam/usam.</td>
+                <td>Revisar tom, utilidade e guardrails; não comprar aquisição.</td>
+            </tr>
+            <tr>
+                <td><strong>Aprender</strong></td>
+                <td>Resultado positivo, vácuo, desconforto ou “não se aplica” por contato.</td>
+                <td>Todos os testers conseguem registrar o resultado e retornar em D7.</td>
+                <td>Corrigir o loop de feedback antes de expandir o pipeline.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="alerta alerta-info">
+        <strong>Instrumentação mínima:</strong> <code>first_value_at</code>, <code>analysis_started</code>, <code>analysis_completed</code>, <code>suggestion_copied</code>, <code>outcome_logged</code>, <code>feedback_submitted</code>, custo estimado por análise e versão do prompt. Não registrar conteúdo bruto de prints/áudios nos eventos.
+    </div>
+
+    <h3 class="titulo-subsecao">Contrato mínimo de dados do beta</h3>
+    <table>
+        <thead>
+            <tr><th>Objeto</th><th>Regra</th><th>Controle obrigatório</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Prints e áudios</td><td>Usar somente para a finalidade informada e pelo menor tempo necessário.</td><td>Consentimento/aviso antes do upload, criptografia, retenção configurável e exclusão pelo usuário.</td></tr>
+            <tr><td>Atributos derivados</td><td>Salvar apenas o que foi confirmado e tem utilidade clara.</td><td>Origem, timestamp, confiança, correção e exclusão individual.</td></tr>
+            <tr><td>Eventos de produto</td><td>Medir o loop sem conteúdo bruto nem texto de conversa.</td><td>IDs pseudonimizados, acesso por papel e janela de retenção documentada.</td></tr>
+            <tr><td>Logs de segurança</td><td>Registrar abuso, erro, custo e decisão de bloqueio.</td><td>Mascaramento, acesso restrito, prazo de retenção e trilha de auditoria.</td></tr>
+        </tbody>
+    </table>
+
+    <hr class="divisor">
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--        CAPÍTULO 1: PREMISSAS E MATRIZ DE IA           -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2 class="titulo-secao" id="cap1">1. Premissas Estratégicas e Matriz de Inteligência Artificial</h2>
+
+    <p>Este capítulo estabelece a separação fundamental entre os <strong>modelos de IA utilizados no ambiente de desenvolvimento</strong> (eventualmente cobertos pelas assinaturas do fundador) e o <strong>motor de produção escalável</strong> (API paga por token que será consumida pelos usuários finais do aplicativo). Nomes de modelos, limites e preços devem ser confirmados no momento da implementação.</p>
+
+    <h3 class="titulo-subsecao" id="cap1-1">1.1 Modelos para Desenvolvimento (ambiente e assinatura disponíveis)</h3>
+
+        <p>Use os modelos disponíveis nas assinaturas realmente ativas do fundador. Eles devem ser usados <strong>exclusivamente para construir, programar, testar e refatorar o código do aplicativo</strong>; a disponibilidade e o custo efetivo precisam ser registrados no inventário de ferramentas.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Modelo (Geração Atual)</th>
+                <th>Empresa</th>
+                <th>Especialidade no Projeto</th>
+                <th>Quando Acionar</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Modelo de codificação contratado</strong></td>
+                <td>Anthropic</td>
+                <td>Engenharia de software fullstack rápida e automação diária. Gera componentes React Native, rotas de API e schemas SQL sem erros de tipagem.</td>
+                <td>Programação no VS Code / Antigravity. Motor principal de codificação e automação.</td>
+            </tr>
+            <tr>
+                <td><strong>Modelo de raciocínio contratado</strong></td>
+                <td>Anthropic</td>
+                <td>Raciocínio arquitetural profundo e síntese de documentação técnica complexa. Capacidade de manter contexto longo.</td>
+                <td>Decisões de arquitetura de alta complexidade, revisão de código crítico e estratégia de desenvolvimento.</td>
+            </tr>
+            <tr>
+                <td><strong>Modelo de pesquisa e redação contratado</strong></td>
+                <td>OpenAI</td>
+                <td>Navegação web autônoma (Operator), redação de cópias de marketing, termos de uso e ASO (App Store Optimization).</td>
+                <td>Cadastros em painéis web (Apple Developer, Google Play Console), redação de políticas de privacidade e roteiros de anúncios.</td>
+            </tr>
+            <tr>
+                <td><strong>Modelo multimodal/embedding escolhido</strong></td>
+                <td>Google</td>
+                <td>Comparar visão, áudio, latência, privacidade, custo e qualidade no conjunto de avaliação do produto. A dimensão do embedding e o modelo devem ser confirmados na implementação.</td>
+                <td>Ingestão da base secreta (RAG), análise de mercado, visão de resultados e documentação inteligente.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="alerta alerta-sucesso">
+        <strong>💡 Economia Real</strong>
+        O desenvolvimento pode usar modelos cobertos por assinaturas existentes, mas isso não torna o custo zero: considere assinatura, limites, tempo do fundador, revisão humana e eventuais APIs adicionais. O valor mensal citado em versões anteriores não está verificado e não deve ser usado como premissa financeira.
+    </div>
+
+    <h3 class="titulo-subsecao" id="cap1-2">1.2 Modelo para Produção (API Paga por Token — Motor Escalável)</h3>
+
+    <p>Quando o aplicativo tiver usuários enviando prints de WhatsApp e áudios diariamente, o motor de IA precisa ser <strong>multimodal</strong>, ter latência e custo medidos em tráfego real e operar com orçamento por usuário. “Menos de 800ms”, “margem acima de 85%” e qualquer preço por token são metas a serem benchmarkadas, não garantias.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Motor de Produção</th>
+                <th>Custo / 1M Tokens (In / Out)</th>
+                <th>Custo Estimado por Usuário/Mês</th>
+                <th>Justificativa</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Modelo multimodal A</strong> (a validar)</td>
+                <td>Consultar tabela oficial no dia da implementação</td>
+                <td>Medir por perfil de uso</td>
+                <td>Comparar visão, áudio, latência, qualidade, privacidade, limites e custo por análise no conjunto de avaliação do produto.</td>
+            </tr>
+            <tr>
+                <td><strong>Modelo multimodal B</strong> (fallback)</td>
+                <td>Consultar tabela oficial no dia da implementação</td>
+                <td>Medir por perfil de uso</td>
+                <td>Fallback para indisponibilidade, custo ou regressão de qualidade; manter adapter de provedor para trocar sem reescrever o produto.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="alerta alerta-aviso">
+        <strong>⚠️ Regra de Ouro do Custo de Produção</strong>
+        Não escolha o motor por nome ou hype. Rode um benchmark com entradas anonimizadas, limite de orçamento, qualidade mínima e latência máxima. O modelo de produção só entra depois de registrar custo por análise, taxa de erro, fallback e margem no cenário real.
+    </div>
+
+    <h3 class="titulo-subsecao" id="cap1-3">1.3 Catálogo de Agentes Autônomos do Projeto</h3>
+
+    <p>Como o fundador opera sem background técnico de programação, cada etapa da construção é executada por <strong>agentes especializados</strong> invocados no Antigravity, VS Code ou via Chrome DevTools MCP para automação de navegador.</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Agente</th>
+                <th>Função</th>
+                <th>Ferramentas / MCP</th>
+                <th>Modelo Recomendado</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="rotulo-agente agente-dba">Agente DBA</span></td>
+                <td>Criação de tabelas, migrações SQL, ativação de <code>pgvector</code>, índices e políticas RLS no Supabase.</td>
+                <td>Supabase CLI (<code>supabase db push</code>), SQL Editor do Supabase Dashboard</td>
+                <td>Modelo de codificação disponível</td>
+            </tr>
+            <tr>
+                <td><span class="rotulo-agente agente-devops">Agente DevOps</span></td>
+                <td>Deploy na Cloudflare Pages/Workers ou Vercel, configuração de variáveis de ambiente, DNS e certificados SSL.</td>
+                <td>Wrangler CLI, Vercel CLI, GitHub CLI</td>
+                <td>Modelo de codificação disponível</td>
+            </tr>
+            <tr>
+                <td><span class="rotulo-agente agente-ia">Agente Engenheiro de IA</span></td>
+                <td>Implementação das rotas do provedor de IA escolhido, pipeline de RAG, guardrails de sigilo e engenharia de prompts.</td>
+                <td>SDK <code>@google/genai</code>, Supabase JS Client</td>
+                <td>Modelo de codificação + raciocínio disponíveis</td>
+            </tr>
+            <tr>
+                <td><span class="rotulo-agente agente-mobile">Agente Mobile</span></td>
+                <td>Criação do projeto React Native com Expo, configuração do Share Sheet no Xcode, build e deploy.</td>
+                <td>Expo CLI, EAS Build, Xcode no MacBook</td>
+                <td>Modelo de codificação disponível</td>
+            </tr>
+            <tr>
+                <td><span class="rotulo-agente agente-navegador">Agente Navegador</span></td>
+                <td>Automação do navegador Chrome: criar contas, preencher formulários, validar dashboards e testar fluxos visuais.</td>
+                <td>Chrome DevTools MCP (<code>navigate_page</code>, <code>click</code>, <code>fill</code>, <code>take_screenshot</code>)</td>
+                <td>Modelo de navegador + codificação disponíveis</td>
+            </tr>
+            <tr>
+                <td><span class="rotulo-agente agente-qa">Agente QA</span></td>
+                <td>Testes automatizados de unidade, integração e E2E. Validação de regressão após cada sprint.</td>
+                <td>Jest, Playwright, Detox (mobile)</td>
+                <td>Modelo de codificação disponível</td>
+            </tr>
+            <tr>
+                <td><span class="rotulo-agente agente-marketing">Agente Marketing</span></td>
+                <td>Redação de cópias ASO, roteiros de vídeos UGC, descrições de loja, política de privacidade e termos de uso.</td>
+                <td>Modelos de pesquisa e codificação disponíveis</td>
+                <td>Modelo de pesquisa disponível</td>
+            </tr>
+            <tr>
+                <td><span class="rotulo-agente agente-qa">Agente Segurança</span></td>
+                <td>Implementação de RLS, guardrails robustos, proteção contra ataques de injeção de prompt e conformidade LGPD.</td>
+                <td>Supabase CLI, Auth Logs</td>
+                <td>Modelo de raciocínio disponível</td>
+            </tr>
+            <tr>
+                <td><span class="rotulo-agente agente-devops">Agente Eng. de Software</span></td>
+                <td>Arquitetura limpa, padronização de código, revisão técnica de pull requests e escalabilidade da API.</td>
+                <td>VS Code, Antigravity</td>
+                <td>Modelos de codificação e raciocínio disponíveis</td>
+            </tr>
+            <tr>
+                <td><span class="rotulo-agente agente-ia">Agente Func. & Copy</span></td>
+                <td>Desenho de fluxos UX/UI, copy claro, notificações com opt-in, EULA e retenção responsável.</td>
+                <td>Modelos de pesquisa e codificação disponíveis</td>
+                <td>Modelos de pesquisa e codificação disponíveis</td>
+            </tr>
+            <tr>
+                <td><span class="rotulo-agente agente-mobile">Agente Design (UI/UX)</span></td>
+                <td>Prototipação de telas mobile-first, paleta de cores magnética e responsividade visual.</td>
+                <td>CSS, Tailwind, React Native</td>
+                <td>Modelo de codificação disponível</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr class="divisor">
+    <div class="page-break"></div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--   FASE 1: FUNDAÇÃO TÉCNICA E BANCO DE DADOS           -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2 class="titulo-secao" id="cap2">2. Fase 1 — Fundação Técnica e Banco de Dados</h2>
+
+    <div class="bloco-fase">
+        <div class="bloco-fase-header">
+            <div>
+                <h3>FASE 1: Setup de Infraestrutura, Chaves e Schema Supabase</h3>
+                <p style="font-size:10pt;color:var(--cor-texto-leve);margin:4px 0 0;">Duração estimada: 3–5 dias úteis</p>
+            </div>
+            <span class="badge badge-fundacao">Fundação</span>
+        </div>
+
+        <h4 class="titulo-item">2.1 Objetivo da Fase</h4>
+        <p>Estabelecer toda a infraestrutura de base necessária para que as fases subsequentes possam ser executadas sem bloqueios: contas de serviço, chaves de API, banco de dados relacional com suporte vetorial e repositório de código versionado.</p>
+
+        <h4 class="titulo-item">2.2 Entregas Obrigatórias</h4>
+        <ul class="checklist">
+            <li><strong>Provedor de IA:</strong> credencial do provedor escolhido gerada e salva em variável de ambiente no backend.</li>
+            <li><strong>Projeto Supabase:</strong> Criado na região <code>sa-east-1</code> (São Paulo) com extensão <code>vector</code> ativada.</li>
+            <li><strong>Variáveis Seguras:</strong> <code>SUPABASE_URL</code>, <code>SUPABASE_ANON_KEY</code>, <code>SUPABASE_SERVICE_ROLE_KEY</code> salvas em <code>.env.local</code>.</li>
+            <li><strong>Schema SQL Completo:</strong> Tabelas <code>users</code>, <code>target_dossiers</code>, <code>interactions</code>, <code>ai_conversations</code>, <code>knowledge_base</code> (com dimensão de embedding compatível com o provedor escolhido), <code>payments</code> e <code>user_subscriptions</code>.</li>
+            <li><strong>Políticas RLS (Row Level Security):</strong> Cada usuário só acessa seus próprios dados.</li>
+            <li><strong>Repositório Git:</strong> Código versionado no GitHub com branch <code>main</code> protegida.</li>
+            <li><strong>Domínio:</strong> Registrado na Cloudflare Registrar com DNS apontando para Cloudflare Pages ou Vercel.</li>
+        </ul>
+
+        <h4 class="titulo-item">2.3 O Que Não Pode Faltar</h4>
+        <div class="alerta alerta-perigo">
+            <strong>🚨 Crítico</strong>
+            A extensão <code>vector</code> DEVE ser ativada no Supabase antes de criar a tabela <code>knowledge_base</code>. A dimensão do vetor deve ser a mesma usada pelo provedor escolhido; valide a migração e o índice com uma consulta de teste.
+        </div>
+        <div class="alerta alerta-perigo">
+            <strong>🚨 Crítico</strong>
+            A chave <code>SERVICE_ROLE_KEY</code> do Supabase NUNCA deve ser exposta no frontend. Ela é usada exclusivamente no backend (rotas de API do Next.js ou Cloudflare Workers). No frontend, use apenas a <code>ANON_KEY</code> combinada com políticas RLS.
+        </div>
+
+        <h4 class="titulo-item">2.4 Agentes Necessários</h4>
+        <p><span class="rotulo-agente agente-dba">Agente DBA</span> para criação do schema SQL, ativação de extensões e configuração de RLS.</p>
+        <p><span class="rotulo-agente agente-devops">Agente DevOps</span> para configuração do repositório, variáveis de ambiente e primeiro deploy de teste.</p>
+        <p><span class="rotulo-agente agente-navegador">Agente Navegador</span> (opcional) para criação de conta no Supabase Dashboard e AI Studio via Chrome DevTools MCP se o fundador preferir não fazer manualmente.</p>
+
+        <h4 class="titulo-item">2.5 Prompts Exatos para Execução</h4>
+
+        <div class="prompt-box">
+<span class="prompt-label">Prompt 1 — Agente DBA (Antigravity / VS Code)</span>
+<span class="comentario">// Acione este prompt no ambiente de codificação disponível</span>
+
+<span class="destaque">Agente DBA:</span> Conecte-se ao Supabase usando as variáveis
+de ambiente SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY do arquivo
+.env.local. Execute as seguintes ações em sequência:
+
+1. Ative a extensão pgvector: <span class="string">CREATE EXTENSION IF NOT EXISTS vector;</span>
+2. Crie a tabela <span class="string">users</span> com: id (UUID, PK), email,
+   nome, avatar_url, plano (enum: 'free','pro','vip'),
+   quota_usage (jsonb), quota_reset_at (timestamptz),
+   tokens_balance (int default 0),
+   created_at, updated_at.
+3. Crie a tabela <span class="string">target_dossiers</span> com: id, user_id (FK),
+   nome, apelido, foto_url, preferencias_compartilhadas (jsonb),
+   estilo_comunicacao_confirmado, objetivo_relacional,
+   fase_atual (enum: 'de_olho','puxando_papo',
+   'flerte_rendendo','tentando_marcar',
+   'role_marcado','esfriou'),
+   ultima_interacao_em, notas_livres, created_at.
+4. Crie a tabela <span class="string">interactions</span> com: id, user_id,
+   target_id (FK), tipo (enum: 'audio','print_conversa',
+   'print_perfil','texto'), conteudo_url,
+   analise_ia (JSONB), created_at.
+5. Crie a tabela <span class="string">knowledge_base</span> com: id, titulo_interno,
+   categoria, conteudo_chunk (text), embedding vector(&lt;provider_dimension&gt;),
+   metadata (JSONB), created_at.
+6. Crie a tabela <span class="string">payments</span> com: id, user_id,
+   provider (enum: 'pix','stripe'), valor_centavos,
+   status, external_id, created_at.
+7. Aplique RLS: cada usuário só lê/escreve seus próprios
+   registros. A tabela knowledge_base é somente leitura
+   para o service_role (backend).
+8. Crie índice IVFFlat na coluna embedding:
+   <span class="string">CREATE INDEX ON knowledge_base
+   USING ivfflat (embedding vector_cosine_ops)
+   WITH (lists = 100);</span>
+
+Confirme cada etapa com o resultado do SQL executado.
+        </div>
+
+        <div class="prompt-box">
+<span class="prompt-label">Prompt 2 — Agente DevOps (Antigravity / VS Code)</span>
+<span class="comentario">// Acione este prompt no ambiente de codificação disponível</span>
+
+<span class="destaque">Agente DevOps:</span> Configure o projeto Next.js existente
+no repositório Kiss-Flow para deploy contínuo:
+
+1. Verifique se o arquivo <span class="string">.env.local</span> contém:
+   AI_PROVIDER_API_KEY, SUPABASE_URL, SUPABASE_ANON_KEY,
+   SUPABASE_SERVICE_ROLE_KEY.
+2. Crie o arquivo <span class="string">wrangler.toml</span> (se Cloudflare) ou
+   <span class="string">vercel.json</span> (se Vercel) com configuração de build
+   e variáveis de ambiente para produção.
+3. Execute o primeiro deploy de teste e confirme que a URL
+   pública está acessível retornando status 200.
+4. Configure o domínio personalizado no DNS da Cloudflare
+   apontando para o deploy.
+        </div>
+
+        <h4 class="titulo-item">2.6 Critérios de Aceitação (Definition of Done)</h4>
+        <ul class="checklist">
+            <li><strong>Teste 1:</strong> Executar <code>SELECT count(*) FROM users;</code> no SQL Editor do Supabase retorna 0 (tabela existe e está vazia).</li>
+            <li><strong>Teste 2:</strong> Inserir um registro de teste em <code>knowledge_base</code> com vetor aleatório de 768 dimensões e confirmar que o índice IVFFlat aceita a inserção.</li>
+            <li><strong>Teste 3:</strong> Acessar a URL pública do deploy e ver a página inicial renderizar sem erros 500.</li>
+        </ul>
+    </div>
+
+    <hr class="divisor">
+    <div class="page-break"></div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--   FASE 1.5: AUTENTICAÇÃO, ONBOARDING E LGPD             -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2 class="titulo-secao" id="cap2-5">2.1 Fase 1.5 — Autenticação, Onboarding e LGPD</h2>
+
+    <div class="bloco-fase">
+        <div class="bloco-fase-header">
+            <div>
+                <h3>FASE 1.5: Fluxo de Registro, Login Seguro e Aceite de Termos</h3>
+                <p style="font-size:10pt;color:var(--cor-texto-leve);margin:4px 0 0;">Duração estimada: 2–3 dias úteis</p>
+            </div>
+            <span class="badge badge-fundacao">Segurança</span>
+        </div>
+
+        <h4 class="titulo-item">2.1.1 Objetivo da Fase</h4>
+        <p>Implementar a porta de entrada segura do aplicativo. Isso inclui criar fluxos de registro e login via OAuth (Google/Apple) e Magic Link, além de garantir a captura explícita do consentimento do usuário para os Termos de Uso e Política de Privacidade (conformidade LGPD).</p>
+
+        <h4 class="titulo-item">2.1.2 Entregas Obrigatórias</h4>
+        <ul class="checklist">
+            <li><strong>Supabase Auth:</strong> Configuração de Provedores de Identidade (Google, Apple) e Email/Senha sem senha (Magic Link).</li>
+            <li><strong>Tela de Onboarding (Splash/Registro):</strong> Interface atrativa onde o usuário faz o primeiro login. Apenas após a confirmação do e-mail, ele avança.</li>
+            <li><strong>Aceite e transparência:</strong> Exibir Termos de Uso e Política de Privacidade em linguagem clara, com aceite desmarcado por padrão quando aplicável. A base legal, o texto e a necessidade do checkbox devem ser validados para cada finalidade.</li>
+            <li><strong>Logs de Consentimento:</strong> Registrar versão do documento, timestamp e evidência mínima necessária. Armazenar IP somente após avaliação jurídica, com finalidade e prazo de retenção documentados; não coletar por padrão.</li>
+            <li><strong>Documentos Jurídicos Básicos:</strong> Rascunho da Política de Privacidade e dos Termos de Uso com um modelo disponível, seguido de revisão jurídica e teste do fluxo real.</li>
+        </ul>
+
+        <h4 class="titulo-item">2.1.3 O Que Não Pode Faltar</h4>
+        <div class="alerta alerta-perigo">
+            <strong>🚨 Bloqueio Apple App Store</strong>
+            Se o app oferecer login social de terceiros, valide a regra atual de login equivalente da Apple e a necessidade de Sign in with Apple no caso concreto. Em qualquer plataforma, termos, privacidade, consentimento e exclusão de conta precisam ser testados como fluxos reais, não apenas como textos na tela.
+        </div>
+        <div class="alerta alerta-info">
+            <strong>💡 Redução de Fricção</strong>
+            Priorize o login via Google OAuth (1-click) para maximizar a conversão de novos usuários e reduzir barreiras de entrada.
+        </div>
+    </div>
+
+    <hr class="divisor">
+    <div class="page-break"></div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--   FASE 2: CÉREBRO SECRETO — RAG E INGESTÃO            -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2 class="titulo-secao" id="cap3">3. Fase 2 — Cérebro Secreto: RAG e Ingestão de Conhecimento</h2>
+
+    <div class="bloco-fase">
+        <div class="bloco-fase-header">
+            <div>
+                <h3>FASE 2: Pipeline de Ingestão de Livros, PDFs e Notas do Fundador</h3>
+                <p style="font-size:10pt;color:var(--cor-texto-leve);margin:4px 0 0;">Duração estimada: 4–6 dias úteis</p>
+            </div>
+            <span class="badge badge-ia">Cérebro IA</span>
+        </div>
+
+        <h4 class="titulo-item">3.1 Objetivo da Fase</h4>
+        <p>Construir o sistema de Retrieval-Augmented Generation (RAG) que permitirá à IA do aplicativo usar materiais autorizados, anotações pessoais e táticas com proveniência e licença registradas. O sistema não deve expor conteúdo protegido nem ocultar direitos autorais; a resposta ao usuário deve ser útil e segura, com atribuição quando aplicável.</p>
+
+        <h4 class="titulo-item">3.2 Entregas Obrigatórias</h4>
+        <ul class="checklist">
+            <li><strong>Bucket de Armazenamento Privado:</strong> Configurado no Supabase Storage (ou Cloudflare R2) para receber os PDFs originais.</li>
+            <li><strong>Script de Ingestão (<code>src/lib/ingest-rag.ts</code>):</strong> Só aceita fontes aprovadas no inventário de licença, extrai texto, divide em chunks semânticos com parâmetros versionados, gera embeddings pelo provedor escolhido e insere na tabela <code>knowledge_base</code> com proveniência e política de descarte.</li>
+            <li><strong>Função de Busca Semântica (<code>src/lib/rag-search.ts</code>):</strong> Recebe a pergunta do usuário, gera o embedding da query, executa busca por similaridade de cosseno na <code>knowledge_base</code> e retorna os 5 chunks mais relevantes (score > 0.75).</li>
+            <li><strong>Guardrails de conteúdo:</strong> Testes automatizados que confirmam que a IA não reproduz trechos protegidos, não usa autores como argumento de autoridade e não revela material interno não autorizado.</li>
+            <li><strong>Categorização de Chunks:</strong> Cada bloco deve ser classificado por categoria (ex: "escuta", "clareza", "reciprocidade", "limites", "timing", "desapego", "empatia", "gestao_emocional") para filtragem contextual.</li>
+        </ul>
+
+        <h4 class="titulo-item">3.3 O Que Não Pode Faltar</h4>
+        <div class="alerta alerta-perigo">
+            <strong>🚨 Direitos e sigilo da base</strong>
+            O material dos livros é propriedade intelectual de terceiros. Antes da ingestão, registre que o projeto tem direito de processar cada fonte e defina retenção, acesso e descarte. Nenhum chunk deve conter citação direta extensa do original; os chunks devem ser reformulados em linguagem própria do sistema ("Inteligência do Sistema AURA") durante a ingestão. “100% blindado” é uma hipótese, não um critério de segurança.
+        </div>
+        <div class="alerta alerta-aviso">
+            <strong>⚠️ Chunking Inteligente</strong>
+            Não divida os PDFs por número fixo de caracteres. Use divisão semântica por parágrafos/seções e descarte instruções incompatíveis com os guardrails de autonomia, consentimento e segurança.
+        </div>
+
+        <h4 class="titulo-item">3.4 Agentes Necessários</h4>
+        <p><span class="rotulo-agente agente-ia">Agente Engenheiro de IA</span> para implementar o pipeline completo de ingestão e busca semântica.</p>
+        <p><span class="rotulo-agente agente-dba">Agente DBA</span> para validar que os embeddings estão sendo indexados corretamente e as buscas retornam resultados em menos de 200ms.</p>
+
+        <h4 class="titulo-item">3.5 Prompts Exatos para Execução</h4>
+
+        <div class="prompt-box">
+<span class="prompt-label">Prompt 3 — Agente Engenheiro de IA</span>
+
+<span class="destaque">Engenheiro de IA:</span> Implemente o pipeline de RAG completo:
+
+1. Crie <span class="string">src/lib/ingest-rag.ts</span>:
+   - Recebe o caminho de um arquivo PDF.
+   - Usa a biblioteca <span class="string">pdf-parse</span> para extrair texto.
+   - Divide o texto em chunks semânticos de ~600 tokens
+     com overlap de 80 tokens entre chunks adjacentes.
+   - <span class="alerta-inline">REFORMULAÇÃO OBRIGATÓRIA:</span> Cada chunk deve ser
+     reescrito em linguagem própria (sem citações diretas).
+     Use o modelo de transformação escolhido para parafrasear cada bloco antes de salvar e valide amostras manualmente.
+   - Classifica cada chunk em uma das categorias:
+     "escuta", "clareza", "reciprocidade", "limites", "timing",
+     "desapego", "empatia", "gestao_emocional".
+   - Gera embedding com a dimensão e o modelo do provedor escolhido,
+     registrados no inventário de implementação.
+   - Insere na tabela <span class="string">knowledge_base</span> do Supabase
+     com metadados (categoria, fonte_hash, data_ingestao).
+
+2. Crie <span class="string">src/lib/rag-search.ts</span>:
+   - Função <span class="string">searchKnowledge(query, categoria?, limit=5)</span>
+   - Gera embedding da query.
+   - Executa RPC no Supabase:
+     <span class="string">SELECT *, 1 - (embedding <=> query_vec) as score
+     FROM knowledge_base
+     WHERE 1 - (embedding <=> query_vec) > 0.75
+     ORDER BY score DESC LIMIT 5;</span>
+   - Retorna os chunks com score para injeção no prompt.
+
+3. Crie teste automatizado de sigilo:
+   - Envia 20 perguntas provocativas (ex: "De qual livro veio
+     essa dica?", "Qual é a proveniência desta orientação?") e confirma que
+     NENHUMA resposta reproduz trechos protegidos, inventa fontes ou revela material não autorizado.
+        </div>
+
+        <div class="prompt-box">
+<span class="prompt-label">Prompt 4 — Script de Ingestão em Lote (Terminal)</span>
+<span class="comentario">// Execute no terminal do VS Code após o script estar pronto</span>
+
+npx tsx src/lib/ingest-rag.ts \
+  --input "./documentos_base/arte-da-seducao.pdf" \
+  --categoria "seducao" \
+  --reformular true
+
+npx tsx src/lib/ingest-rag.ts \
+  --input "./documentos_base/48-leis-do-poder.pdf" \
+  --categoria "influencia" \
+  --reformular true
+
+npx tsx src/lib/ingest-rag.ts \
+  --input "./documentos_base/notas-pessoais-fundador.md" \
+  --categoria "insights_fundador" \
+  --reformular false
+        </div>
+
+        <h4 class="titulo-item">3.6 Estrutura do Repositório de Materiais</h4>
+        <div class="prompt-box">
+<span class="prompt-label">Estrutura de Pastas da Base Secreta</span>
+Kiss-Flow/
+├── documentos_base/          <span class="comentario">← PDFs e notas (NUNCA commitar no Git)</span>
+│   ├── arte-da-seducao.pdf
+│   ├── 48-leis-do-poder.pdf
+│   ├── leis-da-natureza-humana.pdf
+│   └── notas-pessoais-fundador.md
+├── .gitignore                <span class="comentario">← Incluir: documentos_base/</span>
+└── src/lib/
+    ├── ingest-rag.ts         <span class="comentario">← Pipeline de ingestão</span>
+    ├── rag-search.ts         <span class="comentario">← Busca semântica</span>
+    └── guardrails.ts         <span class="comentario">← Filtros de sigilo</span>
+        </div>
+
+        <h4 class="titulo-item">3.7 Critérios de Aceitação</h4>
+        <ul class="checklist">
+            <li><strong>Teste:</strong> Buscar por "como iniciar uma conversa respeitosa" retorna 5 chunks relevantes com score > 0.78.</li>
+            <li><strong>Teste:</strong> Perguntar "de onde veio essa informação?" e a IA responder com transparência sobre proveniência/licença disponível, sem reproduzir conteúdo protegido nem inventar uma fonte.</li>
+            <li><strong>Teste:</strong> A tabela <code>knowledge_base</code> contém pelo menos 200 chunks após ingestão das fontes aprovadas, cada uma com <code>license_status = 'approved'</code> e proveniência registrada.</li>
+        </ul>
+    </div>
+
+    <hr class="divisor">
+    <div class="page-break"></div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--   FASE 3: API MULTIMODAL                              -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2 class="titulo-secao" id="cap4">4. Fase 3 — API Multimodal (Áudio, Prints de Conversa, Prints de Perfil)</h2>
+
+    <div class="bloco-fase">
+        <div class="bloco-fase-header">
+            <div>
+                <h3>FASE 3: Rota de API multimodal — O Wingman AI</h3>
+                <p style="font-size:10pt;color:var(--cor-texto-leve);margin:4px 0 0;">Duração estimada: 5–7 dias úteis</p>
+            </div>
+            <span class="badge badge-ia">Motor de IA</span>
+        </div>
+
+        <h4 class="titulo-item">4.1 Objetivo da Fase</h4>
+        <p>Implementar o endpoint central da aplicação (<code>/api/ai/chat</code>) que recebe qualquer combinação de texto, áudio gravado pelo microfone e imagens (prints de conversas do WhatsApp ou prints de perfis do Instagram) e devolve uma análise tática estruturada em JSON, alimentada pela base secreta RAG.</p>
+
+        <h4 class="titulo-item">4.2 Entregas Obrigatórias</h4>
+        <ul class="checklist">
+            <li><strong>Rota <code>/api/ai/chat</code> (POST):</strong> Aceita <code>multipart/form-data</code> com campos: <code>message</code> (texto), <code>audio</code> (arquivo .m4a/.webm), <code>image</code> (arquivo .png/.jpg), <code>target_id</code> (UUID do contato), <code>conversation_history</code> (JSON).</li>
+            <li><strong>System Prompt Operacional:</strong> Injetado em todas as chamadas com as regras de tom de voz, sigilo e formato de resposta JSON.</li>
+            <li><strong>Integração RAG:</strong> Antes de chamar o provedor escolhido, a rota executa a busca semântica na <code>knowledge_base</code> e injeta os top 5 chunks no contexto.</li>
+            <li><strong>Autorização e minimização:</strong> Buscar o contato com <code>target_id</code> e <code>user_id = auth.uid()</code>; usar apenas atributos confirmados e relevantes para a tarefa, nunca o dossiê completo por padrão.</li>
+            <li><strong>Separação de instruções:</strong> Delimitar histórico, anexos e chunks RAG como conteúdo não confiável. Texto recuperado não pode substituir o system prompt, alterar permissões, revelar segredos ou executar instruções.</li>
+            <li><strong>Controle de Cota Centralizado:</strong> Uma única configuração <code>plan_limits</code> define cota diária, rate limit, tokens, retries e resposta padronizada. Para o primeiro beta, usar 1 análise/dia no Free e 30 requests/h como proteção técnica; qualquer plano pago precisa de orçamento por usuário.</li>
+            <li><strong>Formato de Resposta JSON:</strong> <code>fatos_observados</code>, <code>incertezas</code>, <code>opcoes_respeitosas</code> (até 3), <code>proximo_passo</code>, <code>quando_parar</code> e <code>feedback_solicitado</code>. Não inferir subtexto, temperatura ou intenção como fato.</li>
+        </ul>
+
+        <h4 class="titulo-item">4.3 O Que Não Pode Faltar</h4>
+        <div class="alerta alerta-perigo">
+            <strong>🚨 Proteção Contra Abuso de Tokens</strong>
+            Implemente um middleware de rate limiting por IP e por user_id, com configuração centralizada e orçamento por usuário. Valide tamanho de arquivos, schema do histórico, concorrência, timeout, retries e custo; sem isso, um único usuário malicioso pode gerar custo de API em minutos.
+        </div>
+        <div class="alerta alerta-aviso">
+            <strong>⚠️ Proteção contra Conteúdo Violento</strong>
+            O guardrail do system prompt deve incluir instruções explícitas: "NUNCA sugira vingança, manipulação emocional destrutiva, stalking, assédio ou qualquer forma de violência. Se o usuário descrever uma situação abusiva, oriente-o a procurar apoio profissional e considerar se afastar."
+        </div>
+        <div class="alerta alerta-info">
+            <strong>💡 Performance</strong>
+            O áudio deve seguir o caminho de menor custo e melhor qualidade comprovados no benchmark. Compare envio multimodal direto com transcrição separada, incluindo latência, retenção, erro, privacidade e custo; não fixe preços ou tempos sem medição atual.
+        </div>
+
+        <h4 class="titulo-item">4.4 Prompts Exatos para Execução</h4>
+
+        <div class="prompt-box">
+<span class="prompt-label">Prompt 5 — Agente Engenheiro de IA</span>
+
+<span class="destaque">Engenheiro de IA:</span> Crie a rota de API principal do
+aplicativo AURA em <span class="string">src/app/api/ai/chat/route.ts</span>:
+
+1. <span class="alerta-inline">ENTRADA:</span> multipart/form-data com campos:
+   - message (string, opcional)
+   - audio (File .m4a/.webm, opcional, max 5MB)
+   - image (File .png/.jpg, opcional, max 10MB)
+   - target_id (UUID)
+   - conversation_history (JSON array dos últimos 10 turnos)
+
+2. <span class="alerta-inline">PIPELINE DE EXECUÇÃO:</span>
+   a) Autenticar o usuário via token Supabase Auth.
+   b) Verificar a política central de plano/cota; retornar 429 apenas para rate limit e um erro de entitlement padronizado para cota esgotada.
+   c) Buscar dados do contato em target_dossiers pelo target_id e
+      user_id autenticado; rejeitar qualquer contato de outro usuário.
+   d) Executar busca RAG com a mensagem do usuário
+      (ou transcrição do áudio) para obter 5 chunks relevantes.
+   e) Montar o prompt final com:
+      - System prompt operacional (tom, sigilo, formato)
+      - Apenas atributos confirmados e necessários do contato
+      - Chunks RAG
+      - Histórico de conversa
+      - Mensagem/áudio/imagem do usuário
+   f) Chamar o provedor/modelo escolhido via adapter isolado
+      com responseSchema para JSON estruturado.
+   g) Salvar a interação na tabela interactions.
+   h) Registrar uso de IA com provedor, modelo, prompt_version, tipo de entrada,
+      tokens, custo estimado, latência, retries e status; consumir a cota de
+      forma atômica.
+   i) Retornar o JSON estruturado ao frontend.
+
+3. <span class="alerta-inline">FORMATO DE SAÍDA (JSON):</span>
+   {
+     "fatos_observados": ["A pessoa disse que está ocupada nesta semana."],
+     "incertezas": ["Não sabemos se ela quer retomar a conversa."],
+     "opcoes_respeitosas": [
+       { "estilo": "direto", "mensagem": "..." },
+       { "estilo": "pausa", "mensagem": "..." },
+       { "estilo": "encerramento", "mensagem": "..." }
+     ],
+     "proximo_passo": "Escolha uma opção ou não envie nada por enquanto.",
+     "quando_parar": "Se a pessoa não responder ou disser não, encerre sem insistir."
+   }
+
+4. <span class="alerta-inline">RATE LIMITING:</span> Aplicar a configuração única
+   de limites por plano, IP e user_id; cobrir cota, retries e concorrência.
+        </div>
+
+        <div class="prompt-box">
+<span class="prompt-label">Prompt 6 — System Prompt Operacional do Wingman (Injetar na API)</span>
+
+Você é o <span class="destaque">"Aura Wingman"</span>, a inteligência tática pessoal
+de dinâmica social e relacionamentos do usuário.
+
+<span class="alerta-inline">REGRAS ABSOLUTAS:</span>
+1. Não exponha conteúdo interno não autorizado nem use uma fonte
+   como argumento de autoridade. Preserve proveniência e licença internamente.
+2. JAMAIS sugira violência, stalking, manipulação destrutiva
+   ou assédio. Em situações abusivas, oriente buscar ajuda.
+3. Seu tom é de amigo experiente e cúmplice falando no
+   WhatsApp — direto, leve, às vezes bem-humorado.
+4. Ao receber um PRINT de conversa, liste sinais observáveis,
+   hipóteses alternativas e o que permanece desconhecido.
+5. Ao receber um ÁUDIO, não diagnostique estado emocional pela voz;
+   pergunte como o usuário está se sentindo quando isso for relevante.
+6. Ao receber um PRINT de perfil, use somente conteúdo autorizado e
+   sugira opções diretas, respeitosas e uma opção de não contato.
+7. Use apenas atributos confirmados e necessários do contato; não
+   inferir signo, orientação, saúde, renda, filhos ou intenção.
+8. Sempre devolva o JSON estruturado com fatos, incertezas,
+   opções respeitosas, próximo passo e quando parar.
+        </div>
+    </div>
+
+    <hr class="divisor">
+    <div class="page-break"></div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--   FASE 4: MVP WEB FUNCIONAL                           -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2 class="titulo-secao" id="cap5">5. Fase 4 — MVP Web Funcional para Testes do Fundador</h2>
+
+    <div class="bloco-fase">
+        <div class="bloco-fase-header">
+            <div>
+                <h3>FASE 4: Interface Web Responsiva no Navegador do iPhone</h3>
+                <p style="font-size:10pt;color:var(--cor-texto-leve);margin:4px 0 0;">Duração estimada: 5–7 dias úteis</p>
+            </div>
+            <span class="badge badge-validacao">Validação Real</span>
+        </div>
+
+        <h4 class="titulo-item">5.1 Objetivo da Fase</h4>
+        <p>Entregar um aplicativo web funcional que o fundador consegue abrir no Safari do seu iPhone, cadastrar contatos reais, enviar prints de WhatsApp reais e gravar áudios com o microfone do aparelho, recebendo respostas táticas da IA em tempo real. Este é o momento de validação de campo, não de polimento visual.</p>
+
+        <h4 class="titulo-item">5.2 Entregas Obrigatórias</h4>
+        <ul class="checklist">
+            <li><strong>Tela "Meu Radar Social":</strong> Dashboard com lista de contatos cadastrados, fase atual de cada um, tempo desde última interação e contador de análises restantes no dia.</li>
+            <li><strong>Tela "Em Que Pé Tá?":</strong> Visualização das 6 fases (De Olho → Puxando Papo → Flerte Rendendo → Tentando Marcar → Rolê Marcado → Esfriou) com drag-and-drop ou toque para mover contatos entre fases.</li>
+            <li><strong>Tela de Chat com o Wingman:</strong> Interface de conversa onde o usuário digita texto, grava áudio com botão de segurar ou faz upload de imagem (print). A IA responde com as 3 opções de mensagem e a dica estratégica.</li>
+            <li><strong>Tela de Dossiê do Contato:</strong> Formulário progressivo (não um cadastro gigante) para registrar apenas nome, foto opcional e preferências que a própria pessoa compartilhou ou que o usuário autorizou manter.</li>
+            <li><strong>Autenticação:</strong> Login com email/senha via Supabase Auth. Opção de login com Google (OAuth).</li>
+            <li><strong>Design Mobile-First:</strong> O layout deve funcionar perfeitamente em telas de 375px (iPhone SE) até 430px (iPhone 15 Pro Max).</li>
+        </ul>
+
+        <h4 class="titulo-item">5.3 O Que Não Pode Faltar</h4>
+        <div class="alerta alerta-aviso">
+            <strong>⚠️ Gravação de Áudio no Safari iOS</strong>
+            O Safari do iOS exige que a gravação de áudio use a MediaRecorder API com <code>mimeType: 'audio/mp4'</code> (não <code>audio/webm</code> que funciona no Chrome). Teste no iPhone real, não apenas no simulador.
+        </div>
+        <div class="alerta alerta-info">
+            <strong>💡 Onboarding sem Fricção</strong>
+            O cadastro de dados do contato deve ser progressivo: na primeira vez, peça apenas nome e contexto mínimo. Qualquer outro atributo deve aparecer como hipótese revisável, ter finalidade clara e ser confirmado antes de salvar; não pedir signo, saúde, renda, filhos ou outros dados sensíveis por padrão.
+        </div>
+
+        <h4 class="titulo-item">5.4 Prompts Exatos para Execução</h4>
+
+        <div class="prompt-box">
+<span class="prompt-label">Prompt 7 — Agente Frontend (Antigravity / VS Code)</span>
+
+<span class="destaque">Engenheiro Frontend:</span> Crie as 4 telas principais do
+MVP web em Next.js com design escuro premium mobile-first:
+
+<span class="alerta-inline">TELA 1 — Meu Radar Social (src/app/page.tsx):</span>
+- Header com logo AURA, saudação personalizada e contador
+  de análises restantes ("1 de 1 análise grátis hoje").
+- Grid de cards dos contatos cadastrados, cada card mostrando:
+  foto, nome, fase atual (badge colorido), tempo desde
+  última interação ("há 3 dias").
+- Botão flutuante "+" para adicionar novo contato.
+- Barra de busca para filtrar contatos por nome.
+
+<span class="alerta-inline">TELA 2 — Em Que Pé Tá? (src/app/pipeline/page.tsx):</span>
+- 6 colunas horizontais com scroll lateral no mobile,
+  cada coluna representando uma fase:
+  "De Olho" | "Puxando Papo" | "Flerte Rendendo" |
+  "Tentando Marcar" | "Rolê Marcado" | "Esfriou"
+- Cada contato aparece como card arrastável entre colunas.
+
+<span class="alerta-inline">TELA 3 — Chat do Wingman (src/app/chat/[targetId]/page.tsx):</span>
+- Interface de chat com mensagens do usuário e respostas da IA.
+- Barra inferior com: input de texto, botão de gravar áudio
+  (hold-to-record), botão de anexar imagem.
+- As 3 opções de resposta da IA aparecem como cards clicáveis
+  que copiam o texto para a área de transferência.
+- Dica estratégica aparece como card destacado abaixo.
+
+<span class="alerta-inline">TELA 4 — Dossiê do Contato (src/app/target/[id]/page.tsx):</span>
+- Foto grande do contato no topo.
+- Seções expansíveis: Dados Básicos, Estilo de Vida,
+  Personalidade, Histórico de Interações.
+- Cada campo é editável inline com salvamento automático.
+
+<span class="alerta-inline">REQUISITOS TÉCNICOS:</span>
+- Design system escuro (bg #0a0a0f, cards #1a1a2e).
+- Fonte: Inter para UI, JetBrains Mono para dados.
+- Botões com feedback háptico via navigator.vibrate().
+- Todas as chamadas de API via fetch com loading skeletons.
+- PWA manifest para adicionar à tela inicial do iPhone.
+        </div>
+    </div>
+
+    <hr class="divisor">
+    <div class="page-break"></div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--   FASE 5: PAINEL ADMINISTRATIVO DO FUNDADOR           -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2 class="titulo-secao" id="cap6">6. Fase 5 — Painel Administrativo do Fundador (/admin)</h2>
+
+    <div class="bloco-fase">
+        <div class="bloco-fase-header">
+            <div>
+                <h3>FASE 5: Dashboard de Controle Operacional e Gestão do RAG</h3>
+                <p style="font-size:10pt;color:var(--cor-texto-leve);margin:4px 0 0;">Duração estimada: 3–4 dias úteis</p>
+            </div>
+            <span class="badge badge-controle">Controle</span>
+        </div>
+
+        <h4 class="titulo-item">6.1 Objetivo da Fase</h4>
+        <p>Criar uma área restrita por papel, acessível somente a administradores autorizados no servidor, com MFA quando disponível, auditoria e mascaramento de dados. Ela deve conter métricas de negócio, gestão da base RAG e monitoramento de custos de API; não usar senha fixa nem email hardcoded.</p>
+
+        <h4 class="titulo-item">6.2 Entregas Obrigatórias</h4>
+        <ul class="checklist">
+            <li><strong>Métricas Principais:</strong> Total de usuários, divisão Free vs Pro vs VIP, receita recorrente separada de transações avulsas, tokens de IA consumidos no mês e custo estimado em R$.</li>
+            <li><strong>Gráfico de Crescimento:</strong> Linha temporal de novos cadastros por dia/semana.</li>
+            <li><strong>Interface de Upload RAG:</strong> Formulário drag-and-drop para subir novos PDFs e notas. Ao soltar o arquivo, o pipeline de ingestão executa automaticamente e mostra o progresso (chunks processados / total).</li>
+            <li><strong>Lista de Chunks:</strong> Tabela pesquisável de todos os chunks na <code>knowledge_base</code> com categoria, score médio de uso e opção de editar/excluir chunks individuais.</li>
+            <li><strong>Proteção de Acesso:</strong> A rota <code>/admin</code> valida sessão, papel/claim administrativo e autorização no backend; RLS, MFA, logs de auditoria e ausência de segredos no cliente são obrigatórios.</li>
+        </ul>
+
+        <h4 class="titulo-item">6.3 Prompts Exatos para Execução</h4>
+
+        <div class="prompt-box">
+<span class="prompt-label">Prompt 8 — Agente Frontend + Backend</span>
+
+<span class="destaque">Engenheiro Fullstack:</span> Crie a rota protegida
+<span class="string">/admin</span> com as seguintes funcionalidades:
+
+1. <span class="alerta-inline">PROTEÇÃO:</span> Middleware e backend verificam sessão
+   válida, papel/claim administrativo e autorização server-side. Nunca use email
+   hardcoded, senha fixa ou segredo no cliente; negue por padrão e registre auditoria.
+
+2. <span class="alerta-inline">MÉTRICAS EM TEMPO REAL:</span>
+   - Card: Total de Usuários (SELECT count(*) FROM users)
+   - Card: Usuários Free (WHERE plano = 'free')
+   - Card: Usuários Pro (WHERE plano = 'pro')
+   - Card: Receita recorrente estimada (assinaturas ativas × preço vigente), sem somar PIX avulso
+   - Card: Uso consumido no mês (soma de tokens, caracteres ou unidades do
+     ledger de uso; a unidade deve ser definida pelo provedor)
+     na tabela interactions WHERE created_at >= inicio_mes)
+   - Card: Custo estimado de API (ledger de uso × tabela de preço versionada,
+     confirmada no dia da implementação)
+
+3. <span class="alerta-inline">UPLOAD DE NOVOS MATERIAIS:</span>
+   - Área de drag-and-drop que aceita PDF e .md
+   - Ao soltar, chama /api/admin/ingest que executa o
+     pipeline de RAG e retorna progresso em streaming
+   - Mostrar barra de progresso: "Processando chunk 42 de 180"
+
+4. <span class="alerta-inline">GESTÃO DE CHUNKS:</span>
+   - Tabela com colunas: ID, Categoria, Preview (50 chars),
+     Score Médio, Data de Ingestão
+   - Busca por texto livre
+   - Botão de excluir chunk individual
+   - Botão de editar texto do chunk (modal)
+        </div>
+    </div>
+
+    <hr class="divisor">
+    <div class="page-break"></div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--   FASE 6: GATEWAY DE PAGAMENTOS                       -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2 class="titulo-secao" id="cap7">7. Fase 6 — Gateway de Pagamentos (PIX, Stripe, Tokens)</h2>
+
+    <div class="bloco-fase">
+        <div class="bloco-fase-header">
+            <div>
+                <h3>FASE 6: Monetização com PIX Instantâneo e Assinatura Recorrente</h3>
+                <p style="font-size:10pt;color:var(--cor-texto-leve);margin:4px 0 0;">Duração estimada: 5–7 dias úteis</p>
+            </div>
+            <span class="badge badge-monetizacao">Monetização</span>
+        </div>
+
+        <h4 class="titulo-item">7.1 Objetivo da Fase</h4>
+        <p>Implementar dois fluxos de receita: (1) micropagamentos via PIX para compras avulsas de tokens de análise ("SOS Tokens"), e (2) assinatura mensal recorrente via Stripe para o plano Pro com benefícios ilimitados.</p>
+
+        <h4 class="titulo-item">7.2 Entregas Obrigatórias</h4>
+        <ul class="checklist">
+            <li><strong>Endpoint PIX (<code>/api/payments/pix</code>):</strong> Gera QR Code dinâmico via provedor escolhido após comparação de taxas, antifraude, conciliação e disponibilidade. Preços e pacotes devem ser definidos depois do Gate 0.</li>
+            <li><strong>Endpoint de assinatura (<code>/api/payments/subscribe</code>):</strong> Cria checkout para o plano validado. Preço, impostos, reembolso, cancelamento e suporte precisam ser definidos antes de cobrar.</li>
+            <li><strong>Webhook PIX (<code>/api/webhooks/pix</code>):</strong> Recebe notificação de pagamento confirmado e credita automaticamente os tokens no saldo do usuário (coluna <code>tokens_balance</code>).</li>
+            <li><strong>Webhook Stripe (<code>/api/webhooks/stripe</code>):</strong> Recebe eventos de assinatura criada, renovação, cancelamento e falha de pagamento.</li>
+            <li><strong>Controle de Acesso Freemium vs Premium (Lógica RLS e Backend):</strong>
+                A separação entre usuários pagos e gratuitos deve ser blindada no banco de dados. A tabela <code>users</code> possui a coluna <code>plano</code>.
+                <ul>
+                    <li>Usuários <code>free</code> usam a cota definida em <code>plan_limits</code> (no beta: 1 análise/dia) e proteção técnica de 30 requests/h. O consumo é registrado em ledger atômico, sem contador paralelo por tela.</li>
+                    <li>Quando o limite é atingido, o backend retorna HTTP 403, acionando no frontend o <strong>Modal de Upgrade (Paywall)</strong> com opções PIX ou Assinatura.</li>
+                    <li>Usuários <code>pro</code> ou com <code>tokens_balance > 0</code> contornam esse limite, descontando os tokens disponíveis.</li>
+                </ul>
+            </li>
+            <li><strong>Tela de Upgrade/Paywall:</strong> Quando o usuário Free atinge o limite diário, aparece um modal persuasivo com os benefícios do plano Premium e opções de compra via PIX (QR Code na tela) ou Stripe.</li>
+        </ul>
+
+        <h4 class="titulo-item">7.3 O Que Não Pode Faltar</h4>
+        <div class="alerta alerta-perigo">
+            <strong>🚨 Segurança do Webhook</strong>
+            Valide a assinatura HMAC de cada webhook recebido (tanto do Mercado Pago quanto do Stripe). Sem validação, um atacante pode forjar notificações de pagamento e creditar tokens sem pagar.
+        </div>
+        <div class="alerta alerta-aviso">
+            <strong>⚠️ Apple In-App Purchase (IAP)</strong>
+            Para a versão iOS nativa (Fase 7), classifique cada item vendido e valide a regra atual de pagamentos da Apple antes de implementar. Não fixe “taxa de 30%” como premissa universal: taxas, exceções e programas variam por região e condição. Separe claramente compras no app, web e eventuais créditos consumíveis.
+        </div>
+
+        <h4 class="titulo-item">7.4 Prompts Exatos para Execução</h4>
+
+        <div class="prompt-box">
+<span class="prompt-label">Prompt 9 — Agente de Pagamentos</span>
+
+<span class="destaque">Engenheiro Backend:</span> Implemente o sistema de pagamentos:
+
+1. <span class="alerta-inline">PIX (provedor escolhido):</span>
+   - POST /api/payments/pix recebe { user_id, pacote_id }
+   - Pacotes e preços somente após o Gate 0 e registro de intenção de compra
+   - Gera QR Code PIX via API do gateway
+   - Retorna { qr_code_base64, qr_code_text, expiration }
+   - Webhook /api/webhooks/pix:
+     a) Valida assinatura, timestamp e janela de replay
+     b) Busca o pagamento pelo external_id
+     c) Rejeita evento já processado por chave única
+     d) Credita tokens em transação atômica e registra ledger
+
+2. <span class="alerta-inline">Assinatura (provedor escolhido):</span>
+   - POST /api/payments/subscribe cria Checkout Session
+     com price_id do plano validado após o Gate 0
+   - Webhook /api/webhooks/stripe:
+     a) Valida assinatura Stripe
+     b) Evento checkout.session.completed → plano='pro'
+     c) Evento invoice.payment_failed → notifica usuário
+     d) Evento customer.subscription.deleted → plano='free'
+
+3. <span class="alerta-inline">TELA DE UPGRADE:</span>
+   - Modal que aparece quando a cota centralizada for atingida
+   - Mostra QR Code PIX gerado dinamicamente
+   - Botão "Assinar Pro" que redireciona para Stripe Checkout
+   - Animação de "créditos adicionados" após pagamento
+        </div>
+    </div>
+
+    <hr class="divisor">
+    <div class="page-break"></div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--   FASE 7: APP MOBILE NATIVO                           -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2 class="titulo-secao" id="cap8">8. Fase 7 — Aplicativo Mobile Nativo (React Native / Expo / Xcode)</h2>
+
+    <div class="bloco-fase">
+        <div class="bloco-fase-header">
+            <div>
+                <h3>FASE 7: App iOS/Android com Share Sheet Nativa</h3>
+                <p style="font-size:10pt;color:var(--cor-texto-leve);margin:4px 0 0;">Duração estimada: 10–14 dias úteis</p>
+            </div>
+            <span class="badge badge-mobile">Mobile Nativo</span>
+        </div>
+
+        <h4 class="titulo-item">8.1 Objetivo da Fase</h4>
+        <p>Criar o aplicativo nativo para iOS e Android usando React Native com Expo, com a funcionalidade crítica de <strong>Share Sheet</strong>: quando o usuário tira um print no WhatsApp ou Instagram e aperta "Compartilhar", o ícone do AURA aparece na lista de apps, permitindo enviar a imagem diretamente para análise com 1 toque.</p>
+
+        <h4 class="titulo-item">8.2 Entregas Obrigatórias — Passo a Passo Detalhado</h4>
+        <ul class="checklist">
+            <li><strong>8.2.1 — Criar Projeto Expo:</strong> Executar <code>npx create-expo-app@latest aura-mobile --template tabs</code> no terminal do Mac.</li>
+            <li><strong>8.2.2 — Configurar expo-share-intent:</strong> Instalar o plugin <code>expo-share-intent</code> via <code>npx expo install expo-share-intent</code> e adicionar ao <code>app.json</code> na seção plugins com os tipos de mídia aceitos (imagens e texto).</li>
+            <li><strong>8.2.3 — Gerar Projeto Nativo iOS:</strong> Executar <code>npx expo prebuild --platform ios</code> para gerar a pasta <code>ios/</code> com o projeto Xcode.</li>
+            <li><strong>8.2.4 — Configurar App Groups no Xcode:</strong> Abrir <code>ios/AuraMobile.xcworkspace</code> no Xcode, ir em Signing & Capabilities → + Capability → App Groups. Criar grupo <code>group.com.aura.shared</code>. Repetir para o target da Share Extension.</li>
+            <li><strong>8.2.5 — Testar no Simulador:</strong> Executar <code>npx expo run:ios</code> para abrir o simulador de iPhone no Mac. Testar tirando um screenshot no simulador e verificando se o AURA aparece no menu de compartilhamento.</li>
+            <li><strong>8.2.6 — Testar no iPhone Real:</strong> Conectar o iPhone via cabo USB, selecionar o device no Xcode e executar o build direto no aparelho para testar com prints reais do WhatsApp.</li>
+            <li><strong>8.2.7 — Push Notifications:</strong> Só após opt-in específico. Usar texto genérico sem nome, fase ou conteúdo de relacionamento (ex.: “Você tem uma reflexão pendente?”), horário silencioso, limite de frequência, silenciar por contato e remoção do token na exclusão da conta.</li>
+            <li><strong>8.2.8 — Deep Links:</strong> Configurar Universal Links (iOS) e App Links (Android) para que links do app abram diretamente no aplicativo instalado.</li>
+            <li><strong>8.2.9 — In-App Purchase (Apple):</strong> Integrar a solução oficial ou biblioteca compatível escolhida após validar a categoria do item e as regras atuais da loja.</li>
+        </ul>
+
+        <h4 class="titulo-item">8.3 O Que Não Pode Faltar</h4>
+        <div class="alerta alerta-perigo">
+            <strong>🚨 Conta Apple Developer Obrigatória</strong>
+            Para testar no iPhone real e publicar na App Store, você precisa de uma conta de desenvolvedor ativa. Custos, requisitos e prazos devem ser confirmados diretamente no programa da Apple antes de iniciar esta fase.
+        </div>
+        <div class="alerta alerta-aviso">
+            <strong>⚠️ Share Sheet — Limitação do Android</strong>
+            No Android, o Share Sheet funciona nativamente com o intent-filter padrão. Porém no iOS, a Share Extension roda em um processo separado do app principal. Os dados compartilhados devem ser passados via App Groups (NSUserDefaults compartilhado).
+        </div>
+
+        <h4 class="titulo-item">8.4 Prompts Exatos para Execução</h4>
+
+        <div class="prompt-box">
+<span class="prompt-label">Prompt 10 — Agente Mobile (Antigravity / VS Code)</span>
+
+<span class="destaque">Engenheiro Mobile:</span> Crie o app React Native com Expo:
+
+1. Inicialize: <span class="string">npx create-expo-app@latest aura-mobile
+   --template tabs</span>
+
+2. Instale dependências:
+   <span class="string">npx expo install expo-share-intent expo-image-picker
+   expo-av expo-notifications expo-secure-store
+   @supabase/supabase-js [biblioteca de compras escolhida após validar as regras da loja]</span>
+
+3. Configure <span class="string">app.json</span>:
+   - scheme: "aura"
+   - plugins: ["expo-share-intent", {
+       iosActivationRules: { NSExtensionActivationSupportsImageWithMaxCount: 1 }
+     }]
+   - ios.bundleIdentifier: "com.aura.app"
+   - android.package: "com.aura.app"
+
+4. Crie as telas replicando a versão web:
+   - Tab 1: Meu Radar Social
+   - Tab 2: Em Que Pé Tá? (pipeline visual)
+   - Tab 3: Chat do Wingman (com gravação de áudio nativa)
+   - Tab 4: Perfil e Configurações
+
+5. Implemente o handler de Share Intent:
+   - Quando o app recebe uma imagem compartilhada,
+     abra automaticamente o chat do Wingman com a imagem
+     já anexada e o seletor de contato ("Sobre quem é isso?").
+
+6. Configure Push Notifications:
+   - Solicite permissão no onboarding
+   - Registre o Expo Push Token no Supabase
+   - Crie a Cloud Function que envia lembretes proativos
+     quando ultima_interacao_em > 5 dias
+
+7. Execute <span class="string">npx expo prebuild --platform ios</span>
+8. Abra no Xcode: <span class="string">open ios/AuraMobile.xcworkspace</span>
+9. Configure App Groups no Xcode (grupo: group.com.aura.shared)
+10. Execute no simulador: <span class="string">npx expo run:ios</span>
+        </div>
+    </div>
+
+    <hr class="divisor">
+    <div class="page-break"></div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--   FASE 8: BETA FECHADO                                -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2 class="titulo-secao" id="cap9">9. Fase 8 — Beta Inicial com 10–30 Usuários (TestFlight)</h2>
+
+    <div class="bloco-fase">
+        <div class="bloco-fase-header">
+            <div>
+                <h3>FASE 8: Validação com Usuários Reais e Calibração da IA</h3>
+                <p style="font-size:10pt;color:var(--cor-texto-leve);margin:4px 0 0;">Duração estimada: 7–10 dias</p>
+            </div>
+            <span class="badge badge-beta">Beta Fechado</span>
+        </div>
+
+        <h4 class="titulo-item">9.1 Objetivo da Fase</h4>
+        <p>Distribuir o aplicativo para 10–30 testadores reais via Apple TestFlight (iOS) e Google Play Beta (Android) para validar a qualidade das respostas da IA, medir a retenção D1/D7, identificar bugs críticos e calibrar o tom das respostas do Wingman. A expansão para 100 usuários só ocorre depois do Gate 0 e de um custo por análise sustentável.</p>
+
+        <h4 class="titulo-item">9.2 Entregas Obrigatórias</h4>
+        <ul class="checklist">
+            <li><strong>Build de TestFlight:</strong> Subir o build para o App Store Connect e convidar 10–30 testadores por email, com consentimento e canal de suporte.</li>
+            <li><strong>Build de Google Play Beta:</strong> Subir o <code>.aab</code> para o Google Play Console na faixa de teste fechado.</li>
+            <li><strong>Formulário de Feedback:</strong> Instrumentar no próprio produto: utilidade (1–5), naturalidade, ação tomada, motivo de descarte e campo livre. Não depender só de formulário externo.</li>
+            <li><strong>Monitoramento no /admin:</strong> Acompanhar quais respostas foram mais copiadas, quais contatos foram mais analisados e qual fase do pipeline tem mais gente.</li>
+            <li><strong>Calibração de Prompts:</strong> Com base no feedback, ajustar o System Prompt do Wingman para corrigir respostas muito formais, conselhos genéricos ou tom inadequado.</li>
+        </ul>
+
+        <h4 class="titulo-item">9.3 O Que Não Pode Faltar</h4>
+        <div class="alerta alerta-aviso">
+            <strong>⚠️ Privacidade e consentimento</strong>
+            Antes de upload de prints, áudios ou perfis, informar finalidade, processamento, retenção e terceiros envolvidos. O usuário precisa ter uma forma clara de excluir o próprio material. A base legal e o desenho de consentimento devem ser validados com assessoria jurídica; não transformar um checkbox em promessa automática de conformidade.
+        </div>
+
+        <h4 class="titulo-item">9.4 Prompts Exatos para Execução</h4>
+
+        <div class="prompt-box">
+<span class="prompt-label">Prompt 11 — Build e Envio para TestFlight</span>
+
+<span class="destaque">Agente Mobile:</span> Prepare e envie o build para TestFlight:
+
+1. Atualize o número da versão em <span class="string">app.json</span>:
+   version "1.0.0", ios.buildNumber "1"
+
+2. Execute o build de produção para iOS:
+   <span class="string">eas build --platform ios --profile production</span>
+
+3. Após build concluído, envie para App Store Connect:
+   <span class="string">eas submit --platform ios</span>
+
+4. Acesse App Store Connect > TestFlight > selecione o
+   build > adicione os 10–30 emails de testadores.
+
+5. Monitore crashes no Painel Admin e nos logs do EAS.
+        </div>
+
+        <div class="prompt-box">
+<span class="prompt-label">Prompt 12 — Geração de Termos e Política de Privacidade</span>
+
+<span class="destaque">Agente de Produto + Jurídico:</span> Rascunhe em português brasileiro e submeta a revisão de profissional habilitado:
+
+1. <span class="alerta-inline">POLÍTICA DE PRIVACIDADE</span> do app AURA contendo:
+	   - Dados coletados: email, nome, fotos (opcionais), áudios e
+	     prints, separando dado do usuário de dado de terceiros.
+	   - Finalidades, base legal e necessidade de cada campo, validadas
+	     para o contexto de distribuição do app.
+	   - Direitos do titular: acesso, correção, portabilidade quando
+	     aplicável, oposição e exclusão, com canal e prazo operacional.
+	   - Compartilhamento com provedores de IA, hospedagem e pagamento,
+	     incluindo região de processamento e subcontratados.
+	   - Retenção por tipo de dado, backups e exclusão verificável.
+	   - Identificação do controlador e canal de privacidade; DPO somente
+	     se aplicável ao caso concreto.
+
+2. <span class="alerta-inline">TERMOS DE USO</span> contendo:
+   - Descrição do serviço.
+   - Proibição de uso para assédio, stalking ou violência.
+   - Limitação de responsabilidade (a IA fornece sugestões,
+     não garante resultados em relacionamentos).
+	   - Política de cancelamento e reembolso validada para cada canal.
+	   - Exclusão de conta e dados com confirmação clara e rastreável.
+        </div>
+    </div>
+
+    <hr class="divisor">
+    <div class="page-break"></div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--   FASE 9: PUBLICAÇÃO NAS LOJAS                        -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2 class="titulo-secao" id="cap10">10. Fase 9 — Publicação Oficial (App Store e Google Play)</h2>
+
+    <div class="bloco-fase">
+        <div class="bloco-fase-header">
+            <div>
+                <h3>FASE 9: Lançamento Público e ASO (App Store Optimization)</h3>
+                <p style="font-size:10pt;color:var(--cor-texto-leve);margin:4px 0 0;">Duração estimada: 5–7 dias (inclui tempo de revisão Apple)</p>
+            </div>
+            <span class="badge badge-lancamento">Lançamento</span>
+        </div>
+
+        <h4 class="titulo-item">10.1 Objetivo da Fase</h4>
+        <p>Publicar o aplicativo nas lojas oficiais com assets visuais profissionais, descrições otimizadas para busca (ASO) e configuração completa de In-App Purchase para monetização via Apple/Google.</p>
+
+        <h4 class="titulo-item">10.2 Entregas Obrigatórias</h4>
+        <ul class="checklist">
+            <li><strong>Contas de desenvolvedor:</strong> custos e requisitos devem ser confirmados no país de distribuição e no momento da abertura das contas.</li>
+            <li><strong>Screenshots Profissionais:</strong> 6 prints do app em iPhone 15 Pro Max (6.7") e iPhone SE (4.7") com textos de destaque sobrepostos.</li>
+            <li><strong>Ícone do App:</strong> 1024x1024px, sem transparência, cantos arredondados automáticos.</li>
+            <li><strong>Descrição ASO:</strong> Título com keyword principal, subtítulo (30 chars), descrição longa com 4.000 chars e campo de keywords (100 chars).</li>
+            <li><strong>Configuração de IAP:</strong> Criar os produtos de compra (tokens avulsos e assinatura Pro) no App Store Connect e Google Play Console.</li>
+            <li><strong>Classificação Etária:</strong> preencher a ferramenta oficial de cada loja conforme o conteúdo real; “17+” é hipótese até a classificação.</li>
+            <li><strong>Exclusão de Conta:</strong> oferecer caminho claramente encontrável dentro do app e excluir a conta e dados associados, salvo retenções legais documentadas.</li>
+        </ul>
+
+        <h4 class="titulo-item">10.3 O Que Não Pode Faltar</h4>
+        <div class="alerta alerta-perigo">
+            <strong>🚨 Requisito de revisão e privacidade</strong>
+            Apps que permitem criação de conta precisam oferecer exclusão de conta. A implementação deve remover a conta e os dados associados, salvo retenções legais documentadas, desautenticar a sessão e explicar o que acontece com assinaturas e backups. Consulte a <a href="https://developer.apple.com/app-store/review/guidelines/" target="_blank" rel="noopener noreferrer">diretriz atual da Apple</a> e a <a href="https://support.google.com/googleplay/android-developer/answer/13327111" target="_blank" rel="noopener noreferrer">exigência atual do Google Play</a> antes do envio.
+        </div>
+
+        <h4 class="titulo-item">10.4 Prompts Exatos para Execução</h4>
+
+        <div class="prompt-box">
+<span class="prompt-label">Prompt 13 — Agente Marketing / ASO</span>
+
+<span class="destaque">Agente Marketing:</span> Crie o conteúdo ASO para
+as lojas Apple e Google em português brasileiro:
+
+1. <span class="alerta-inline">TÍTULO:</span> "AURA — Seu Estrategista de Relacionamentos"
+   (máximo 30 caracteres)
+
+2. <span class="alerta-inline">SUBTÍTULO (iOS):</span> "Organize sinais e escolha melhor"
+   (máximo 30 caracteres)
+
+3. <span class="alerta-inline">DESCRIÇÃO CURTA (Android):</span>
+	   "Envie contexto, receba opções para decidir."
+   (máximo 80 caracteres)
+
+4. <span class="alerta-inline">DESCRIÇÃO LONGA (4000 chars):</span>
+   Estruture com emojis, parágrafos curtos e keywords:
+   "relacionamento", "crush", "paquera", "flerte",
+   "como responder", "entender mensagem", "IA pessoal".
+
+5. <span class="alerta-inline">KEYWORDS iOS (100 chars):</span>
+	   relacionamento,crush,paquera,flerte,ia,conselho,
+	   dica,conversa,privacidade
+
+6. <span class="alerta-inline">TEXTOS PARA SCREENSHOTS (6):</span>
+	   - "Mandou contexto? Veja opções claras."
+	   - "Sugestões opcionais. Você decide o próximo passo."
+   - "Organize seus crushes por fase."
+	   - "Organize conversas sem perder seu próprio ritmo."
+	   - "Gravou áudio? Revise o contexto antes de agir."
+	   - "Registre o resultado e aprenda com a próxima conversa."
+        </div>
+    </div>
+
+    <hr class="divisor">
+    <div class="page-break"></div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--   FASE 10: TRÁFEGO PAGO E ESCALA                      -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2 class="titulo-secao" id="cap11">11. Fase 10 — Ativação de Tráfego Pago e Máquina de Escala</h2>
+
+    <div class="bloco-fase">
+        <div class="bloco-fase-header">
+            <div>
+                <h3>FASE 10: Campanhas de Aquisição e Reinvestimento Composto</h3>
+                <p style="font-size:10pt;color:var(--cor-texto-leve);margin:4px 0 0;">Duração: contínuo após lançamento</p>
+            </div>
+            <span class="badge badge-escala">Escala</span>
+        </div>
+
+        <h4 class="titulo-item">11.1 Objetivo da Fase</h4>
+        <p>Ativar a máquina de aquisição paga para escalar de 0 a 50.000 usuários em 15 meses, reinvestindo 40% do lucro operacional em novos anúncios e mantendo CPI (Custo por Instalação) abaixo de R$ 2,00.</p>
+
+        <h4 class="titulo-item">11.2 Entregas Obrigatórias</h4>
+        <ul class="checklist">
+            <li><strong>Conta TikTok Ads:</strong> Configurada com pixel de rastreamento instalado no app e no site.</li>
+            <li><strong>3 Criativos UGC Iniciais:</strong> Vídeos de 15-30 segundos em formato vertical gravados no celular mostrando situações reais.</li>
+            <li><strong>Conta Meta Ads (Instagram/Facebook):</strong> Configurada como backup para retargeting de visitantes do site.</li>
+            <li><strong>Dashboard de CAC/LTV:</strong> Painel no /admin mostrando custo de aquisição real vs lifetime value para otimizar o investimento.</li>
+        </ul>
+
+        <h4 class="titulo-item">11.3 Roteiros dos Criativos UGC</h4>
+
+        <div class="prompt-box">
+<span class="prompt-label">Roteiro 1 — "O Print que Mudou Tudo" (15s)</span>
+
+[Tela do celular filmada de cima]
+<span class="string">NARRAÇÃO:</span> "Ela me mandou ISSO no WhatsApp..."
+[Mostra um print de conversa ambíguo]
+<span class="string">NARRAÇÃO:</span> "Joguei no app e olha o que a IA respondeu..."
+[Mostra as 3 opções de resposta do AURA]
+<span class="string">NARRAÇÃO:</span> "Mandei a opção 2. Ela respondeu em 30 segundos."
+[Corta para tela: "Download grátis — link na bio"]
+        </div>
+
+        <div class="prompt-box">
+<span class="prompt-label">Roteiro 2 — "O Conselheiro que Não Dorme" (20s)</span>
+
+[POV: pessoa deitada na cama às 2h da manhã]
+<span class="string">NARRAÇÃO:</span> "2 da manhã e ela parou de responder."
+[Abre o AURA, grava áudio: "cara, ela sumiu do nada"]
+<span class="string">NARRAÇÃO:</span> "A IA analisou e disse: 'calma, ela vai voltar
+amanhã com energia. Não mande nada agora.'"
+[Corte para manhã seguinte: notificação do WhatsApp]
+[Narração deve mostrar a experiência real, sem afirmar que a IA previu a resposta]
+[CTA: "Baixe o AURA grátis"]
+        </div>
+
+        <h4 class="titulo-item">11.4 Regra de Reinvestimento</h4>
+        <div class="alerta alerta-sucesso">
+            <strong>📈 Fórmula de Escala</strong>
+            Aplique somente depois do Gate 0: <strong>uma parcela definida do lucro operacional mensal</strong> pode ser reinvestida em tráfego pago no mês seguinte. Separe receita recorrente de transações avulsas e desconte taxas, impostos, reembolsos, suporte e custo de aquisição antes de calcular o valor reinvestível. Percentual e exemplo numérico são hipóteses a validar.
+        </div>
+    </div>
+
+    <hr class="divisor">
+    <div class="page-break"></div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--   CAP 12: PROTOCOLO DE RISCOS                         -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2 class="titulo-secao" id="cap12">12. Protocolo de Riscos, Inerências e Contingências</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width:5%">#</th>
+                <th style="width:22%">Risco</th>
+                <th style="width:8%">Severidade</th>
+                <th style="width:10%">Fase</th>
+                <th style="width:30%">Mitigação</th>
+                <th style="width:25%">Contingência</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>R01</td>
+                <td>Custo de API de IA explode com abuso de usuários Free</td>
+                <td style="color:#dc2626;font-weight:700;">Alta</td>
+                <td>Fase 3</td>
+                <td>Rate limiting por user_id (30 req/h free), limite diário de 1 análise grátis, validação server-side.</td>
+            <td>Suspender temporariamente a análise multimodal, reduzir a cota e investigar custo, abuso e falha de autenticação antes de reabrir.</td>
+            </tr>
+            <tr>
+                <td>R02</td>
+                <td>Rejeição na Apple App Store</td>
+                <td style="color:#dc2626;font-weight:700;">Alta</td>
+                <td>Fase 9</td>
+                <td>Incluir botão "Excluir Conta" funcional, EULA, política de privacidade e classificação oficial compatível com o conteúdo.</td>
+                <td>Manter versão PWA como fallback enquanto negocia com a Apple Review Board.</td>
+            </tr>
+            <tr>
+                <td>R03</td>
+                <td>IA gera conselho prejudicial ou violento</td>
+                <td style="color:#dc2626;font-weight:700;">Alta</td>
+                <td>Fase 3</td>
+                <td>Guardrails no System Prompt + filtro de output que bloqueia keywords de violência antes de enviar.</td>
+                <td>Moderação humana (fundador) dos logs de interação no /admin com poder de ajustar respostas retroativamente.</td>
+            </tr>
+            <tr>
+                <td>R04</td>
+                <td>Vazamento da base secreta de livros (RAG)</td>
+                <td style="color:#f59e0b;font-weight:700;">Média</td>
+                <td>Fase 2</td>
+                <td>Chunks reformulados (nunca citação direta), RLS no Supabase, bucket privado, pasta excluída do Git.</td>
+                <td>Purgar todos os chunks e reingerir com reformulação mais agressiva caso haja leak detectado.</td>
+            </tr>
+            <tr>
+                <td>R05</td>
+                <td>Usuário usa o app para stalking ou assédio</td>
+                <td style="color:#f59e0b;font-weight:700;">Média</td>
+                <td>Todas</td>
+                <td>Termos de Uso proíbem explicitamente. Sistema de denúncia. Guardrails da IA detectam e recusam.</td>
+                <td>Banimento permanente da conta + exclusão de dados + relatório ao fundador no /admin.</td>
+            </tr>
+            <tr>
+                <td>R06</td>
+                <td>Indisponibilidade do provedor de IA</td>
+                <td style="color:#f59e0b;font-weight:700;">Média</td>
+                <td>Fase 3+</td>
+                <td>Circuit breaker com fallback para um segundo provedor/modelo previamente benchmarkado.</td>
+                <td>Mensagem ao usuário: "Nosso conselheiro está em meditação. Tente novamente em 5 minutos." + retry automático.</td>
+            </tr>
+            <tr>
+                <td>R07</td>
+                <td>Share Sheet não funciona após update do iOS</td>
+                <td style="color:#3b82f6;font-weight:700;">Baixa</td>
+                <td>Fase 7</td>
+                <td>Usar plugin oficial expo-share-intent com atualizações frequentes. Testar em cada beta do iOS.</td>
+                <td>Fallback para upload manual de imagem no chat (funcionalidade que já existe independente do Share Sheet).</td>
+            </tr>
+            <tr>
+                <td>R08</td>
+                <td>Coleta de prints/áudios expõe dados de terceiros sem finalidade clara</td>
+                <td style="color:#dc2626;font-weight:700;">Alta</td>
+                <td>Fases 1.5/3</td>
+                <td>Minimização, aviso antes do upload, redaction, retenção curta, criptografia, exclusão e registro de subcontratados.</td>
+                <td>Suspender upload multimodal, apagar artefatos pendentes e revisar o fluxo de privacidade antes de reabrir.</td>
+            </tr>
+            <tr>
+                <td>R09</td>
+                <td>Conselho da IA incentiva manipulação, coerção ou contato insistente</td>
+                <td style="color:#dc2626;font-weight:700;">Alta</td>
+                <td>Fase 3+</td>
+                <td>Taxonomia de abuso, testes adversariais, linguagem de consentimento e limites de frequência por contato.</td>
+                <td>Bloquear a sugestão, oferecer orientação segura e encaminhar o caso para revisão humana.</td>
+            </tr>
+            <tr>
+                <td>R10</td>
+                <td>Métrica de vaidade mascara falta de valor recorrente</td>
+                <td style="color:#f59e0b;font-weight:700;">Média</td>
+                <td>Fase 8+</td>
+                <td>Medir tempo até valor, sugestão copiada, ação tomada, feedback, retorno D7 e custo por análise.</td>
+                <td>Parar tráfego e reduzir escopo até o loop principal atingir os critérios do Gate 0.</td>
+            </tr>
+            <tr>
+                <td>R11</td>
+                <td>Dependência de um provedor de IA ou mudança de modelo quebra custo/qualidade</td>
+                <td style="color:#f59e0b;font-weight:700;">Média</td>
+                <td>Fases 2/3</td>
+                <td>Adapter de provedor, prompt versionado, conjunto de avaliação, timeout, retry limitado e orçamento por usuário.</td>
+                <td>Desligar temporariamente análise multimodal e manter apenas fluxo textual de baixo custo.</td>
+            </tr>
+            <tr>
+                <td>R12</td>
+                <td>Direitos autorais ou licença da base RAG não estão comprovados</td>
+                <td style="color:#dc2626;font-weight:700;">Alta</td>
+                <td>Fase 2</td>
+                <td>Inventário de fontes, prova de licença/permissão, política de citação, remoção e revisão jurídica.</td>
+                <td>Purgar a fonte sem licença e reprocessar apenas materiais autorizados.</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr class="divisor">
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!--   RESUMO EXECUTIVO FINAL                              -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <h2 class="titulo-secao">Resumo Executivo: Visão Geral dos 10 Blocos</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Fase</th>
+                <th>Duração</th>
+                <th>Agentes Principais</th>
+                <th>Entrega-Chave</th>
+                <th>Critério de Conclusão</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>1. Fundação</strong></td>
+                <td>3–5 dias</td>
+                <td><span class="rotulo-agente agente-dba">DBA</span> <span class="rotulo-agente agente-devops">DevOps</span></td>
+                <td>Supabase + pgvector + Deploy inicial</td>
+                <td>SELECT na tabela users retorna 0 sem erro</td>
+            </tr>
+            <tr>
+                <td><strong>2. RAG Secreto</strong></td>
+                <td>4–6 dias</td>
+                <td><span class="rotulo-agente agente-ia">Eng. IA</span></td>
+                <td>200+ chunks autorizados, com licença e proveniência registradas</td>
+                <td>Busca por “iniciar uma conversa respeitosa” retorna 5 chunks relevantes de fontes aprovadas sem revelar conteúdo protegido indevidamente</td>
+            </tr>
+            <tr>
+                <td><strong>3. API Multimodal</strong></td>
+                <td>5–7 dias</td>
+                <td><span class="rotulo-agente agente-ia">Eng. IA</span></td>
+                <td>Rota /api/ai/chat processando áudio + imagem</td>
+                <td>Enviar print real e receber JSON com 3 opções</td>
+            </tr>
+            <tr>
+                <td><strong>4. MVP Web</strong></td>
+                <td>5–7 dias</td>
+                <td><span class="rotulo-agente agente-ia">Eng. IA</span> <span class="rotulo-agente agente-devops">DevOps</span></td>
+                <td>4 telas funcionais no Safari do iPhone</td>
+                <td>Fundador cadastra contato real e recebe resposta da IA</td>
+            </tr>
+            <tr>
+                <td><strong>5. Admin /admin</strong></td>
+                <td>3–4 dias</td>
+                <td><span class="rotulo-agente agente-ia">Eng. IA</span></td>
+                <td>Dashboard com métricas + upload de PDFs</td>
+                <td>Arrastar PDF e ver chunks sendo processados em tempo real</td>
+            </tr>
+            <tr>
+                <td><strong>6. Pagamentos</strong></td>
+                <td>5–7 dias</td>
+                <td><span class="rotulo-agente agente-ia">Eng. IA</span></td>
+                <td>PIX + Stripe funcionando com webhooks</td>
+                <td>Demonstrar intenção de pagamento e validar webhook idempotente antes de cobrar</td>
+            </tr>
+            <tr>
+                <td><strong>7. Mobile Nativo</strong></td>
+                <td>10–14 dias</td>
+                <td><span class="rotulo-agente agente-mobile">Mobile</span></td>
+                <td>App iOS com Share Sheet funcionando</td>
+                <td>Tirar print no WhatsApp → compartilhar → AURA analisa</td>
+            </tr>
+            <tr>
+                <td><strong>8. Beta inicial</strong></td>
+                <td>7–10 dias</td>
+                <td><span class="rotulo-agente agente-qa">QA</span> <span class="rotulo-agente agente-marketing">Marketing</span></td>
+                <td>10–30 testadores reais no TestFlight; expansão posterior para 100</td>
+            <td>Retorno D7 ≥ 30% da coorte ativada e satisfação média ≥ 4/5, com denominador e janela documentados</td>
+            </tr>
+            <tr>
+                <td><strong>9. Publicação</strong></td>
+                <td>5–7 dias</td>
+                <td><span class="rotulo-agente agente-marketing">Marketing</span> <span class="rotulo-agente agente-navegador">Navegador</span></td>
+                <td>App público na App Store e Google Play</td>
+                <td>Link funcional para download + IAP configurado</td>
+            </tr>
+            <tr>
+                <td><strong>10. Escala</strong></td>
+                <td>Contínuo</td>
+                <td><span class="rotulo-agente agente-marketing">Marketing</span></td>
+                <td>Campanhas TikTok/Meta ativas com CPI < R$ 2</td>
+                <td>Primeiros 500 downloads orgânicos + pagos na semana 1</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- RODAPÉ ABNT -->
+    <hr class="divisor">
+    <footer style="text-align:center;font-size:9pt;color:var(--cor-texto-leve);padding:20px 0;">
+        <p><strong>AURA — Plano Diretor de Engenharia e Execução Operacional</strong></p>
+        <p>Documento com estrutura editorial inspirada em referências ABNT; conformidade formal não foi objeto desta revisão.</p>
+        <p>Versão 3.0 • Agosto 2026 • Classificação: Confidencial — Uso Exclusivo do Fundador</p>
+        <p style="margin-top:12px;font-size:8pt;">© 2026 AURA Technologies. Todos os direitos reservados.</p>
+    </footer>
+
+</div>
+
+</body>
+</html>

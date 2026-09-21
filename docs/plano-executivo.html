@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masterplan Executivo: CRM de Relacionamentos com IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #090A0F; color: #E2E8F0; }
+        .glass-card { background: rgba(18, 20, 29, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .accent-gradient { background: linear-gradient(135deg, #6366F1 0%, #A855F7 50%, #EC4899 100%); }
+        .text-gradient { background: linear-gradient(135deg, #818CF8, #C084FC, #F472B6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .badge-glow { box-shadow: 0 0 15px rgba(99, 102, 241, 0.3); }
+    </style>
+</head>
+<body class="min-h-screen antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- Header / Hero -->
+    <header class="border-b border-slate-800/80 sticky top-0 z-50 bg-[#090A0F]/90 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl accent-gradient flex items-center justify-center text-white font-bold text-xl shadow-lg">
+                    <i class="fa-solid fa-chess-knight"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-extrabold tracking-tight text-white">AURA <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">Masterplan Executivo</span></h1>
+                    <p class="text-xs text-slate-400">CRM de Dinâmica Social & Dossiê de Empatia com IA</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <a href="manual-execucao-10-semanas.html" class="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-md">
+                    <i class="fa-solid fa-book-bookmark mr-1.5"></i> Abrir Manual de Execução
+                </a>
+                <a href="prototipo.html" class="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white transition-all shadow-md">
+                    <i class="fa-solid fa-mobile-screen mr-1.5"></i> Abrir Protótipo Interativo
+                </a>
+                <a href="#dossie-empatia" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30 transition-all">
+                    <i class="fa-solid fa-heart mr-1"></i> Dossiê de Empatia
+                </a>
+                <a href="#simulador" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-md hover:shadow-indigo-500/25">
+                    <i class="fa-solid fa-calculator mr-1.5"></i> Simulador de Tráfego
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-6 py-10 space-y-12">
+
+        <!-- Visão Geral em Cards -->
+        <section class="grid grid-cols-1 md:grid-cols-4 gap-5">
+            <div class="glass-card rounded-2xl p-5 hover:border-indigo-500/40 transition-all">
+                <div class="flex items-center justify-between text-indigo-400 mb-3">
+                    <i class="fa-solid fa-wand-magic-sparkles text-2xl"></i>
+                    <span class="text-xs font-semibold px-2 py-1 rounded bg-indigo-500/10">Consentido</span>
+                </div>
+                <h3 class="text-sm font-medium text-slate-400">Cadastro Invisível</h3>
+                <p class="text-lg font-bold text-white mt-1">Contexto Confirmado</p>
+                <p class="text-xs text-slate-400 mt-2">A IA organiza apenas o que foi fornecido ou confirmado pelo usuário e é relevante para a tarefa.</p>
+            </div>
+
+            <div class="glass-card rounded-2xl p-5 hover:border-purple-500/40 transition-all">
+                <div class="flex items-center justify-between text-purple-400 mb-3">
+                    <i class="fa-solid fa-gauge-high text-2xl"></i>
+                    <span class="text-xs font-semibold px-2 py-1 rounded bg-purple-500/10">Gamificação</span>
+                </div>
+                <h3 class="text-sm font-medium text-slate-400">Termômetro de Empatia</h3>
+                <p class="text-lg font-bold text-white mt-1">Sair do Egoísmo</p>
+                <p class="text-xs text-slate-400 mt-2">Mede quantos contextos autorizados foram compreendidos, sem transformar o contato em objeto de otimização.</p>
+            </div>
+
+            <div class="glass-card rounded-2xl p-5 hover:border-pink-500/40 transition-all">
+                <div class="flex items-center justify-between text-pink-400 mb-3">
+                    <i class="fa-solid fa-brain text-2xl"></i>
+                    <span class="text-xs font-semibold px-2 py-1 rounded bg-pink-500/10">Socrático</span>
+                </div>
+                <h3 class="text-sm font-medium text-slate-400">Perguntas Oportunas</h3>
+                <p class="text-lg font-bold text-white mt-1">Troca Justa</p>
+                <p class="text-xs text-slate-400 mt-2">A IA só pergunta algo quando vai usar a resposta na próxima mensagem ou convite — e aceita “não sei”.</p>
+            </div>
+
+            <div class="glass-card rounded-2xl p-5 hover:border-emerald-500/40 transition-all">
+                <div class="flex items-center justify-between text-emerald-400 mb-3">
+                    <i class="fa-solid fa-shield-halved text-2xl"></i>
+                    <span class="text-xs font-semibold px-2 py-1 rounded bg-emerald-500/10">Black Box</span>
+                </div>
+                <h3 class="text-sm font-medium text-slate-400">RAG Proprietário</h3>
+                <p class="text-lg font-bold text-white mt-1">Base Secreta</p>
+                <p class="text-xs text-slate-400 mt-2">Livros e táticas autorizados, privados e protegidos por guardrails.</p>
+            </div>
+        </section>
+
+        <!-- PREMISSAS E GATES DE DECISÃO -->
+        <section id="premissas" class="glass-card rounded-3xl p-8 space-y-6 border-amber-500/30">
+            <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4 border-b border-slate-800 pb-5">
+                <div>
+                    <span class="text-xs font-extrabold uppercase tracking-widest text-amber-400 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">Leitura obrigatória antes de executar</span>
+                    <h2 class="text-2xl font-extrabold text-white mt-2">O plano precisa provar o loop antes de comprar escala</h2>
+                    <p class="text-xs text-slate-400 mt-1 max-w-3xl">O primeiro objetivo não é chegar a 50.000 usuários. É provar, com pessoas reais, que capturar contexto → receber uma sugestão → agir → registrar o resultado gera valor recorrente.</p>
+                </div>
+                <span class="shrink-0 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs font-bold text-amber-300">Gate 0: 10 usuários reais</span>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
+                    <span class="text-emerald-400 font-bold block mb-2"><i class="fa-solid fa-flask mr-1"></i> Hipótese a validar</span>
+                    <p class="text-slate-300 leading-relaxed">O usuário consegue registrar uma situação em até 2 minutos e considera útil pelo menos uma sugestão da IA na primeira sessão.</p>
+                </div>
+                <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
+                    <span class="text-cyan-400 font-bold block mb-2"><i class="fa-solid fa-chart-line mr-1"></i> Métricas do MVP</span>
+                    <p class="text-slate-300 leading-relaxed">Tempo até a primeira sugestão, taxa de cópia/uso, feedback positivo, retorno em D7 e custo por análise. Sem essas métricas, não há base para tráfego pago.</p>
+                </div>
+                <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800">
+                    <span class="text-rose-400 font-bold block mb-2"><i class="fa-solid fa-ban mr-1"></i> Critério de parada</span>
+                    <p class="text-slate-300 leading-relaxed">Se a IA gerar conselho invasivo, manipulador, inseguro ou caro demais, reduzir escopo e corrigir guardrails antes de adicionar mobile, pagamento ou escala.</p>
+                </div>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 text-xs text-slate-400 leading-relaxed">
+                <strong class="text-slate-200">Nota sobre o simulador financeiro:</strong> os valores abaixo são um cenário ilustrativo, não uma previsão. A conta pressupõe R$ 19,90 por assinatura Pro, R$ 6,00 por passe PIX, 15% dos usuários ativos pagando no mês, custo médio de R$ 0,21 por usuário e reinvestimento de 40% da margem após IA/infra. Ainda não estão incluídos impostos, taxas de loja e pagamento, churn, reembolsos, suporte, moderação, CAC, retenção ou custo jurídico.
+            </div>
+        </section>
+
+        <!-- SEÇÃO: O DOSSIÊ DE EMPATIA & PERFIL PROGRESSIVO -->
+        <section id="dossie-empatia" class="glass-card rounded-3xl p-8 space-y-8 border-purple-500/30">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+                <div>
+                    <span class="text-xs font-extrabold uppercase tracking-widest text-purple-400 bg-purple-500/10 px-3 py-1 rounded-full border border-purple-500/20">Psicologia & UX Cognitiva</span>
+                <h2 class="text-2xl font-extrabold text-white mt-2">O Dossiê de Empatia: Como Registrar Contexto Sem Fricção</h2>
+                    <p class="text-xs text-slate-400 mt-1">O segredo para sair do egoísmo e entrar no mundo da outra pessoa sem preencher cadastros cansativos.</p>
+                </div>
+                <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 text-xs text-purple-300">
+                    <i class="fa-solid fa-sparkles text-purple-400 mr-1"></i> Setup inicial: <strong>Apenas 3 campos (5 segundos)</strong>
+                </div>
+            </div>
+
+            <!-- As 3 Camadas do Mapeamento -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs">1</div>
+                    <h3 class="text-sm font-bold text-white">Setup Mínimo (Zero Fricção)</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        Ao criar o contato, o usuário informa apenas <strong>Nome</strong>, <strong>Objetivo</strong> e quais contextos deseja registrar. O perfil só fica ativo depois da confirmação.
+                    </p>
+                </div>
+
+                <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3">
+                    <div class="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-xs">2</div>
+                    <h3 class="text-sm font-bold text-white">Revisão Explícita do Contexto</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        A IA pode resumir um áudio ou print autorizado, mas mostra a origem e pede confirmação antes de salvar qualquer atributo. Nada é inferido por foto, voz, signo ou comportamento.
+                    </p>
+                </div>
+
+                <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3">
+                    <div class="w-8 h-8 rounded-lg bg-pink-500/20 text-pink-400 flex items-center justify-center font-bold text-xs">3</div>
+                    <h3 class="text-sm font-bold text-white">Perguntas sob Demanda</h3>
+                    <p class="text-xs text-slate-400 leading-relaxed">
+                        A IA só pergunta quando a resposta for necessária: <em>"Para sugerir um convite, você sabe se essa pessoa prefere um café ou outro formato? Se não souber, tudo bem."</em>. O usuário decide se responde e salva.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Tabela Visual de Atributos Extraídos -->
+            <div class="p-6 rounded-2xl bg-slate-900/50 border border-slate-800/80 space-y-4">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300">Mapa de Atributos e Utilidade Tática para a IA</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+                    <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
+                        <span class="text-purple-400 font-bold block mb-1"><i class="fa-solid fa-user-tag mr-1"></i> Perfil & Altura</span>
+                        <span class="text-slate-400">Preferências e estilo somente quando compartilhados e úteis.</span>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
+                        <span class="text-purple-400 font-bold block mb-1"><i class="fa-solid fa-paw mr-1"></i> Pets & Lifestyle</span>
+                        <span class="text-slate-400">Pets ou interesses mencionados pela própria pessoa, sem presumir intimidade.</span>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
+                        <span class="text-purple-400 font-bold block mb-1"><i class="fa-solid fa-wine-glass mr-1"></i> Bebida, Cigarro & Treino</span>
+                        <span class="text-slate-400">Restrições e preferências confirmadas orientam opções mais adequadas.</span>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
+                        <span class="text-purple-400 font-bold block mb-1"><i class="fa-solid fa-hashtag mr-1"></i> Redes & Influencer</span>
+                        <span class="text-slate-400">Canal e ritmo de comunicação observados, sem perfilamento oculto.</span>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
+                        <span class="text-purple-400 font-bold block mb-1"><i class="fa-solid fa-star mr-1"></i> Signo & Mapa Astral</span>
+                        <span class="text-slate-400">Calculado automaticamente da data de nascimento.</span>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
+                        <span class="text-purple-400 font-bold block mb-1"><i class="fa-solid fa-children mr-1"></i> Filhos & Futuro</span>
+                        <span class="text-slate-400">Se tem filhos e se deseja ter no futuro.</span>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
+                        <span class="text-purple-400 font-bold block mb-1"><i class="fa-solid fa-phone-volume mr-1"></i> Estilo de Resposta</span>
+                        <span class="text-slate-400">WhatsApp rápido, chamada de áudio ou pessoal.</span>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800">
+                        <span class="text-purple-400 font-bold block mb-1"><i class="fa-solid fa-bullseye mr-1"></i> Objetivo do Alvo</span>
+                        <span class="text-slate-400">Quer algo sério, casual ou está em transição?</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="p-4 rounded-2xl bg-rose-950/30 border border-rose-500/25 text-xs text-slate-300 leading-relaxed">
+            <strong class="text-rose-300"><i class="fa-solid fa-user-shield mr-1"></i> Guardrail de perfil:</strong> atributos só entram quando a própria pessoa usuária os fornece ou confirma e quando têm utilidade clara para a tarefa. Não inferir signo, orientação, religião, saúde, filhos, renda ou intenção a partir de foto, voz ou rede social. O contato deve poder corrigir e apagar qualquer atributo extraído.
+        </div>
+
+        <!-- SIMULADOR FINANCEIRO E CRESCIMENTO COM TRÁFEGO PAGO -->
+        <section id="simulador" class="glass-card rounded-3xl p-8 space-y-8 border-indigo-500/30">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+                <div>
+                    <span class="text-xs font-extrabold uppercase tracking-widest text-indigo-400 bg-indigo-500/10 px-3 py-1 rounded-full border border-indigo-500/20">Modelo Financeiro & Growth</span>
+                    <h2 class="text-2xl font-extrabold text-white mt-2">Simulação de Crescimento e Tráfego Pago (500 a 50.000 Usuários)</h2>
+                    <p class="text-xs text-slate-400 mt-1">Início do reinvestimento em tráfego pago a partir de 500 usuários ativos.</p>
+                </div>
+                <div class="flex items-center space-x-2 bg-slate-900 p-1.5 rounded-xl border border-slate-800">
+                    <button onclick="setScenario(500)" class="px-3 py-1.5 text-xs font-semibold rounded-lg hover:bg-slate-800 text-slate-300 tab-btn" id="btn-500">500</button>
+                    <button onclick="setScenario(1000)" class="px-3 py-1.5 text-xs font-semibold rounded-lg hover:bg-slate-800 text-slate-300 tab-btn" id="btn-1000">1.000</button>
+                    <button onclick="setScenario(5000)" class="px-3 py-1.5 text-xs font-semibold rounded-lg hover:bg-slate-800 text-slate-300 tab-btn" id="btn-5000">5.000</button>
+                    <button onclick="setScenario(15000)" class="px-3 py-1.5 text-xs font-semibold rounded-lg hover:bg-slate-800 text-slate-300 tab-btn" id="btn-15000">15.000</button>
+                    <button onclick="setScenario(50000)" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-indigo-600 text-white tab-btn" id="btn-50000">50.000</button>
+                </div>
+            </div>
+
+            <!-- Indicadores do Cenário Selecionado -->
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+                    <span class="text-[11px] text-slate-400 block font-medium">Receita Bruta Mensal</span>
+                    <span class="text-xl font-extrabold text-emerald-400 mt-1 block" id="card-receita">R$ 79.750</span>
+                    <span class="text-[10px] text-slate-500">Assinaturas + Passes PIX</span>
+                </div>
+                <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+                    <span class="text-[11px] text-slate-400 block font-medium">Custo Infra + IA (cenário)</span>
+                    <span class="text-xl font-extrabold text-red-400 mt-1 block" id="card-custos">R$ 10.500</span>
+                    <span class="text-[10px] text-slate-500">~R$ 0,21 por usuário</span>
+                </div>
+                <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+                    <span class="text-[11px] text-slate-400 block font-medium">Margem Operacional</span>
+                    <span class="text-xl font-extrabold text-indigo-400 mt-1 block" id="card-margem">R$ 69.250</span>
+                    <span class="text-[10px] text-slate-500">86,8% Margem Bruta</span>
+                </div>
+                <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+                    <span class="text-[11px] text-slate-400 block font-medium">Verba Tráfego Pago (40%)</span>
+                    <span class="text-xl font-extrabold text-purple-400 mt-1 block" id="card-trafego">R$ 27.700</span>
+                    <span class="text-[10px] text-slate-500" id="card-alcance">~13.850 downloads estimados</span>
+                </div>
+                <div class="p-4 rounded-xl bg-slate-900/80 border border-slate-800">
+                    <span class="text-[11px] text-slate-400 block font-medium">Lucro Líquido em Caixa</span>
+                    <span class="text-xl font-extrabold text-pink-400 mt-1 block" id="card-lucro">R$ 41.550</span>
+                    <span class="text-[10px] text-slate-500">Livre para o negócio</span>
+                </div>
+            </div>
+
+            <!-- Gráfico de Comparação e Tabela -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-4">
+                <div class="lg:col-span-1 p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex flex-col justify-center">
+                    <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3">Distribuição do Faturamento</h3>
+                    <div class="h-56 relative">
+                        <canvas id="financeChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-2 overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-800 text-slate-400">
+                                <th class="py-3 px-3">Marco</th>
+                                <th class="py-3 px-3">Usuários com receita</th>
+                                <th class="py-3 px-3">Receita Bruta</th>
+                                <th class="py-3 px-3">Custos IA/Infra</th>
+                                <th class="py-3 px-3">Tráfego Pago (40%)</th>
+                                <th class="py-3 px-3">Novos Downloads/Mês (CPI R$ 2)</th>
+                                <th class="py-3 px-3 font-bold text-emerald-400">Lucro Livre</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-800/60 text-slate-300">
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="py-3 px-3 font-semibold text-white">500 Usuários</td>
+                                <td class="py-3 px-3">75 (25 Pro + 50 PIX)</td>
+                                <td class="py-3 px-3 text-emerald-400">R$ 797,50</td>
+                                <td class="py-3 px-3 text-red-400">R$ 105,00</td>
+                                <td class="py-3 px-3 text-purple-400">R$ 277,00</td>
+                                <td class="py-3 px-3">+138 downloads</td>
+                                <td class="py-3 px-3 font-bold text-white">R$ 415,50</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="py-3 px-3 font-semibold text-white">1.000 Usuários</td>
+                                <td class="py-3 px-3">150 (50 Pro + 100 PIX)</td>
+                                <td class="py-3 px-3 text-emerald-400">R$ 1.595,00</td>
+                                <td class="py-3 px-3 text-red-400">R$ 210,00</td>
+                                <td class="py-3 px-3 text-purple-400">R$ 554,00</td>
+                                <td class="py-3 px-3">+277 downloads</td>
+                                <td class="py-3 px-3 font-bold text-white">R$ 831,00</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="py-3 px-3 font-semibold text-white">5.000 Usuários</td>
+                                <td class="py-3 px-3">750 (250 Pro + 500 PIX)</td>
+                                <td class="py-3 px-3 text-emerald-400">R$ 7.975,00</td>
+                                <td class="py-3 px-3 text-red-400">R$ 1.050,00</td>
+                                <td class="py-3 px-3 text-purple-400">R$ 2.770,00</td>
+                                <td class="py-3 px-3">+1.385 downloads</td>
+                                <td class="py-3 px-3 font-bold text-white">R$ 4.155,00</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="py-3 px-3 font-semibold text-white">15.000 Usuários</td>
+                                <td class="py-3 px-3">2.250 (750 Pro + 1.500 PIX)</td>
+                                <td class="py-3 px-3 text-emerald-400">R$ 23.925,00</td>
+                                <td class="py-3 px-3 text-red-400">R$ 3.150,00</td>
+                                <td class="py-3 px-3 text-purple-400">R$ 8.310,00</td>
+                                <td class="py-3 px-3">+4.155 downloads</td>
+                                <td class="py-3 px-3 font-bold text-white">R$ 12.465,00</td>
+                            </tr>
+                            <tr class="hover:bg-slate-800/30 bg-indigo-950/20">
+                                <td class="py-3 px-3 font-bold text-indigo-300">50.000 Usuários</td>
+                                <td class="py-3 px-3">7.500 (2.500 Pro + 5.000 PIX)</td>
+                                <td class="py-3 px-3 font-bold text-emerald-400">R$ 79.750,00</td>
+                                <td class="py-3 px-3 text-red-400">R$ 10.500,00</td>
+                                <td class="py-3 px-3 font-bold text-purple-400">R$ 27.700,00</td>
+                                <td class="py-3 px-3 font-bold text-white">+13.850 downloads</td>
+                                <td class="py-3 px-3 font-extrabold text-pink-400">R$ 41.550,00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ROADMAP VISUAL DETALHADO -->
+        <section class="space-y-6">
+            <div class="flex items-center space-x-3 border-b border-slate-800 pb-4">
+                <div class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
+                    <i class="fa-solid fa-timeline"></i>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-white">Roadmap de 10 Semanas até a Decisão do Gate 0</h2>
+                    <p class="text-xs text-slate-400">Primeiro provar o loop de valor no web; só depois liberar mobile, cobrança e aquisição.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- Fase 1 -->
+                <div class="glass-card rounded-2xl p-5 border-l-4 border-indigo-500">
+                        <span class="text-[10px] font-extrabold uppercase text-indigo-400 tracking-wider">Semanas 1 e 2</span>
+                        <h3 class="text-sm font-bold text-white mt-1">Fatia vertical web</h3>
+                        <ul class="mt-3 space-y-2 text-xs text-slate-300">
+                            <li class="flex items-start space-x-1.5"><i class="fa-solid fa-check text-indigo-400 mt-0.5 text-[10px]"></i> <span>Criar contato e registrar contexto textual</span></li>
+                            <li class="flex items-start space-x-1.5"><i class="fa-solid fa-check text-indigo-400 mt-0.5 text-[10px]"></i> <span>Receber sugestão, copiar/adaptar e registrar resultado</span></li>
+                            <li class="flex items-start space-x-1.5"><i class="fa-solid fa-check text-indigo-400 mt-0.5 text-[10px]"></i> <span>Instrumentar utilidade, custo e versão do prompt</span></li>
+                        </ul>
+                </div>
+
+                <!-- Fase 2 -->
+                <div class="glass-card rounded-2xl p-5 border-l-4 border-purple-500">
+                        <span class="text-[10px] font-extrabold uppercase text-purple-400 tracking-wider">Semanas 3 a 5</span>
+                        <h3 class="text-sm font-bold text-white mt-1">Gate 0 com 10 usuários</h3>
+                        <ul class="mt-3 space-y-2 text-xs text-slate-300">
+                            <li class="flex items-start space-x-1.5"><i class="fa-solid fa-check text-purple-400 mt-0.5 text-[10px]"></i> <span>Observar captura → sugestão → ação → resultado</span></li>
+                            <li class="flex items-start space-x-1.5"><i class="fa-solid fa-check text-purple-400 mt-0.5 text-[10px]"></i> <span>Medir utilidade, retorno D7 e custo por análise</span></li>
+                            <li class="flex items-start space-x-1.5"><i class="fa-solid fa-check text-purple-400 mt-0.5 text-[10px]"></i> <span>Corrigir linguagem, segurança e fricção</span></li>
+                        </ul>
+                </div>
+
+                <!-- Fase 3 -->
+                <div class="glass-card rounded-2xl p-5 border-l-4 border-pink-500">
+                        <span class="text-[10px] font-extrabold uppercase text-pink-400 tracking-wider">Semanas 6 e 7</span>
+                        <h3 class="text-sm font-bold text-white mt-1">Decisão pós-Gate</h3>
+                        <ul class="mt-3 space-y-2 text-xs text-slate-300">
+                            <li class="flex items-start space-x-1.5"><i class="fa-solid fa-check text-pink-400 mt-0.5 text-[10px]"></i> <span>Se aprovado: testar intenção de pagamento</span></li>
+                            <li class="flex items-start space-x-1.5"><i class="fa-solid fa-check text-pink-400 mt-0.5 text-[10px]"></i> <span>Se reprovado: reduzir escopo e repetir o loop</span></li>
+                            <li class="flex items-start space-x-1.5"><i class="fa-solid fa-check text-pink-400 mt-0.5 text-[10px]"></i> <span>Admin mínimo para custo, segurança e feedback</span></li>
+                        </ul>
+                </div>
+
+                <!-- Fase 4 -->
+                <div class="glass-card rounded-2xl p-5 border-l-4 border-emerald-500">
+                        <span class="text-[10px] font-extrabold uppercase text-emerald-400 tracking-wider">Semanas 8 a 10</span>
+                        <h3 class="text-sm font-bold text-white mt-1">Próximo ciclo condicional</h3>
+                        <ul class="mt-3 space-y-2 text-xs text-slate-300">
+                            <li class="flex items-start space-x-1.5"><i class="fa-solid fa-check text-emerald-400 mt-0.5 text-[10px]"></i> <span>Escolher: aprofundar web, iniciar mobile ou encerrar hipótese</span></li>
+                            <li class="flex items-start space-x-1.5"><i class="fa-solid fa-check text-emerald-400 mt-0.5 text-[10px]"></i> <span>Preparar beta maior apenas com evidência</span></li>
+                            <li class="flex items-start space-x-1.5"><i class="fa-solid fa-check text-emerald-400 mt-0.5 text-[10px]"></i> <span>Tráfego pago fica fora do caminho crítico</span></li>
+                        </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="border-t border-slate-800 py-8 text-center text-xs text-slate-500">
+        <p>Aura & KissFlow OS &copy; 2026. Documento de Arquitetura Confidencial. Base de conhecimento proprietária protegida.</p>
+    </footer>
+
+    <script>
+        const scenarios = {
+            500: { receita: "R$ 797,50", custos: "R$ 105,00", margem: "R$ 692,50", trafego: "R$ 277,00", lucro: "R$ 415,50", alcance: "~138 downloads estimados", data: [415.5, 277, 105] },
+            1000: { receita: "R$ 1.595,00", custos: "R$ 210,00", margem: "R$ 1.385,00", trafego: "R$ 554,00", lucro: "R$ 831,00", alcance: "~277 downloads estimados", data: [831, 554, 210] },
+            5000: { receita: "R$ 7.975,00", custos: "R$ 1.050,00", margem: "R$ 6.925,00", trafego: "R$ 2.770,00", lucro: "R$ 4.155,00", alcance: "~1.385 downloads estimados", data: [4155, 2770, 1050] },
+            15000: { receita: "R$ 23.925,00", custos: "R$ 3.150,00", margem: "R$ 20.775,00", trafego: "R$ 8.310,00", lucro: "R$ 12.465,00", alcance: "~4.155 downloads estimados", data: [12465, 8310, 3150] },
+            50000: { receita: "R$ 79.750,00", custos: "R$ 10.500,00", margem: "R$ 69.250,00", trafego: "R$ 27.700,00", lucro: "R$ 41.550,00", alcance: "~13.850 downloads estimados", data: [41550, 27700, 10500] }
+        };
+
+        let chart;
+
+        function initChart(data) {
+            const ctx = document.getElementById('financeChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Lucro Livre', 'Tráfego Pago (40%)', 'Custos IA/Infra'],
+                    datasets: [{
+                        data: data,
+                        backgroundColor: ['#EC4899', '#A855F7', '#EF4444'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: '#94A3B8', boxWidth: 10, font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function setScenario(users) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-600', 'text-white');
+                btn.classList.add('text-slate-300');
+            });
+            document.getElementById(`btn-${users}`).classList.add('bg-indigo-600', 'text-white');
+            document.getElementById(`btn-${users}`).classList.remove('text-slate-300');
+
+            const s = scenarios[users];
+            document.getElementById('card-receita').innerText = s.receita;
+            document.getElementById('card-custos').innerText = s.custos;
+            document.getElementById('card-margem').innerText = s.margem;
+            document.getElementById('card-trafego').innerText = s.trafego;
+            document.getElementById('card-lucro').innerText = s.lucro;
+            document.getElementById('card-alcance').innerText = s.alcance;
+
+            chart.data.datasets[0].data = s.data;
+            chart.update();
+        }
+
+        window.onload = () => {
+            initChart(scenarios[50000].data);
+        };
+    </script>
+</body>
+</html>

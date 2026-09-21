@@ -370,6 +370,8 @@ export async function persistAlerts(
     executed: false,
   }));
 
+  if (!supabase) return [];
+
   const { data, error } = await supabase
     .from("system_alerts")
     .upsert(rows, {
@@ -378,31 +380,28 @@ export async function persistAlerts(
     })
     .select();
 
-  if (error) throw new Error(`Failed to persist alerts: ${error.message}`);
-
+  if (error) return [];
   return (data ?? []) as PersistedAlert[];
 }
 
 export async function dismissAlert(alertId: string): Promise<void> {
   const supabase = createSupabaseBrowser();
+  if (!supabase) return;
 
-  const { error } = await supabase
+  await supabase
     .from("system_alerts")
     .update({ dismissed: true })
     .eq("id", alertId);
-
-  if (error) throw new Error(`Failed to dismiss alert: ${error.message}`);
 }
 
 export async function executeAlert(alertId: string): Promise<void> {
   const supabase = createSupabaseBrowser();
+  if (!supabase) return;
 
-  const { error } = await supabase
+  await supabase
     .from("system_alerts")
     .update({ executed: true, dismissed: true })
     .eq("id", alertId);
-
-  if (error) throw new Error(`Failed to execute alert: ${error.message}`);
 }
 
 export async function getActiveAlerts(
@@ -410,6 +409,7 @@ export async function getActiveAlerts(
   contactId?: string
 ): Promise<PersistedAlert[]> {
   const supabase = createSupabaseBrowser();
+  if (!supabase) return [];
 
   let query = supabase
     .from("system_alerts")
@@ -423,8 +423,7 @@ export async function getActiveAlerts(
   }
 
   const { data, error } = await query;
-
-  if (error) throw new Error(`Failed to fetch alerts: ${error.message}`);
+  if (error) return [];
 
   return (data ?? []) as PersistedAlert[];
 }

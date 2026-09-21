@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURA — Seu Wingman & Radar Social</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #08090D; color: #E2E8F0; }
+        .glass-panel { background: rgba(16, 18, 27, 0.75); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.07); }
+        .glass-card { background: rgba(23, 26, 38, 0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .accent-gradient { background: linear-gradient(135deg, #6366F1 0%, #A855F7 50%, #EC4899 100%); }
+        .text-gradient { background: linear-gradient(135deg, #818CF8, #C084FC, #F472B6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .pulse-slow { animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        .demo-toast { transform: translateY(12px); opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease; }
+        .demo-toast.is-visible { transform: translateY(0); opacity: 1; }
+        .recording { animation: pulse 1.2s ease-in-out infinite; }
+        button:focus-visible, input:focus-visible, textarea:focus-visible, label:has(input:focus-visible) {
+            outline: 2px solid #a5b4fc;
+            outline-offset: 2px;
+        }
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+            .demo-toast { transition: none; }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col md:flex-row antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- Topbar Mobile -->
+    <div class="md:hidden flex items-center justify-between p-4 border-b border-slate-800 bg-[#090A0F]/90 sticky top-0 z-50">
+        <div class="flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded-lg accent-gradient flex items-center justify-center text-white font-bold text-sm">
+                <i class="fa-solid fa-bolt"></i>
+            </div>
+            <span class="font-extrabold text-white text-base tracking-tight">AURA</span>
+        </div>
+        <div class="flex items-center space-x-2">
+                <button onclick="toggleStealth()" aria-label="Ativar modo disfarce" class="p-2 rounded-lg bg-slate-800 text-slate-300 text-xs">
+                <i class="fa-solid fa-calculator"></i>
+            </button>
+            <span class="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-semibold border border-indigo-500/30">
+                WINGMAN PRO
+            </span>
+        </div>
+    </div>
+
+    <!-- Sidebar Navegação (Desktop) -->
+    <aside class="w-full md:w-64 border-r border-slate-800/80 bg-[#0A0C13] flex flex-col justify-between shrink-0 p-4 space-y-6">
+        <div class="space-y-6">
+            <!-- Brand -->
+            <div class="hidden md:flex items-center justify-between px-2">
+                <div class="flex items-center space-x-3">
+                    <div class="w-9 h-9 rounded-xl accent-gradient flex items-center justify-center text-white font-bold text-base shadow-md">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-base font-extrabold tracking-tight text-white">AURA</h1>
+                        <p class="text-[10px] text-slate-500">Seu Wingman de Bolso</p>
+                    </div>
+                </div>
+                <button onclick="toggleStealth()" aria-label="Ativar modo disfarce" title="Disfarce com Calculadora" class="text-slate-500 hover:text-slate-300 transition-all text-xs p-1.5 rounded-lg hover:bg-slate-800">
+                    <i class="fa-solid fa-calculator"></i>
+                </button>
+            </div>
+
+            <!-- Navegação Principal -->
+            <nav class="space-y-1 text-xs font-semibold">
+                <button onclick="switchScreen('radar')" id="nav-radar" aria-current="page" class="nav-item w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 transition-all">
+                    <i class="fa-solid fa-compass text-sm w-4"></i>
+                    <span>Meu Radar (5 Contatinhos)</span>
+                </button>
+
+                <button onclick="switchScreen('fases')" id="nav-fases" class="nav-item w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition-all">
+                    <i class="fa-solid fa-layer-group text-sm w-4"></i>
+                    <span>Em que pé tá? (Fases)</span>
+                </button>
+
+                <button onclick="switchScreen('chat-wingman')" id="nav-chat-wingman" class="nav-item w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition-all">
+                    <i class="fa-solid fa-comments text-sm w-4 text-purple-400"></i>
+                    <span>Conversar com o Wingman</span>
+                </button>
+
+                <button onclick="switchScreen('memoria-crush')" id="nav-memoria-crush" class="nav-item w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 transition-all">
+                    <i class="fa-solid fa-user-check text-sm w-4 text-pink-400"></i>
+                    <span>Ficha & Memória do Crush</span>
+                </button>
+
+                <div class="pt-3 border-t border-slate-800/80">
+                    <span class="text-[9px] uppercase font-extrabold text-slate-500 px-3.5 tracking-wider block mb-1">Área do Fundador</span>
+                    <button onclick="switchScreen('admin')" id="nav-admin" class="nav-item w-full flex items-center space-x-3 px-3.5 py-2.5 rounded-xl text-amber-400 hover:bg-amber-500/10 transition-all border border-amber-500/20">
+                        <i class="fa-solid fa-shield-halved text-sm w-4"></i>
+                        <span>Painel Admin & RAG</span>
+                    </button>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Notificação Ativa de Reaquecimento -->
+        <div id="reminder-card" class="p-3.5 rounded-2xl bg-amber-950/30 border border-amber-500/30 space-y-2 text-xs">
+            <div class="flex items-center space-x-1.5 text-amber-400 font-bold text-[11px]">
+                <i class="fa-solid fa-bell"></i>
+                <span>Lembrete do Wingman</span>
+            </div>
+            <p class="text-slate-300 text-[11px]">Camila tá a 4 dias sem papo. Ainda tem interesse nela?</p>
+            <div class="flex items-center space-x-2 pt-1">
+                <button onclick="selectCrush('camila'); switchScreen('chat-wingman')" class="px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 text-[10px] font-bold">
+                    Puxar Assunto
+                </button>
+                <button onclick="archiveReminder()" class="px-2 py-1 rounded-lg bg-slate-800 text-slate-400 text-[10px]">
+                    Deixar Quieto
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Área Principal de Conteúdo -->
+    <main class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
+
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 py-2.5 rounded-2xl bg-cyan-950/30 border border-cyan-500/20 text-[11px]" role="status">
+            <span class="text-cyan-200"><i class="fa-solid fa-flask mr-1.5"></i> Modo demonstração: os dados ficam apenas nesta página.</span>
+            <span class="text-slate-400">Fluxo em demonstração: capturar → sugerir → agir → registrar</span>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- BARRA SUPERIOR DE CRUSHES (CLIQUE RÁPIDO) -->
+        <!-- ============================================== -->
+        <div class="flex items-center space-x-3 overflow-x-auto pb-2 scrollbar-none min-w-0">
+            <div class="text-xs text-slate-400 font-bold shrink-0 flex items-center mr-1">
+                <span>Crushes:</span>
+            </div>
+
+            <!-- Crush 1: Larissa (De olho) -->
+            <button onclick="selectCrush('larissa')" id="tab-crush-larissa" class="crush-tab px-3 py-1.5 rounded-xl bg-indigo-600/30 border border-indigo-500 text-white flex items-center space-x-2 shrink-0 transition-all" aria-pressed="true">
+                <img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=80&auto=format&fit=crop&q=80" alt="Larissa" class="w-6 h-6 rounded-lg object-cover">
+                <span class="text-xs font-bold">Larissa (21)</span>
+                <span class="w-2 h-2 rounded-full bg-cyan-400" title="De Olho / Não falou ainda"></span>
+            </button>
+
+            <!-- Crush 2: Camila (Puxando Papo) -->
+            <button onclick="selectCrush('camila')" id="tab-crush-camila" aria-pressed="false" class="crush-tab px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white flex items-center space-x-2 shrink-0 transition-all">
+                <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=80&auto=format&fit=crop&q=80" alt="Camila" class="w-6 h-6 rounded-lg object-cover">
+                <span class="text-xs font-bold">Camila (22)</span>
+                <span class="w-2 h-2 rounded-full bg-indigo-400" title="Puxando Papo"></span>
+            </button>
+
+            <!-- Crush 3: Beatriz (Flerte Rendendo) -->
+            <button onclick="selectCrush('beatriz')" id="tab-crush-beatriz" class="crush-tab px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white flex items-center space-x-2 shrink-0 transition-all" aria-pressed="false">
+                <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&auto=format&fit=crop&q=80" alt="Beatriz" class="w-6 h-6 rounded-lg object-cover">
+                <span class="text-xs font-bold">Beatriz (24)</span>
+                <span class="w-2 h-2 rounded-full bg-purple-400" title="Flerte Rendendo"></span>
+            </button>
+
+            <!-- Crush 4: Mariana (Tentando Marcar) -->
+            <button onclick="selectCrush('mariana')" id="tab-crush-mariana" aria-pressed="false" class="crush-tab px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white flex items-center space-x-2 shrink-0 transition-all">
+                <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&auto=format&fit=crop&q=80" alt="Mariana" class="w-6 h-6 rounded-lg object-cover">
+                <span class="text-xs font-bold">Mariana (25)</span>
+                <span class="w-2 h-2 rounded-full bg-amber-400" title="Tentando Marcar"></span>
+            </button>
+
+            <!-- Crush 5: Juliana (Rolê Marcado) -->
+            <button onclick="selectCrush('juliana')" id="tab-crush-juliana" aria-pressed="false" class="crush-tab px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white flex items-center space-x-2 shrink-0 transition-all">
+                <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=80&auto=format&fit=crop&q=80" alt="Juliana" class="w-6 h-6 rounded-lg object-cover">
+                <span class="text-xs font-bold">Juliana (26)</span>
+                <span class="w-2 h-2 rounded-full bg-pink-400" title="Date Marcado"></span>
+            </button>
+
+            <button id="new-contact-trigger" onclick="openNewContactModal()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center space-x-1 shrink-0">
+                <i class="fa-solid fa-plus text-[10px]"></i>
+                <span>Novo</span>
+            </button>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TELA 1: MEU RADAR SOCIAL -->
+        <!-- ============================================== -->
+        <div id="screen-radar" class="screen-view space-y-6">
+            <!-- Banner de Anti-Feed / Foco na Vida Real -->
+            <div class="p-4 md:p-5 rounded-2xl bg-gradient-to-r from-purple-950/40 via-indigo-950/40 to-slate-900 border border-purple-500/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div class="flex items-start space-x-3.5">
+                    <div class="w-10 h-10 rounded-xl bg-purple-500/20 text-purple-400 flex items-center justify-center shrink-0 text-base">
+                        <i class="fa-solid fa-people-arrows"></i>
+                    </div>
+                    <div>
+                        <span class="text-[10px] uppercase font-extrabold tracking-widest text-purple-400">Vida Real em Primeiro Lugar</span>
+                        <h2 class="text-sm md:text-base font-bold text-white mt-0.5">Menos tempo rolando feed, mais encontros reais</h2>
+                        <p class="text-xs text-slate-300 mt-1">Troque uma ideia, vá para os dates e volte aqui para contar o que rolou para ajustarmos as próximas jogadas.</p>
+                    </div>
+                </div>
+                <button onclick="switchScreen('chat-wingman')" class="px-4 py-2 text-xs font-semibold rounded-xl bg-purple-600 hover:bg-purple-500 text-white shrink-0 transition-all">
+                    <i class="fa-solid fa-microphone mr-1.5"></i> Contar o que rolou
+                </button>
+            </div>
+
+            <!-- Resumo das Conexões -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="p-4 rounded-2xl glass-card border-indigo-500/20">
+                    <span class="text-[11px] text-slate-400 block font-medium">Contatinhos Ativos</span>
+                    <span class="text-2xl font-black text-white mt-1 block">5 Pessoas</span>
+                    <span class="text-[10px] text-indigo-400">1 na mira, 3 conversando, 1 date</span>
+                </div>
+
+                <div class="p-4 rounded-2xl glass-card border-amber-500/20">
+                    <span class="text-[11px] text-slate-400 block font-medium">Tentando Marcar</span>
+                    <span class="text-2xl font-black text-amber-400 mt-1 block">Mariana (25)</span>
+                    <span class="text-[10px] text-slate-400">Sondando bar de drinks</span>
+                </div>
+
+                <div class="p-4 rounded-2xl glass-card border-pink-500/20">
+                    <span class="text-[11px] text-slate-400 block font-medium">Date Confirmado</span>
+                    <span class="text-2xl font-black text-pink-400 mt-1 block">Sexta 19h</span>
+                    <span class="text-[10px] text-pink-300">Juliana (Bistrô Batel)</span>
+                </div>
+
+                <div class="p-4 rounded-2xl glass-card border-cyan-500/20">
+                    <span class="text-[11px] text-slate-400 block font-medium">Na Mira (Não falou ainda)</span>
+                    <span class="text-2xl font-black text-cyan-400 mt-1 block">Larissa (21)</span>
+                    <span class="text-[10px] text-cyan-300">Analisar perfil do Insta</span>
+                </div>
+            </div>
+
+            <!-- Painel de Pessoas & Status de Ação -->
+            <div class="glass-panel rounded-3xl p-6 space-y-4">
+                <h3 class="text-sm font-bold text-white flex items-center justify-between">
+                    <span><i class="fa-solid fa-list-check text-indigo-400 mr-2"></i> Próximos Movimentos Recomendados</span>
+                    <span class="text-xs text-slate-400 font-normal">Baseado nas conversas e no tempo sem falar</span>
+                </h3>
+
+                <div class="space-y-3 text-xs">
+                    <!-- Larissa (De Olho) -->
+                    <div class="p-4 rounded-2xl bg-slate-900/80 border border-cyan-500/30 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-cyan-500/60 transition-all">
+                        <div class="flex items-center space-x-3.5">
+                            <img src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=100&auto=format&fit=crop&q=80" alt="Larissa" class="w-12 h-12 rounded-xl object-cover">
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <h4 class="text-xs font-bold text-white">Larissa (21)</h4>
+                                    <span id="radar-status-larissa" class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-[10px] font-semibold">🎯 De Olho (Não puxou papo)</span>
+                                </div>
+                                <p class="text-slate-300 mt-1"><strong>Situação:</strong> Você segue ela no Instagram, mas ainda não mandou a primeira mensagem.</p>
+                                <p class="text-cyan-400 font-semibold mt-0.5">👉 Dica do Wingman: Mande um print do perfil ou dos stories dela para a IA sugerir o primeiro assunto.</p>
+                            </div>
+                        </div>
+                        <button onclick="selectCrush('larissa'); switchScreen('chat-wingman')" class="px-3.5 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold shrink-0">
+                            Gerar 1º Papo
+                        </button>
+                    </div>
+
+                    <!-- Beatriz (Flerte Rendendo) -->
+                    <div class="p-4 rounded-2xl bg-slate-900/80 border border-purple-500/30 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-purple-500/60 transition-all">
+                        <div class="flex items-center space-x-3.5">
+                            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80" alt="Beatriz" class="w-12 h-12 rounded-xl object-cover">
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <h4 class="text-xs font-bold text-white">Beatriz Martins (24)</h4>
+                                    <span id="radar-status-beatriz" class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[10px] font-semibold">🔥 Flerte Rendendo</span>
+                                </div>
+                                <p class="text-slate-300 mt-1"><strong>Situação:</strong> Troca de áudios e brincadeiras frequentes. Plantão veterinário terminou ontem.</p>
+                                <p class="text-purple-400 font-semibold mt-0.5">👉 Dica do Wingman: Momento ideal para passar da fase de flerte para "Tentando Marcar".</p>
+                            </div>
+                        </div>
+                        <button onclick="selectCrush('beatriz'); switchScreen('chat-wingman')" class="px-3.5 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold shrink-0">
+                            Jogar Isca de Date
+                        </button>
+                    </div>
+
+                    <!-- Mariana (Tentando Marcar) -->
+                    <div class="p-4 rounded-2xl bg-slate-900/80 border border-amber-500/30 flex flex-col md:flex-row md:items-center justify-between gap-3 hover:border-amber-500/60 transition-all">
+                        <div class="flex items-center space-x-3.5">
+                            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&auto=format&fit=crop&q=80" alt="Mariana" class="w-12 h-12 rounded-xl object-cover">
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <h4 class="text-xs font-bold text-white">Mariana (25)</h4>
+                                    <span id="radar-status-mariana" class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-semibold">📅 Tentando Marcar</span>
+                                </div>
+                                <p class="text-slate-300 mt-1"><strong>Situação:</strong> Ela disse que essa semana tá corrida, mas "semana que vem com certeza".</p>
+                                <p class="text-amber-400 font-semibold mt-0.5">👉 Dica do Wingman: Não fique cobrando o dia. Espere segunda-feira para mandar a sugestão fechada.</p>
+                            </div>
+                        </div>
+                        <button onclick="selectCrush('mariana'); switchScreen('chat-wingman')" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold shrink-0">
+                            Ver Estratégia
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TELA 2: EM QUE PÉ TÁ? (AS 6 FASES REAIS) -->
+        <!-- ============================================== -->
+        <div id="screen-fases" class="screen-view hidden space-y-6">
+            <div>
+                <h2 class="text-lg font-bold text-white">Em que pé tá cada contatinho?</h2>
+                <p class="text-xs text-slate-400">As 6 fases reais da vida amorosa sem enrolação.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3.5 pb-4">
+                <!-- Fase 1: De Olho -->
+                <div class="glass-panel rounded-2xl p-3.5 space-y-3">
+                    <div class="flex justify-between items-center text-xs font-bold text-cyan-300 pb-2 border-b border-slate-800">
+                        <span>🎯 1. De Olho</span>
+                        <span class="px-2 py-0.5 rounded-full bg-cyan-500/20 text-[10px] text-cyan-400">1</span>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-900 border border-cyan-500/30 space-y-1 cursor-pointer" role="button" tabindex="0" aria-label="Abrir conversa com Larissa" onclick="selectCrush('larissa'); switchScreen('chat-wingman')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectCrush('larissa');switchScreen('chat-wingman')}" >
+                        <h4 class="text-xs font-bold text-white">Larissa (21)</h4>
+                        <p id="phase-status-larissa" class="text-[10px] text-slate-400">Analisar perfil do IG.</p>
+                    </div>
+                </div>
+
+                <!-- Fase 2: Puxando Papo -->
+                <div class="glass-panel rounded-2xl p-3.5 space-y-3">
+                    <div class="flex justify-between items-center text-xs font-bold text-indigo-300 pb-2 border-b border-slate-800">
+                        <span>💬 2. Puxando Papo</span>
+                        <span class="px-2 py-0.5 rounded-full bg-indigo-500/20 text-[10px] text-indigo-400">1</span>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-900 border border-indigo-500/30 space-y-1 cursor-pointer" role="button" tabindex="0" aria-label="Abrir conversa com Camila" onclick="selectCrush('camila'); switchScreen('chat-wingman')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectCrush('camila');switchScreen('chat-wingman')}" >
+                        <h4 class="text-xs font-bold text-white">Camila (22)</h4>
+                        <p id="phase-status-camila" class="text-[10px] text-slate-400">Respondendo stories.</p>
+                    </div>
+                </div>
+
+                <!-- Fase 3: Flerte Rendendo -->
+                <div class="glass-panel rounded-2xl p-3.5 space-y-3">
+                    <div class="flex justify-between items-center text-xs font-bold text-purple-300 pb-2 border-b border-slate-800">
+                        <span>🔥 3. Flerte Rendendo</span>
+                        <span class="px-2 py-0.5 rounded-full bg-purple-500/20 text-[10px] text-purple-400">1</span>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-900 border border-purple-500/40 space-y-1 cursor-pointer" role="button" tabindex="0" aria-label="Abrir conversa com Beatriz" onclick="selectCrush('beatriz'); switchScreen('chat-wingman')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectCrush('beatriz');switchScreen('chat-wingman')}" >
+                        <h4 class="text-xs font-bold text-white">Beatriz (24)</h4>
+                        <p id="phase-status-beatriz" class="text-[10px] text-slate-400">Provocações mútuas.</p>
+                    </div>
+                </div>
+
+                <!-- Fase 4: Tentando Marcar -->
+                <div class="glass-panel rounded-2xl p-3.5 space-y-3">
+                    <div class="flex justify-between items-center text-xs font-bold text-amber-300 pb-2 border-b border-slate-800">
+                        <span>📅 4. Tentando Marcar</span>
+                        <span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-[10px] text-amber-400">1</span>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-900 border border-amber-500/30 space-y-1 cursor-pointer" role="button" tabindex="0" aria-label="Abrir conversa com Mariana" onclick="selectCrush('mariana'); switchScreen('chat-wingman')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectCrush('mariana');switchScreen('chat-wingman')}" >
+                        <h4 class="text-xs font-bold text-white">Mariana (25)</h4>
+                        <p id="phase-status-mariana" class="text-[10px] text-slate-400">Ajustando agenda.</p>
+                    </div>
+                </div>
+
+                <!-- Fase 5: Rolê Marcado -->
+                <div class="glass-panel rounded-2xl p-3.5 space-y-3">
+                    <div class="flex justify-between items-center text-xs font-bold text-pink-300 pb-2 border-b border-slate-800">
+                        <span>🍷 5. Rolê Marcado</span>
+                        <span class="px-2 py-0.5 rounded-full bg-pink-500/20 text-[10px] text-pink-400">1</span>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-900 border border-pink-500/40 space-y-1 cursor-pointer" role="button" tabindex="0" aria-label="Abrir conversa com Juliana" onclick="selectCrush('juliana'); switchScreen('chat-wingman')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();selectCrush('juliana');switchScreen('chat-wingman')}" >
+                        <h4 class="text-xs font-bold text-white">Juliana (26)</h4>
+                        <p id="phase-status-juliana" class="text-[10px] text-slate-400">Sexta 19h no Batel.</p>
+                    </div>
+                </div>
+
+                <!-- Fase 6: Esfriou -->
+                <div class="glass-panel rounded-2xl p-3.5 space-y-3">
+                    <div class="flex justify-between items-center text-xs font-bold text-slate-400 pb-2 border-b border-slate-800">
+                        <span>❄️ 6. Deixa Quieto</span>
+                        <span class="px-2 py-0.5 rounded-full bg-slate-800 text-[10px] text-slate-400">1</span>
+                    </div>
+                    <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1 opacity-70" aria-disabled="true">
+                        <h4 class="text-xs font-bold text-slate-400">Fernanda (23)</h4>
+                        <p class="text-[10px] text-slate-500">Aprender & Desapegar.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TELA 3: CHAT UNIFICADO DO WINGMAN (ANÁLISE DE PERFIL + ÁUDIO) -->
+        <!-- ============================================== -->
+        <div id="screen-chat-wingman" class="screen-view hidden space-y-4">
+            <!-- Header com o Alvo Ativo -->
+            <div class="p-4 rounded-2xl glass-panel flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <img id="chat-header-avatar" src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=100&auto=format&fit=crop&q=80" alt="Contato selecionado" class="w-10 h-10 rounded-xl object-cover border border-cyan-500/40">
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <h3 id="chat-header-name" class="text-xs font-bold text-white">Conversando sobre Larissa (21)</h3>
+                            <span id="chat-header-badge" class="text-[9px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-semibold">🎯 De Olho (Sem papo ainda)</span>
+                        </div>
+                        <p class="text-[10px] text-slate-400">Mande prints do perfil do Instagram dela ou áudios para a IA analisar.</p>
+                    </div>
+                </div>
+                <button onclick="switchScreen('memoria-crush')" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300">
+                    Ver Ficha Dela
+                </button>
+            </div>
+
+            <!-- Feed de Conversa do Wingman -->
+            <div id="chat-feed" class="glass-panel rounded-3xl p-5 h-[420px] overflow-y-auto space-y-4 text-xs" role="log" aria-live="polite" aria-label="Histórico da conversa com o Wingman">
+                <!-- Exemplo 1: Usuário enviou Print do Perfil do Instagram -->
+                <div class="flex flex-col items-end space-y-1">
+                    <span class="text-[10px] text-slate-500">Você enviou um print do perfil • Hoje 14:10</span>
+                    <div class="bg-indigo-600 text-white p-3 rounded-2xl rounded-tr-none max-w-[80%] space-y-2">
+                        <div class="flex items-center space-x-2 text-[11px] bg-indigo-700/60 p-2 rounded-lg">
+                            <i class="fa-brands fa-instagram text-pink-300"></i>
+                            <span id="chat-context-file">Print_Perfil_Instagram_Larissa.png</span>
+                        </div>
+                        <p id="chat-context-request" class="text-[11px]">"Tô interessado nela, mas nunca conversei. Analisa o contexto e me dá opções boas pra puxar papo sem parecer insistente."</p>
+                    </div>
+                </div>
+
+                <!-- Resposta do Wingman com Análise do Perfil -->
+                <div class="flex items-start space-x-2.5 max-w-[85%]">
+                    <div class="w-8 h-8 rounded-xl accent-gradient flex items-center justify-center text-white font-bold text-xs shrink-0 mt-1">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl rounded-tl-none space-y-3 text-slate-200">
+                        <p><strong id="analysis-title">Análise do contexto da Larissa:</strong></p>
+                        <ul class="list-disc list-inside text-slate-300 space-y-1">
+                            <li id="analysis-summary-1">O contexto indica interesse por Design Gráfico e viagens.</li>
+                            <li id="analysis-summary-2">Nos stories recentes, apareceu um vinil antigo e uma cafeteria charmosa.</li>
+                            <li><strong>Leitura responsável:</strong> <span id="analysis-summary-3">há sinais de interesse por estética e lugares com identidade, mas não sabemos como a pessoa se sente.</span></li>
+                        </ul>
+
+                        <div class="space-y-2 pt-2 border-t border-slate-800">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-cyan-400 block">3 opções para começar com respeito:</span>
+
+                            <!-- Opção 1 -->
+                            <button type="button" class="w-full text-left p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-cyan-500/50 cursor-pointer" data-hook-index="0" data-copy="Passando só pra perguntar: aquele café do story é bom mesmo ou é só bonito pra foto?" onclick="copySuggestion(this)">
+                                <div class="flex justify-between text-[10px] text-cyan-300 font-bold mb-0.5">
+                                    <span id="hook-1-label">Opção 1 (Contextual - recomendada)</span>
+                                    <i class="fa-regular fa-copy"></i>
+                                </div>
+                                <p id="hook-1-text" class="text-white text-[11px]">"Passando só pra perguntar: aquele café do story é bom mesmo ou é só bonito pra foto?"</p>
+                            </button>
+
+                            <!-- Opção 2 -->
+                            <button type="button" class="w-full text-left p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-indigo-500/50 cursor-pointer" data-hook-index="1" data-copy="Qual foi a música que você mais ouviu esta semana?" onclick="copySuggestion(this)">
+                                <div class="flex justify-between text-[10px] text-indigo-300 font-bold mb-0.5">
+                                    <span id="hook-2-label">Opção 2 (Leve e curiosa)</span>
+                                    <i class="fa-regular fa-copy"></i>
+                                </div>
+                                <p id="hook-2-text" class="text-white text-[11px]">"Qual foi a música que você mais ouviu esta semana?"</p>
+                            </button>
+                            <button type="button" class="w-full text-left p-2.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-emerald-500/50 cursor-pointer" data-hook-index="2" data-copy="Se preferir não falar agora, tudo bem. Quando quiser, me conta o que achou desse lugar." onclick="copySuggestion(this)">
+                                <div class="flex justify-between text-[10px] text-emerald-300 font-bold mb-0.5">
+                                    <span id="hook-3-label">Opção 3 (Pausa respeitosa)</span>
+                                    <i class="fa-regular fa-copy"></i>
+                                </div>
+                                <p id="hook-3-text" class="text-white text-[11px]">"Se preferir não falar agora, tudo bem. Quando quiser, me conta o que achou desse lugar."</p>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Widget de Feedback da Ação (O que rolou?) -->
+                <div class="p-3.5 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 space-y-2">
+                    <span class="text-[10px] font-bold text-indigo-300 uppercase tracking-wider block">
+                        <i class="fa-solid fa-square-check mr-1"></i> Depois que você mandar a mensagem:
+                    </span>
+                    <p class="text-slate-300 text-[11px]">Conte para o Wingman o que ela respondeu para ajustarmos o ritmo do papo.</p>
+                    <div class="flex items-center space-x-2 pt-1">
+                        <button onclick="registerOutcome('positive')" class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 text-[10px] font-bold">
+                            👍 Ela Respondeu Bem
+                        </button>
+                        <button onclick="registerOutcome('quiet')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 text-[10px]">
+                            👎 Ficou no Vácuo
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Barra de Envio Unificada (Áudio, Print de Perfil/Chat ou Texto) -->
+            <div class="p-3 rounded-2xl glass-panel flex flex-wrap items-center gap-2">
+                <label for="attachment-input" aria-label="Anexar print ou arquivo" title="Enviar print" class="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white cursor-pointer">
+                    <i class="fa-solid fa-camera"></i>
+                </label>
+                <input id="attachment-input" type="file" accept="image/*,.pdf,.txt" class="hidden" onchange="handleAttachment(event)">
+                <button id="record-button" onclick="toggleRecording(this)" aria-label="Gravar áudio" aria-pressed="false" title="Gravar áudio" class="p-2.5 rounded-xl bg-pink-600/20 text-pink-400 hover:bg-pink-600/30 border border-pink-500/30">
+                    <i class="fa-solid fa-microphone"></i>
+                </button>
+                <input id="chat-input" type="text" aria-label="Mensagem para o Wingman" placeholder="Mande um print do perfil/chat, desabafe em áudio ou faça uma pergunta..." class="flex-1 min-w-[150px] bg-slate-900/80 border border-slate-800 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500" onkeydown="handleChatKeydown(event)">
+                <button onclick="sendMessage()" aria-label="Enviar mensagem" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </button>
+            </div>
+            <p id="attachment-status" class="text-[10px] text-slate-500 px-1" aria-live="polite"></p>
+        </div>
+
+        <!-- ============================================== -->
+        <!-- TELA 4: FICHA & MEMÓRIA DO CRUSH -->
+        <!-- ============================================== -->
+        <div id="screen-memoria-crush" class="screen-view hidden space-y-6">
+            <div class="p-6 rounded-3xl glass-panel flex flex-col md:flex-row items-start md:items-center justify-between gap-6 border-indigo-500/30">
+                <div class="flex items-center space-x-4">
+                    <img id="dossier-avatar" src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=300&auto=format&fit=crop&q=80" alt="Foto do contato selecionado" class="w-16 h-16 rounded-2xl object-cover border-2 border-cyan-500/40 shadow-xl">
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <h2 id="dossier-name" class="text-lg font-extrabold text-white">Larissa</h2>
+                            <span id="dossier-age" class="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 text-xs font-semibold">21 anos</span>
+                            <span id="dossier-sign" class="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-semibold">♎ Libra</span>
+                        </div>
+                        <p id="dossier-job" class="text-xs text-slate-400 mt-1">Estudante de Design Gráfico • Centro Cívico (a 4 km)</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="switchScreen('chat-wingman')" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold">
+                        <i class="fa-solid fa-comments mr-1.5"></i> Abrir Chat do Wingman
+                    </button>
+                </div>
+            </div>
+
+            <!-- Ficha Prática do Crush -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                <div class="p-5 rounded-2xl glass-card space-y-3">
+                    <h4 class="text-xs font-bold text-white border-b border-slate-800 pb-2 flex items-center">
+                        <i class="fa-solid fa-palette text-cyan-400 mr-2"></i> Estilo & Vibe
+                    </h4>
+                    <div class="space-y-2 text-slate-300">
+                        <div class="flex justify-between py-1 border-b border-slate-800/60">
+                            <span class="text-slate-400">Área:</span>
+                            <span id="dossier-area" class="font-semibold text-white">Design & Artes</span>
+                        </div>
+                        <div class="flex justify-between py-1 border-b border-slate-800/60">
+                            <span class="text-slate-400">Rolês Favoritos:</span>
+                            <span id="dossier-roles" class="font-semibold text-cyan-300">Cafés, livrarias e vinil</span>
+                        </div>
+                        <div class="flex justify-between py-1">
+                            <span class="text-slate-400">Pets:</span>
+                            <span id="dossier-pets" class="font-semibold text-white">Gato Persa</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-5 rounded-2xl glass-card space-y-3">
+                    <h4 class="text-xs font-bold text-white border-b border-slate-800 pb-2 flex items-center">
+                        <i class="fa-solid fa-phone text-indigo-400 mr-2"></i> Como se comunica
+                    </h4>
+                    <div class="space-y-2 text-slate-300">
+                        <div class="flex justify-between py-1 border-b border-slate-800/60">
+                            <span class="text-slate-400">Instagram:</span>
+                            <span id="dossier-activity" class="font-semibold text-pink-400">Super ativa nos stories</span>
+                        </div>
+                        <div class="flex justify-between py-1 border-b border-slate-800/60">
+                            <span class="text-slate-400">Fase Atual:</span>
+                            <span id="dossier-phase" class="font-semibold text-cyan-300">De Olho (Sem conversa ainda)</span>
+                        </div>
+                        <div class="flex justify-between py-1">
+                            <span class="text-slate-400">Canal Ideal:</span>
+                            <span id="dossier-channel" class="font-semibold text-white">Responder story com pergunta</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-5 rounded-2xl glass-card space-y-3">
+                    <h4 class="text-xs font-bold text-white border-b border-slate-800 pb-2 flex items-center">
+                        <i class="fa-solid fa-heart text-pink-400 mr-2"></i> O que agrada & evitar
+                    </h4>
+                    <div class="space-y-2 text-slate-300">
+                        <div class="flex justify-between py-1 border-b border-slate-800/60">
+                            <span class="text-slate-400">O que atrai:</span>
+                            <span id="dossier-attracts" class="font-semibold text-emerald-300">Humor inteligente & estética</span>
+                        </div>
+                        <div class="flex justify-between py-1">
+                            <span class="text-slate-400">O que espanta:</span>
+                            <span id="dossier-avoids" class="font-semibold text-red-400">Cantadas prontas e clichês</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- ============================================== -->
+        <!-- TELA 5: PAINEL ADMINISTRATIVO DO FUNDADOR -->
+        <!-- ============================================== -->
+        <div id="screen-admin" class="screen-view hidden space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/30">ÁREA RESTRITA</span>
+                        <h2 class="text-lg font-extrabold text-white">Painel de Controle do Fundador</h2>
+                    </div>
+                    <p class="text-xs text-slate-400 mt-1">Métricas simuladas para validar o painel, custos de IA e ingestão do RAG.</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span class="text-xs text-emerald-400 font-bold bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20">
+                        <i class="fa-solid fa-flask text-[8px] mr-1.5"></i> Modo demonstração
+                    </span>
+                </div>
+            </div>
+
+            <!-- Cards de Métricas do Admin -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="p-4 rounded-2xl glass-panel border-amber-500/20">
+                    <span class="text-[11px] text-slate-400 block font-medium">Total de Usuários</span>
+                    <span class="text-2xl font-black text-white mt-1 block">1.037</span>
+                    <div class="flex justify-between text-[10px] text-slate-400 mt-1 pt-1 border-t border-slate-800">
+                        <span>Free: <strong>881</strong></span>
+                        <span class="text-emerald-400">Pagantes: <strong>156</strong></span>
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-2xl glass-panel border-emerald-500/20">
+                    <span class="text-[11px] text-slate-400 block font-medium">Receita mensal simulada</span>
+                    <span class="text-2xl font-black text-emerald-400 mt-1 block">R$ 1.659,00</span>
+                    <div class="flex justify-between text-[10px] text-slate-400 mt-1 pt-1 border-t border-slate-800">
+                        <span>52 Assinaturas Pro</span>
+                        <span>104 PIX Avulsos</span>
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-2xl glass-panel border-red-500/20">
+                    <span class="text-[11px] text-slate-400 block font-medium">Custos (Infra + IA simulados)</span>
+                    <span class="text-2xl font-black text-red-400 mt-1 block">R$ 311,00</span>
+                    <div class="flex justify-between text-[10px] text-slate-400 mt-1 pt-1 border-t border-slate-800">
+                        <span>4.2M Tokens In</span>
+                        <span>280k Tokens Out</span>
+                    </div>
+                </div>
+
+                <div class="p-4 rounded-2xl glass-panel border-indigo-500/20">
+                    <span class="text-[11px] text-slate-400 block font-medium">Lucro Líquido Retido</span>
+                    <span class="text-2xl font-black text-indigo-400 mt-1 block">R$ 809,00</span>
+                    <div class="flex justify-between text-[10px] text-slate-400 mt-1 pt-1 border-t border-slate-800">
+                        <span>Verba Ads: <strong>R$ 539</strong></span>
+                        <span class="text-indigo-300">Margem: <strong>81%</strong></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ingestão do RAG Secreto (Cérebro da IA) -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Upload de Novos Livros e PDFs -->
+                <div class="lg:col-span-6 glass-panel rounded-3xl p-6 space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center">
+                            <i class="fa-solid fa-brain text-purple-400 mr-2"></i> Ingestão do Cérebro RAG (Confidencial)
+                        </h3>
+                        <span class="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded font-semibold">Base Secreta</span>
+                    </div>
+
+                    <p class="text-xs text-slate-400">
+                        Faça upload somente de materiais autorizados. A IA fragmenta, registra licença/proveniência e cria vetores no <code class="text-indigo-300">pgvector</code>; conteúdo protegido não é exposto aos usuários.
+                    </p>
+
+                    <!-- Dropzone de Arquivos -->
+                    <label id="rag-dropzone" for="rag-file-input" ondragover="event.preventDefault()" ondrop="handleRagDrop(event)" class="block p-6 rounded-2xl border-2 border-dashed border-slate-700 hover:border-purple-500/60 bg-slate-900/40 text-center space-y-2 cursor-pointer">
+                        <i class="fa-solid fa-cloud-arrow-up text-3xl text-purple-400"></i>
+                        <p class="text-xs font-semibold text-white">Arraste seus PDFs ou anotações aqui</p>
+                        <span class="text-[10px] text-slate-500 block">Suporta PDF, TXT, EPUB e Áudios de aula</span>
+                    </label>
+                    <input id="rag-file-input" type="file" accept=".pdf,.txt,.epub,audio/*" class="hidden" onchange="handleRagFile(event)">
+
+                    <!-- Input de Insight Rápido do Fundador -->
+                    <div class="space-y-2 pt-2">
+                        <label class="text-[11px] font-bold text-slate-300">Adicionar Insight / Regra Tática Direta:</label>
+                        <textarea id="insight-input" placeholder="Ex: Quando a pessoa disser que vai viajar, priorize uma resposta leve e sem cobrança..." class="w-full h-20 bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-purple-500"></textarea>
+                        <button onclick="saveInsight()" class="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs">
+                            <i class="fa-solid fa-plus mr-1"></i> Injetar no Conhecimento da IA
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lista de Livros & Módulos já Ingeridos -->
+                <div class="lg:col-span-6 glass-panel rounded-3xl p-6 space-y-4">
+                    <h3 class="text-xs font-bold text-white uppercase tracking-wider border-b border-slate-800 pb-3 flex items-center">
+                        <i class="fa-solid fa-database text-indigo-400 mr-2"></i> Acervo de Inteligência Ativo (5 Obras / 1.420 Fragmentos)
+                    </h3>
+
+                    <div id="rag-list" class="space-y-2.5 text-xs">
+                        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+                            <div>
+                            <span class="font-bold text-white block">Módulo A: Comunicação & Reciprocidade</span>
+                            <span class="text-[10px] text-slate-400">420 vetores • fontes autorizadas</span>
+                            </div>
+                            <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">Ativo</span>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+                            <div>
+                            <span class="font-bold text-white block">Módulo B: Limites, Clareza & Timing</span>
+                            <span class="text-[10px] text-slate-400">380 vetores • comunicação sem pressão</span>
+                            </div>
+                            <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">Ativo</span>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+                            <div>
+                            <span class="font-bold text-white block">Módulo C: Incerteza & Regulação Emocional</span>
+                            <span class="text-[10px] text-slate-400">290 vetores • hipóteses, limites e pausa</span>
+                            </div>
+                            <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">Ativo</span>
+                        </div>
+
+                        <div class="p-3 rounded-xl bg-slate-900/80 border border-slate-800 flex items-center justify-between">
+                            <div>
+                                <span class="font-bold text-white block">Módulo D: Notas & Insights Próprios do Fundador</span>
+                                <span class="text-[10px] text-purple-300">142 táticas customizadas injetadas</span>
+                            </div>
+                            <span class="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[10px] font-bold">Custom</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Modal de cadastro rápido: mantém a promessa de três campos do plano -->
+    <div id="new-contact-modal" onclick="if(event.target === this) closeNewContactModal()" onkeydown="handleModalKeydown(event)" class="hidden fixed inset-0 z-[60] items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="new-contact-title">
+        <form class="w-full max-w-md rounded-3xl glass-panel p-6 space-y-5 border-indigo-500/30" onsubmit="createContact(event)">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <span class="text-[10px] uppercase tracking-widest text-indigo-300 font-bold">Cadastro sem fricção</span>
+                    <h2 id="new-contact-title" class="text-lg font-extrabold text-white mt-1">Adicionar pessoa ao radar</h2>
+                    <p class="text-xs text-slate-400 mt-1">A ficha pode ser enriquecida depois, a partir de contexto enviado com consentimento.</p>
+                </div>
+                <button type="button" onclick="closeNewContactModal()" aria-label="Fechar cadastro" class="p-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <label class="block space-y-1.5 text-xs text-slate-300">Nome
+                <input id="new-contact-name" required maxlength="40" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-indigo-500" placeholder="Ex.: Ana">
+            </label>
+            <label class="block space-y-1.5 text-xs text-slate-300">Objetivo
+                <select id="new-contact-goal" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-indigo-500">
+                    <option>Conhecer melhor</option>
+                    <option>Conversa casual</option>
+                    <option>Relacionamento sério</option>
+                </select>
+            </label>
+            <label class="block space-y-1.5 text-xs text-slate-300">Contexto inicial (opcional)
+                <input id="new-contact-context" maxlength="80" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-indigo-500" placeholder="Ex.: respondeu um story sobre café">
+            </label>
+            <div class="flex justify-end gap-2 pt-1">
+                <button type="button" onclick="closeNewContactModal()" class="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold">Cancelar</button>
+                <button type="submit" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold">Adicionar ao radar</button>
+            </div>
+        </form>
+    </div>
+
+    <div id="demo-toast" class="demo-toast fixed bottom-5 right-5 z-[70] max-w-sm px-4 py-3 rounded-2xl bg-slate-800 border border-slate-700 shadow-2xl text-xs text-white" role="status" aria-live="polite"></div>
+
+    <!-- Script de Navegação e Dados dos Crushes -->
+    <script>
+        const crushesData = {
+            larissa: {
+                name: "Larissa", age: "21 anos", sign: "♎ Libra",
+                job: "Estudante de Design Gráfico • Centro Cívico (a 4 km)",
+                avatar: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=300&auto=format&fit=crop&q=80",
+                badge: "🎯 1. De Olho (Sem papo ainda)", phase: "De Olho (Sem conversa ainda)",
+                area: "Design & Artes", interests: "Cafés, livrarias e vinil", pets: "Gato Persa",
+                activity: "Super ativa nos stories", channel: "Responder story com pergunta",
+                attracts: "Humor inteligente & estética", avoids: "Cantadas prontas e clichês",
+                contextFile: "Print_Perfil_Instagram_Larissa.png",
+                request: "Tô interessado nela, mas nunca conversei. Analisa o contexto e me dá opções boas pra puxar papo sem parecer insistente.",
+                summary: ["O contexto indica interesse por Design Gráfico e viagens.", "Nos stories recentes, apareceu um vinil antigo e uma cafeteria charmosa.", "há sinais de interesse por estética e lugares com identidade, mas não sabemos como a pessoa se sente."],
+                hooks: ["Passando só pra perguntar: aquele café do story é bom mesmo ou é só bonito pra foto?", "Qual foi a música que você mais ouviu esta semana?", "Se preferir não falar agora, tudo bem. Quando quiser, me conta o que achou desse lugar."]
+            },
+            camila: {
+                name: "Camila Rodrigues", age: "22 anos", sign: "♉ Touro",
+                job: "Estudante de Direito • Bairro Centro (a 3 km)",
+                avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=300&auto=format&fit=crop&q=80",
+                badge: "💬 2. Puxando Papo", phase: "Puxando Papo",
+                area: "Direito & estudos", interests: "Cafés e parques", pets: "Não informado",
+                activity: "Responde stories à noite", channel: "Pergunta contextual e curta",
+                attracts: "Humor leve & curiosidade", avoids: "Textão sem contexto",
+                contextFile: "Contexto_Story_Camila.txt", request: "Ela respondeu um story. Quero uma pergunta curta que mantenha a conversa aberta.",
+                summary: ["A conversa começou por um story e teve resposta curta.", "Ainda não há informação suficiente para concluir interesse.", "trate o próximo passo como hipótese e deixe espaço para ela encerrar."],
+                hooks: ["Esse lugar é bom mesmo ou você recomenda outro por perto?", "O que te fez escolher esse rolê hoje?", "Se não for um bom momento, tudo bem — a gente conversa outra hora."]
+            },
+            beatriz: {
+                name: "Beatriz Martins", age: "24 anos", sign: "♏ Escorpião",
+                job: "Médica Veterinária • Bairro Batel (a 6 km de você)",
+                avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&auto=format&fit=crop&q=80",
+                badge: "🔥 3. Flerte Rendendo", phase: "Flerte Rendendo",
+                area: "Medicina veterinária", interests: "Animais e trilhas", pets: "Gosta de cachorros",
+                activity: "Prefere áudio", channel: "Brincadeira ligada ao contexto",
+                attracts: "Espontaneidade & atenção", avoids: "Cobrança por resposta",
+                contextFile: "Audio_Resumo_Beatriz.m4a", request: "A conversa está leve. Quero sugerir um encontro sem transformar isso em pressão.",
+                summary: ["Houve troca de áudios e brincadeiras frequentes.", "O contexto disponível menciona um plantão veterinário.", "não sabemos se ela quer marcar agora; um convite claro pode ser recusado sem constrangimento."],
+                hooks: ["Quando sua semana aliviar, topa um café? Se não, sem problema.", "Você prefere um rolê curto ou deixar para outra semana?", "Se estiver corrida, me avisa e eu não fico insistindo."]
+            },
+            mariana: {
+                name: "Mariana", age: "25 anos", sign: "♌ Leão",
+                job: "Arquiteta • Bairro Juvevê (a 5 km)",
+                avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&auto=format&fit=crop&q=80",
+                badge: "📅 4. Tentando Marcar", phase: "Tentando Marcar",
+                area: "Arquitetura", interests: "Restaurantes e exposições", pets: "Não informado",
+                activity: "Responde melhor pela manhã", channel: "Convite com dia e local",
+                attracts: "Clareza & iniciativa", avoids: "Convite em aberto",
+                contextFile: "Conversa_Mariana.txt", request: "Ela disse que esta semana está corrida. Me ajude a responder sem cobrar.",
+                summary: ["Ela disse que a semana está corrida.", "Não há uma data confirmada no contexto.", "a opção de pausar é tão válida quanto tentar um convite fechado depois."],
+                hooks: ["Tranquilo, quando você tiver uma janela me avisa.", "Posso te chamar na próxima semana com uma sugestão fechada?", "Sem pressão — boa semana por aí."]
+            },
+            juliana: {
+                name: "Juliana Costa", age: "26 anos", sign: "♌ Leão",
+                job: "Publicitária • Bairro Ecoville (a 12 km)",
+                avatar: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=300&auto=format&fit=crop&q=80",
+                badge: "🍷 5. Rolê Marcado (Sexta 19h)", phase: "Rolê Marcado",
+                area: "Publicidade", interests: "Bistrôs e música ao vivo", pets: "Não informado",
+                activity: "Confirmou sexta às 19h", channel: "Mensagem objetiva de confirmação",
+                attracts: "Bom humor & presença", avoids: "Mudar o combinado em cima da hora",
+                contextFile: "Confirmacao_Juliana.txt", request: "O encontro está marcado. Me ajude a confirmar sem exagerar nas mensagens.",
+                summary: ["Existe um encontro marcado para sexta às 19h.", "O próximo passo é confirmar logística, não criar urgência.", "mantenha a mensagem objetiva e respeite qualquer mudança de plano."],
+                hooks: ["Combinado: sexta às 19h no Batel. Te mando o local certinho amanhã.", "Se algo mudar, me avisa sem problema.", "Até sexta — sem precisar ficar trocando mensagem o dia todo."]
+            }
+        };
+
+        let currentCrush = "larissa";
+        let toastTimer;
+        let recordingTimer;
+        let lastModalTrigger;
+
+        const get = id => document.getElementById(id);
+        const setText = (id, value) => { if (get(id)) get(id).textContent = value || "Não informado"; };
+
+        function showToast(message) {
+            const toast = get('demo-toast');
+            if (!toast) return;
+            toast.textContent = message;
+            toast.classList.add('is-visible');
+            window.clearTimeout(toastTimer);
+            toastTimer = window.setTimeout(() => toast.classList.remove('is-visible'), 3200);
+        }
+
+        function switchScreen(screenId) {
+            const next = get(`screen-${screenId}`);
+            if (!next) return;
+            document.querySelectorAll('.screen-view').forEach(screen => screen.classList.add('hidden'));
+            document.querySelectorAll('.nav-item').forEach(button => {
+                button.classList.remove('bg-indigo-600/20', 'text-indigo-300', 'border', 'border-indigo-500/30');
+                button.classList.add('text-slate-400');
+                button.removeAttribute('aria-current');
+            });
+            next.classList.remove('hidden');
+            const main = document.querySelector('main');
+            if (main) main.scrollTop = 0;
+            const activeNav = get(`nav-${screenId}`);
+            if (activeNav) {
+                activeNav.classList.add('bg-indigo-600/20', 'text-indigo-300', 'border', 'border-indigo-500/30');
+                activeNav.classList.remove('text-slate-400');
+                activeNav.setAttribute('aria-current', 'page');
+            }
+            const heading = next.querySelector('h2, h3');
+            if (heading) {
+                heading.setAttribute('tabindex', '-1');
+                heading.focus({ preventScroll: true });
+            }
+        }
+
+        function selectCrush(key) {
+            const data = crushesData[key];
+            if (!data) return;
+            currentCrush = key;
+            document.querySelectorAll('.crush-tab').forEach(tab => {
+                tab.classList.remove('bg-indigo-600/30', 'border-indigo-500', 'text-white');
+                tab.classList.add('bg-slate-900', 'border-slate-800', 'text-slate-400');
+                tab.setAttribute('aria-pressed', 'false');
+            });
+            const activeTab = get(`tab-crush-${key}`);
+            if (activeTab) {
+                activeTab.classList.add('bg-indigo-600/30', 'border-indigo-500', 'text-white');
+                activeTab.classList.remove('bg-slate-900', 'border-slate-800', 'text-slate-400');
+                activeTab.setAttribute('aria-pressed', 'true');
+            }
+            setText('chat-header-name', `Conversando sobre ${data.name} (${data.age.split(' ')[0]})`);
+            get('chat-header-avatar').src = data.avatar;
+            setText('chat-header-badge', data.badge);
+            setText('chat-context-file', data.contextFile || `Contexto_${data.name}.txt`);
+            setText('chat-context-request', `"${data.request || 'Quero entender melhor esta situação e agir com respeito.'}"`);
+            setText('analysis-title', `Análise do contexto da ${data.name}:`);
+            (data.summary || []).forEach((summary, index) => setText(`analysis-summary-${index + 1}`, summary));
+            (data.hooks || []).forEach((hook, index) => {
+                setText(`hook-${index + 1}-text`, `"${hook}"`);
+                const hookButton = document.querySelector(`[data-hook-index="${index}"]`);
+                if (hookButton) hookButton.dataset.copy = hook;
+            });
+            setText('dossier-name', data.name);
+            setText('dossier-age', data.age);
+            setText('dossier-sign', data.sign);
+            setText('dossier-job', data.job);
+            get('dossier-avatar').src = data.avatar;
+            setText('dossier-area', data.area);
+            setText('dossier-roles', data.interests);
+            setText('dossier-pets', data.pets);
+            setText('dossier-activity', data.activity);
+            setText('dossier-phase', data.phase);
+            setText('dossier-channel', data.channel);
+            setText('dossier-attracts', data.attracts);
+            setText('dossier-avoids', data.avoids);
+        }
+
+        function copySuggestion(button) {
+            const text = button.dataset.copy;
+            if (!text) return;
+            const copied = () => showToast('Sugestão copiada. Edite antes de enviar, se quiser.');
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(copied).catch(() => copyFallback(text, copied));
+            } else {
+                copyFallback(text, copied);
+            }
+        }
+
+        function copyFallback(text, callback) {
+            const helper = document.createElement('textarea');
+            helper.value = text;
+            helper.setAttribute('readonly', '');
+            helper.style.position = 'fixed';
+            helper.style.opacity = '0';
+            document.body.appendChild(helper);
+            helper.select();
+            try { document.execCommand('copy'); callback(); } catch { showToast('Texto pronto para copiar: selecione a sugestão.'); }
+            helper.remove();
+        }
+
+        function registerOutcome(outcome) {
+            const data = crushesData[currentCrush];
+            if (!data) return;
+            if (outcome === 'positive') {
+                data.badge = '💬 2. Puxando Papo';
+                data.phase = 'Puxando Papo';
+                showToast(`${data.name} avançou para “Puxando Papo”. Resultado registrado.`);
+            } else {
+                data.badge = '❄️ 6. Deixa Quieto';
+                data.phase = 'Deixa Quieto';
+                showToast(`Vácuo registrado para ${data.name}. O próximo passo é dar espaço.`);
+            }
+            setText(`phase-status-${currentCrush}`, `Resultado registrado: ${data.phase}`);
+            setText(`radar-status-${currentCrush}`, data.badge);
+            appendChatBubble(`Resultado registrado para ${data.name}: ${data.phase}. Próximo passo: respeitar o ritmo e revisar antes de agir novamente.`, 'assistant');
+            selectCrush(currentCrush);
+        }
+
+        function archiveReminder() {
+            const card = get('reminder-card');
+            if (card) card.classList.add('hidden');
+            showToast('Lembrete arquivado. Você pode voltar a focar nas conversas ativas.');
+        }
+
+        function handleAttachment(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            setText('attachment-status', `Anexo pronto para análise: ${file.name} (${Math.ceil(file.size / 1024)} KB)`);
+            appendChatBubble(`Você anexou ${file.name} para ${crushesData[currentCrush].name}.`, 'user');
+            showToast('Anexo recebido no modo demonstração; nenhuma informação foi enviada.');
+            queueDemoAnalysis('arquivo');
+        }
+
+        function queueDemoAnalysis(source) {
+            const data = crushesData[currentCrush];
+            window.setTimeout(() => {
+                appendChatBubble(`Demonstração: encontrei sinais observáveis no ${source}, mas não posso saber a intenção da outra pessoa. Revise as três opções abaixo e escolha também a alternativa de pausar.`, 'assistant');
+                showToast(`Análise demonstrativa pronta para ${data.name}.`);
+            }, 450);
+        }
+
+        function toggleRecording(button) {
+            const recording = button.dataset.recording === 'true';
+            if (recording) {
+                window.clearTimeout(recordingTimer);
+                button.dataset.recording = 'false';
+                button.classList.remove('recording');
+                button.setAttribute('aria-pressed', 'false');
+                button.setAttribute('aria-label', 'Gravar áudio');
+                button.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+                setText('attachment-status', 'Gravação interrompida antes da análise.');
+                showToast('Gravação interrompida.');
+                return;
+            }
+            button.dataset.recording = 'true';
+            button.classList.add('recording');
+            button.setAttribute('aria-pressed', 'true');
+            button.setAttribute('aria-label', 'Parar gravação');
+            button.innerHTML = '<i class="fa-solid fa-stop"></i>';
+            showToast('Gravando demonstração por 2 segundos…');
+            recordingTimer = window.setTimeout(() => {
+                button.dataset.recording = 'false';
+                button.classList.remove('recording');
+                button.setAttribute('aria-pressed', 'false');
+                button.setAttribute('aria-label', 'Gravar áudio');
+                button.innerHTML = '<i class="fa-solid fa-microphone"></i>';
+                setText('attachment-status', 'Áudio de demonstração pronto para análise.');
+                showToast('Áudio pronto. No produto real, esta etapa chama a análise multimodal.');
+                appendChatBubble(`Você gravou um áudio sobre ${crushesData[currentCrush].name}.`, 'user');
+                queueDemoAnalysis('áudio');
+            }, 2000);
+        }
+
+        function appendChatBubble(text, role) {
+            const feed = get('chat-feed');
+            if (!feed) return;
+            const row = document.createElement('div');
+            row.className = role === 'user' ? 'flex flex-col items-end space-y-1' : 'flex items-start space-x-2.5 max-w-[85%]';
+            const bubble = document.createElement('div');
+            bubble.className = role === 'user'
+                ? 'bg-indigo-600 text-white p-3 rounded-2xl rounded-tr-none max-w-[80%]'
+                : 'bg-slate-900 border border-slate-800 p-3 rounded-2xl rounded-tl-none text-slate-200';
+            bubble.textContent = text;
+            row.appendChild(bubble);
+            feed.appendChild(row);
+            feed.scrollTop = feed.scrollHeight;
+        }
+
+        function sendMessage() {
+            const input = get('chat-input');
+            const message = input ? input.value.trim() : '';
+            if (!message) {
+                showToast('Escreva uma situação para o Wingman analisar.');
+                return;
+            }
+            appendChatBubble(message, 'user');
+            input.value = '';
+            showToast('Analisando o contexto…');
+            window.setTimeout(() => {
+                appendChatBubble(`Demonstração: para ${crushesData[currentCrush].name}, responda com curiosidade e respeite o ritmo da conversa. Escolha uma sugestão acima e registre o resultado depois.`, 'assistant');
+                showToast('Sugestão adicionada ao histórico.');
+            }, 450);
+        }
+
+        function handleChatKeydown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function openNewContactModal() {
+            const modal = get('new-contact-modal');
+            lastModalTrigger = document.activeElement;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            get('new-contact-name').focus();
+        }
+
+        function closeNewContactModal() {
+            const modal = get('new-contact-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            if (lastModalTrigger && typeof lastModalTrigger.focus === 'function') lastModalTrigger.focus();
+        }
+
+        function handleModalKeydown(event) {
+            const modal = get('new-contact-modal');
+            if (!modal || modal.classList.contains('hidden') || event.key !== 'Tab') return;
+            const focusable = [...modal.querySelectorAll('button, input, select, textarea')].filter(element => !element.disabled);
+            if (!focusable.length) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        }
+
+        function createContact(event) {
+            event.preventDefault();
+            const name = get('new-contact-name').value.trim();
+            const goal = get('new-contact-goal').value;
+            const context = get('new-contact-context').value.trim();
+            if (!name) return;
+            const key = `contact-${Date.now()}`;
+            crushesData[key] = {
+                name, age: "—", sign: "Não informado",
+                job: context || goal,
+                avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300&auto=format&fit=crop&q=80",
+                badge: "🎯 1. De Olho (novo)", phase: "De Olho (novo)",
+                area: "Ainda não informado", interests: context || "A descobrir", pets: "Ainda não informado",
+                activity: "Ainda não informado", channel: "A descobrir",
+                attracts: "A descobrir", avoids: "A descobrir",
+                contextFile: "Novo_contexto.txt", request: "Ainda não há contexto suficiente. Quero começar com uma pergunta respeitosa.",
+                summary: ["Ainda não há fatos suficientes para analisar.", "O contexto inicial precisa ser confirmado pelo usuário.", "não inferir intenção; começar com uma pergunta simples e dar espaço para recusa."],
+                hooks: ["Quer conversar sobre isso agora?", "Se preferir, posso deixar para outro momento.", "O que você gostaria que eu entendesse primeiro?"]
+            };
+            const tab = document.createElement('button');
+            tab.type = 'button';
+            tab.id = `tab-crush-${key}`;
+            tab.className = 'crush-tab px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white flex items-center space-x-2 shrink-0 transition-all';
+            tab.onclick = () => selectCrush(key);
+            const label = document.createElement('span');
+            label.className = 'text-xs font-bold';
+            label.textContent = name;
+            const dot = document.createElement('span');
+            dot.className = 'w-2 h-2 rounded-full bg-cyan-400';
+            tab.append(label, dot);
+            get('new-contact-trigger').before(tab);
+            closeNewContactModal();
+            event.target.reset();
+            selectCrush(key);
+            showToast(`${name} foi adicionado ao radar. Agora registre contexto sem invadir a privacidade.`);
+        }
+
+        function handleRagFile(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            showToast(`${file.name} pronto para ingestão demonstrativa.`);
+        }
+
+        function handleRagDrop(event) {
+            event.preventDefault();
+            const file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
+            if (!file) return;
+            showToast(`${file.name} pronto para ingestão demonstrativa.`);
+        }
+
+        function saveInsight() {
+            const input = get('insight-input');
+            const insight = input.value.trim();
+            if (!insight) {
+                showToast('Escreva um insight antes de injetar.');
+                return;
+            }
+            const item = document.createElement('div');
+            item.className = 'p-3 rounded-xl bg-slate-900/80 border border-purple-500/30';
+            item.innerHTML = '<span class="font-bold text-purple-200 block">Insight demonstrativo</span>';
+            const text = document.createElement('span');
+            text.className = 'text-[10px] text-slate-400';
+            text.textContent = insight;
+            item.appendChild(text);
+            get('rag-list').appendChild(item);
+            input.value = '';
+            showToast('Insight adicionado à lista demonstrativa.');
+        }
+
+        function toggleStealth() {
+            const active = document.body.dataset.stealth === 'true';
+            document.body.dataset.stealth = String(!active);
+            showToast(active ? 'Modo disfarce demonstrativo desativado.' : 'Modo disfarce demonstrativo ativado. Nenhuma tela foi substituída.');
+        }
+
+        document.addEventListener('keydown', event => {
+            if (event.key === 'Escape' && !get('new-contact-modal').classList.contains('hidden')) closeNewContactModal();
+        });
+
+        selectCrush('larissa');
+    </script>
+</body>
+</html>

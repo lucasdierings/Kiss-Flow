@@ -184,9 +184,9 @@ export default function ActionModal({
     })
       .then((res) => {
         if (!res.ok) throw new Error("Falha ao gerar sugestoes");
-        return res.json();
+        return res.json() as Promise<AIResponse>;
       })
-      .then((data: AIResponse) => setAiData(data))
+      .then((data) => setAiData(data))
       .catch((err) => {
         if (err.name !== "AbortError") {
           setError("Nao foi possivel gerar a analise. Tente novamente.");

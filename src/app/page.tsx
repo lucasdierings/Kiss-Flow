@@ -17,6 +17,7 @@ import BehaviorDiagnostic from "@/components/BehaviorDiagnostic";
 import PipelineFunnel from "@/components/PipelineFunnel";
 import ActiveContacts from "@/components/ActiveContacts";
 import ConversionAnalytics from "@/components/ConversionAnalytics";
+import DemoDataLoader from "@/components/DemoDataLoader";
 import { loadState } from "@/lib/store";
 import type { Interaction } from "@/lib/types";
 import { generateProactiveAlerts } from "@/lib/alerts-engine";
@@ -111,6 +112,11 @@ export default function Dashboard() {
             </div>
           </div>
         </header>
+
+        {/* Demo Data Bar */}
+        <div className="mb-6">
+          <DemoDataLoader />
+        </div>
 
         {/* Proactive Alerts */}
         <AlertBanner

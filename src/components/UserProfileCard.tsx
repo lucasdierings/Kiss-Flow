@@ -39,28 +39,38 @@ export default function UserProfileCard() {
     async function loadProfile() {
       try {
         const supabase = createSupabaseBrowser();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+        if (supabase) {
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
 
-        if (user) {
-          const { data: profileData } = await supabase
-            .from("user_profiles")
-            .select("*")
-            .eq("id", user.id)
-            .single();
+          if (user) {
+            const { data: profileData } = await supabase
+              .from("user_profiles")
+              .select("*")
+              .eq("id", user.id)
+              .single();
 
-          if (profileData) {
-            setProfile({
-              displayName:
-                profileData.display_name ||
-                user.user_metadata?.display_name ||
-                "Usuário",
-              gender: profileData.gender || "other",
-              seducerArchetype: profileData.seducer_archetype || "charmer",
-              avatarUrl: profileData.avatar_url || null,
-            });
+            if (profileData) {
+              setProfile({
+                displayName:
+                  profileData.display_name ||
+                  user.user_metadata?.display_name ||
+                  "Seducer Pro",
+                gender: profileData.gender || "other",
+                seducerArchetype: profileData.seducer_archetype || "charmer",
+                avatarUrl: profileData.avatar_url || null,
+              });
+            }
           }
+        }
+        if (!profile) {
+          setProfile({
+            displayName: "Seducer Pro",
+            gender: "male",
+            seducerArchetype: "charmer",
+            avatarUrl: null,
+          });
         }
 
         // Calculate scores from local state

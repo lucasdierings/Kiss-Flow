@@ -20,13 +20,17 @@ const STAGE_MIGRATION: Record<string, string> = {
   retention: "fechamento", // retention removido; contatos "won" recebem status "won"
 };
 
-const DEFAULT_STATE: AppState = {
+export const DEFAULT_STATE: AppState = {
   contacts: [],
   interactions: [],
   phaseHistory: [],
   activeContactId: null,
   seducerArchetype: "charmer",
 };
+
+export function getDefaultState(): AppState {
+  return JSON.parse(JSON.stringify(DEFAULT_STATE));
+}
 
 // ===== Persistência localStorage =====
 

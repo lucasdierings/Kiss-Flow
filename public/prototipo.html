@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Kiss Flow — CRM de Conquistas & Estrategista Pessoal</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              purple: '#8b5cf6',
+              rose: '#f43f5e',
+              emerald: '#10b981',
+              amber: '#f59e0b',
+              blue: '#3b82f6',
+            },
+            dark: {
+              bg: '#0B0C10',
+              surface: '#14161F',
+              card: '#1B1E2B',
+              border: '#2A2E40',
+              text: '#F1F5F9',
+              muted: '#94A3B8'
+            },
+            light: {
+              bg: '#F8FAFC',
+              surface: '#FFFFFF',
+              card: '#F1F5F9',
+              border: '#E2E8F0',
+              text: '#0F172A',
+              muted: '#64748B'
+            }
+          },
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- FontAwesome & Google Fonts -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    input, textarea, select {
+      user-select: auto;
+    }
+    
+    /* Scrollbar oculta no mobile */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Animações suaves */
+    .screen-fade {
+      animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Gradientes */
+    .grad-donjuan {
+      background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 50%, #2563eb 100%);
+    }
+    .grad-cleopatra {
+      background: linear-gradient(135deg, #e11d48 0%, #d946ef 50%, #f59e0b 100%);
+    }
+    .grad-brand {
+      background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+    }
+
+    /* Mockup Frame */
+    .iphone-frame {
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.5), 0 0 0 12px #1e293b, 0 0 0 14px #334155;
+    }
+    @media (max-width: 640px) {
+      .iphone-frame {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        width: 100% !important;
+        height: 100vh !important;
+        max-width: 100% !important;
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col items-center justify-center p-0 sm:p-6 font-sans antialiased">
+
+  <!-- BARRA DE CONTROLE DO PROTÓTIPO (DESKTOP) -->
+  <header class="w-full max-w-md hidden sm:flex items-center justify-between mb-4 px-2 text-xs text-slate-400">
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+      <span class="font-bold tracking-wide uppercase text-slate-200">Protótipo Mobile • Kiss Flow</span>
+    </div>
+    <div class="flex items-center gap-2 bg-slate-800/80 p-1.5 rounded-xl border border-slate-700/50">
+      <!-- Toggle Tema -->
+      <button onclick="toggleTheme()" class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-700 text-slate-200 hover:bg-slate-600 transition-all font-medium" id="theme-btn">
+        <i class="fa-solid fa-moon text-indigo-400"></i>
+        <span id="theme-label">Escuro</span>
+      </button>
+      <!-- Tela cheia -->
+      <button onclick="toggleDeviceView()" class="px-2.5 py-1 rounded-lg hover:bg-slate-700 text-slate-300 transition-all" title="Alternar visão">
+        <i class="fa-solid fa-mobile-screen"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- DISPOSITIVO SMARTPHONE MOCKUP -->
+  <div id="device-container" class="iphone-frame w-full sm:max-w-[400px] h-[100dvh] sm:h-[844px] bg-dark-bg text-dark-text dark:bg-dark-bg dark:text-dark-text rounded-none sm:rounded-[48px] overflow-hidden flex flex-col relative border-0 transition-colors duration-300">
+    
+    <!-- TOP STATUS BAR & DYNAMIC ISLAND -->
+    <div class="w-full pt-2 px-6 flex items-center justify-between z-30 shrink-0 select-none bg-inherit">
+      <span class="text-xs font-semibold tracking-tight" id="status-clock">09:41</span>
+      
+      <!-- Dynamic Island -->
+      <div class="w-24 h-5 bg-black rounded-full flex items-center justify-end px-2 gap-1.5">
+        <div class="w-2 h-2 rounded-full bg-indigo-500/80 animate-ping"></div>
+        <div class="w-2.5 h-2.5 rounded-full bg-neutral-900 border border-neutral-700"></div>
+      </div>
+
+      <div class="flex items-center gap-1.5 text-xs">
+        <i class="fa-solid fa-signal text-[10px]"></i>
+        <i class="fa-solid fa-wifi text-[10px]"></i>
+        <i class="fa-solid fa-battery-full text-xs text-emerald-400"></i>
+      </div>
+    </div>
+
+    <!-- CABEÇALHO DO APP (BARRA SUPERIOR) -->
+    <div class="px-4 py-3 flex items-center justify-between border-b border-dark-border dark:border-dark-border light:border-light-border shrink-0 bg-inherit z-20">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl grad-brand flex items-center justify-center text-white text-sm font-black shadow-md shadow-purple-500/20">
+          <i class="fa-solid fa-fire"></i>
+        </div>
+        <div>
+          <h1 class="font-extrabold text-base tracking-tight leading-none">
+            Kiss <span class="text-transparent bg-clip-text grad-brand">Flow</span>
+          </h1>
+          <p class="text-[10px] text-dark-muted dark:text-dark-muted light:text-light-muted font-medium mt-0.5" id="app-subtitle">CRM de Conquistas</p>
+        </div>
+      </div>
+
+      <!-- BOTÕES DE TOPO: CRÉDITOS + TEMA RÁPIDO -->
+      <div class="flex items-center gap-2">
+        <!-- Badge de Créditos de IA (Abre Modal de Créditos) -->
+        <button onclick="openCreditsModal()" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-brand-purple/15 border border-brand-purple/30 text-brand-purple hover:bg-brand-purple/25 transition-all text-xs font-bold active:scale-95">
+          <i class="fa-solid fa-sparkles text-[10px]"></i>
+          <span id="credit-count-top">14</span>
+          <span class="text-[10px] opacity-70">créditos</span>
+        </button>
+
+        <!-- Botão Rápido Alternar Tema no Celular -->
+        <button onclick="toggleTheme()" class="w-7 h-7 rounded-full bg-dark-surface dark:bg-dark-surface light:bg-slate-200 flex items-center justify-center text-xs text-dark-muted dark:text-dark-muted light:text-slate-700">
+          <i class="fa-solid fa-circle-half-stroke"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ÁREA DE CONTEÚDO PRINCIPAL (COM SCROLL) -->
+    <main class="flex-1 overflow-y-auto no-scrollbar pb-24 px-4 pt-3 relative" id="main-content">
+      
+      <!-- ============================================== -->
+      <!-- TELA 1: PIPELINE & OPORTUNIDADES (CRM) -->
+      <!-- ============================================== -->
+      <section id="screen-crm" class="screen-fade space-y-4">
+        
+        <!-- Header da Seção & Busca -->
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-lg font-bold tracking-tight">Oportunidades</h2>
+            <p class="text-xs text-dark-muted dark:text-dark-muted light:text-light-muted">4 alvos ativos no funil</p>
+          </div>
+          <button onclick="openNewTargetForm()" class="flex items-center gap-1 px-3 py-1.5 rounded-xl bg-brand-purple text-white text-xs font-semibold shadow-lg shadow-brand-purple/25 active:scale-95 transition-all">
+            <i class="fa-solid fa-plus text-[10px]"></i>
+            <span>Novo Alvo</span>
+          </button>
+        </div>
+
+        <!-- Barra de Busca e Filtro de Temperatura -->
+        <div class="space-y-2">
+          <div class="relative">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-dark-muted text-xs"></i>
+            <input type="text" id="target-search" oninput="filterTargets()" placeholder="Buscar por nome, fase ou estilo..." class="w-full pl-9 pr-3 py-2 rounded-xl bg-dark-surface dark:bg-dark-surface light:bg-light-surface border border-dark-border dark:border-dark-border light:border-light-border text-xs focus:outline-none focus:border-brand-purple transition-all">
+          </div>
+          
+          <!-- Filtros de Temperatura (Estilo CRM) -->
+          <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-[11px] font-semibold">
+            <button onclick="filterTemp('all')" class="temp-filter active px-2.5 py-1 rounded-lg bg-brand-purple/20 text-brand-purple border border-brand-purple/40">Todos (4)</button>
+            <button onclick="filterTemp('hot')" class="temp-filter px-2.5 py-1 rounded-lg bg-dark-surface dark:bg-dark-surface light:bg-light-surface border border-dark-border dark:border-dark-border light:border-light-border text-dark-muted">🔥 Quente (1)</button>
+            <button onclick="filterTemp('warm')" class="temp-filter px-2.5 py-1 rounded-lg bg-dark-surface dark:bg-dark-surface light:bg-light-surface border border-dark-border dark:border-dark-border light:border-light-border text-dark-muted">⚡ Morno (2)</button>
+            <button onclick="filterTemp('cold')" class="temp-filter px-2.5 py-1 rounded-lg bg-dark-surface dark:bg-dark-surface light:bg-light-surface border border-dark-border dark:border-dark-border light:border-light-border text-dark-muted">❄️ Esfriando (1)</button>
+          </div>
+        </div>
+
+        <!-- VISUALIZADOR DE FUNIL / ESTÁGIOS RESUMO -->
+        <div class="p-3 rounded-2xl bg-dark-surface dark:bg-dark-surface light:bg-light-surface border border-dark-border dark:border-dark-border light:border-light-border space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold flex items-center gap-1.5">
+              <i class="fa-solid fa-chart-simple text-brand-purple"></i>
+              Pipeline de Conquista
+            </span>
+            <span class="text-[10px] text-dark-muted">Taxa de Rolê: <strong class="text-brand-emerald">50%</strong></span>
+          </div>
+
+          <!-- Barra de Estágios Horizontal -->
+          <div class="grid grid-cols-5 gap-1 text-center text-[9px] font-bold">
+            <div class="p-1.5 rounded-lg bg-slate-800/80 dark:bg-slate-800/80 light:bg-slate-200 text-slate-400">
+              <div>De Olho</div>
+              <div class="text-xs font-extrabold text-slate-200">1</div>
+            </div>
+            <div class="p-1.5 rounded-lg bg-indigo-500/20 border border-indigo-500/30 text-indigo-300">
+              <div>Papo</div>
+              <div class="text-xs font-extrabold text-indigo-400">1</div>
+            </div>
+            <div class="p-1.5 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-300">
+              <div>Flerte</div>
+              <div class="text-xs font-extrabold text-purple-400">1</div>
+            </div>
+            <div class="p-1.5 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-300">
+              <div>Marcar</div>
+              <div class="text-xs font-extrabold text-amber-400">1</div>
+            </div>
+            <div class="p-1.5 rounded-lg bg-emerald-500/20 border border-emerald-500/30 text-emerald-300">
+              <div>Rolê 🎉</div>
+              <div class="text-xs font-extrabold text-emerald-400">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LISTA DE CARDS DE OPORTUNIDADE / ALVOS -->
+        <div class="space-y-2.5" id="targets-list">
+          
+          <!-- Card 1: Gabriela (🔥 Quente - Flerte Rendendo) -->
+          <div class="target-card p-3 rounded-2xl bg-dark-surface dark:bg-dark-surface light:bg-light-surface border border-dark-border dark:border-dark-border light:border-light-border hover:border-brand-purple/50 transition-all space-y-2.5" data-temp="hot">
+            <div class="flex items-start justify-between">
+              <div class="flex items-center gap-2.5">
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80" class="w-11 h-11 rounded-full object-cover ring-2 ring-brand-rose">
+                  <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-brand-rose text-[8px] flex items-center justify-center text-white">🔥</span>
+                </div>
+                <div>
+                  <div class="flex items-center gap-1.5">
+                    <h3 class="font-bold text-sm">Gabriela Lima</h3>
+                    <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-brand-purple/15 text-brand-purple">A Sereia</span>
+                  </div>
+                  <p class="text-[11px] text-dark-muted">Última msg: <em>"Amei o café que você indicou haha"</em></p>
+                </div>
+              </div>
+              <span class="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                Há 2h
+              </span>
+            </div>
+
+            <!-- Métricas Rápidas do Alvo (Mini Gauges) -->
+            <div class="grid grid-cols-3 gap-2 pt-1 text-[10px] border-t border-dark-border/60 dark:border-dark-border/60 light:border-light-border/60">
+              <div class="flex items-center justify-between px-2 py-1 rounded-lg bg-dark-card dark:bg-dark-card light:bg-slate-100">
+                <span class="text-dark-muted">Mistério</span>
+                <strong class="text-brand-purple font-mono">82%</strong>
+              </div>
+              <div class="flex items-center justify-between px-2 py-1 rounded-lg bg-dark-card dark:bg-dark-card light:bg-slate-100">
+                <span class="text-dark-muted">Tensão</span>
+                <strong class="text-brand-rose font-mono">68%</strong>
+              </div>
+              <div class="flex items-center justify-between px-2 py-1 rounded-lg bg-dark-card dark:bg-dark-card light:bg-slate-100">
+                <span class="text-dark-muted">Interesse</span>
+                <strong class="text-brand-emerald font-mono">90%</strong>
+              </div>
+            </div>
+
+            <!-- Ações Rápidas: Chamar Mentor com Nome Próprio -->
+            <div class="flex items-center gap-2 pt-1">
+              <button onclick="consultAIForTarget('Gabriela Lima', 'flerte')" class="flex-1 py-1.5 rounded-xl grad-brand text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-brand-purple/20 active:scale-95 transition-all">
+                <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
+                <span class="btn-mentor-action-text">Conselho do Don Juan</span>
+              </button>
+              <button onclick="showToast('Dossiê completo de Gabriela')" class="px-3 py-1.5 rounded-xl bg-dark-card dark:bg-dark-card light:bg-slate-200 text-xs font-medium hover:bg-dark-border transition-all" title="Ver Dossiê">
+                <i class="fa-solid fa-address-card"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Card 2: Camila (⚡ Morno - Tentando Marcar) -->
+          <div class="target-card p-3 rounded-2xl bg-dark-surface dark:bg-dark-surface light:bg-light-surface border border-dark-border dark:border-dark-border light:border-light-border hover:border-brand-purple/50 transition-all space-y-2.5" data-temp="warm">
+            <div class="flex items-start justify-between">
+              <div class="flex items-center gap-2.5">
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80" class="w-11 h-11 rounded-full object-cover ring-2 ring-brand-amber">
+                  <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-brand-amber text-[8px] flex items-center justify-center text-white">⚡</span>
+                </div>
+                <div>
+                  <div class="flex items-center gap-1.5">
+                    <h3 class="font-bold text-sm">Camila Rocha</h3>
+                    <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-500/15 text-amber-400">Coquete</span>
+                  </div>
+                  <p class="text-[11px] text-dark-muted">Fase: <strong>Tentando Marcar</strong></p>
+                </div>
+              </div>
+              <span class="text-[10px] text-amber-400 font-semibold">Ontem</span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 pt-1 text-[10px] border-t border-dark-border/60 dark:border-dark-border/60 light:border-light-border/60">
+              <div class="flex items-center justify-between px-2 py-1 rounded-lg bg-dark-card dark:bg-dark-card light:bg-slate-100">
+                <span class="text-dark-muted">Mistério</span>
+                <strong class="text-brand-purple font-mono">60%</strong>
+              </div>
+              <div class="flex items-center justify-between px-2 py-1 rounded-lg bg-dark-card dark:bg-dark-card light:bg-slate-100">
+                <span class="text-dark-muted">Tensão</span>
+                <strong class="text-brand-rose font-mono">45%</strong>
+              </div>
+              <div class="flex items-center justify-between px-2 py-1 rounded-lg bg-dark-card dark:bg-dark-card light:bg-slate-100">
+                <span class="text-dark-muted">Interesse</span>
+                <strong class="text-brand-amber font-mono">65%</strong>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 pt-1">
+              <button onclick="consultAIForTarget('Camila Rocha', 'convite')" class="flex-1 py-1.5 rounded-xl bg-dark-card dark:bg-dark-card light:bg-slate-200 hover:bg-brand-purple hover:text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all">
+                <i class="fa-solid fa-calendar-check text-[10px] text-brand-purple"></i>
+                <span class="btn-mentor-action-text">Conselho do Don Juan</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Card 3: Juliana (❄️ Esfriando - Alerta de Recuo) -->
+          <div class="target-card p-3 rounded-2xl bg-dark-surface dark:bg-dark-surface light:bg-light-surface border border-brand-rose/40 space-y-2.5" data-temp="cold">
+            <div class="flex items-start justify-between">
+              <div class="flex items-center gap-2.5">
+                <div class="relative">
+                  <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?w=120&auto=format&fit=crop&q=80" class="w-11 h-11 rounded-full object-cover ring-2 ring-sky-400">
+                  <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-sky-500 text-[8px] flex items-center justify-center text-white">❄️</span>
+                </div>
+                <div>
+                  <div class="flex items-center gap-1.5">
+                    <h3 class="font-bold text-sm">Juliana Mendes</h3>
+                    <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-sky-500/15 text-sky-400">Natural</span>
+                  </div>
+                  <p class="text-[11px] text-rose-400 font-medium">⚠️ 4 dias no vácuo (Alerta Recuo)</p>
+                </div>
+              </div>
+              <span class="text-[10px] text-dark-muted">4d atrás</span>
+            </div>
+
+            <!-- Banner de Alerta Proativo Tático -->
+            <div class="p-2 rounded-xl bg-brand-rose/10 border border-brand-rose/20 text-[11px] text-rose-300 flex items-center gap-2">
+              <i class="fa-solid fa-shield-halved text-brand-rose text-sm shrink-0"></i>
+              <span><strong>Ação recomendada:</strong> Não mande mensagem agora. Espere 48h para recuperar o mistério.</span>
+            </div>
+
+            <div class="flex items-center gap-2 pt-1">
+              <button onclick="consultAIForTarget('Juliana Mendes', 'recuo')" class="flex-1 py-1.5 rounded-xl bg-brand-rose/20 text-rose-300 border border-brand-rose/30 text-xs font-bold flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-clock-rotate-left text-[10px]"></i>
+                <span>Tática de Reversão</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ============================================== -->
+      <!-- TELA 2: ESTRATEGISTA PESSOAL (DON JUAN / CLEÓPATRA) -->
+      <!-- ============================================== -->
+      <section id="screen-chat" class="screen-fade space-y-4 hidden">
+        
+        <!-- CABEÇALHO DO ESTRATEGISTA COM NOME E SELETOR -->
+        <div class="p-3.5 rounded-2xl bg-dark-surface dark:bg-dark-surface light:bg-light-surface border border-dark-border dark:border-dark-border light:border-light-border space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-dark-muted flex items-center gap-1.5">
+              <i class="fa-solid fa-crown text-brand-purple"></i>
+              Seu Estrategista Pessoal:
+            </span>
+            <span class="text-[10px] px-2 py-0.5 rounded-full bg-brand-purple/20 text-brand-purple font-semibold" id="mentor-badge-status">Ativo pelo Perfil</span>
+          </div>
+
+          <!-- Switch Don Juan / Cleópatra (Sempre chamados pelos nomes) -->
+          <div class="grid grid-cols-2 gap-2">
+            <!-- Don Juan Button -->
+            <button onclick="selectMentor('donjuan', true)" id="btn-agent-donjuan" class="agent-card p-2.5 rounded-xl border-2 border-brand-purple bg-brand-purple/10 flex items-center gap-2.5 transition-all text-left">
+              <div class="w-9 h-9 rounded-full grad-donjuan flex items-center justify-center text-white text-sm shrink-0 shadow-md">
+                👑
+              </div>
+              <div class="overflow-hidden">
+                <div class="font-extrabold text-xs text-white dark:text-white light:text-slate-900">Don Juan</div>
+                <div class="text-[9px] text-indigo-300 truncate">Mentor de Conquistas</div>
+              </div>
+            </button>
+
+            <!-- Cleópatra Button -->
+            <button onclick="selectMentor('cleopatra', true)" id="btn-agent-cleopatra" class="agent-card p-2.5 rounded-xl border border-dark-border dark:border-dark-border light:border-light-border bg-dark-card dark:bg-dark-card light:bg-slate-100 flex items-center gap-2.5 transition-all text-left opacity-70">
+              <div class="w-9 h-9 rounded-full grad-cleopatra flex items-center justify-center text-white text-sm shrink-0 shadow-md">
+                ✨
+              </div>
+              <div class="overflow-hidden">
+                <div class="font-extrabold text-xs">Cleópatra</div>
+                <div class="text-[9px] text-pink-400 truncate">Mentora de Magnetismo</div>
+              </div>
+            </button>
+          </div>
+          <p class="text-[9px] text-dark-muted text-center pt-0.5">
+            Definido automaticamente pelo seu perfil. Novas personalidades poderão ser configuradas futuramente.
+          </p>
+        </div>
+
+        <!-- Seletor do Alvo que está sendo analisado -->
+        <div class="flex items-center justify-between px-1 text-xs">
+          <span class="text-dark-muted">Alvo em análise:</span>
+          <select id="chat-target-select" onchange="changeChatTarget()" class="bg-dark-surface dark:bg-dark-surface light:bg-light-surface border border-dark-border dark:border-dark-border light:border-light-border rounded-lg px-2.5 py-1 text-xs font-bold text-brand-purple focus:outline-none">
+            <option value="Gabriela Lima">Gabriela Lima (🔥 Quente)</option>
+            <option value="Camila Rocha">Camila Rocha (⚡ Morno)</option>
+            <option value="Juliana Mendes">Juliana Mendes (❄️ Esfriando)</option>
+          </select>
+        </div>
+
+        <!-- HISTÓRICO DE MENSAGENS DO MENTOR -->
+        <div class="space-y-3" id="chat-stream">
+          
+          <!-- Mensagem de Saudação -->
+          <div class="flex gap-2.5 items-start">
+            <div class="w-8 h-8 rounded-full grad-donjuan flex items-center justify-center text-white text-xs shrink-0 shadow" id="current-agent-avatar">
+              👑
+            </div>
+            <div class="flex-1 p-3 rounded-2xl rounded-tl-sm bg-dark-surface dark:bg-dark-surface light:bg-light-surface border border-dark-border dark:border-dark-border light:border-light-border text-xs space-y-1.5">
+              <div class="flex items-center justify-between text-[10px] text-dark-muted">
+                <strong class="text-indigo-400" id="current-agent-name">Don Juan</strong>
+                <span>Agora</span>
+              </div>
+              <p id="current-agent-greeting">
+                Pronto para o jogo. Analisei o dossiê da <strong>Gabriela</strong>. Ela demonstrou abertura falando do café. Me mande um print ou o que ela disse para eu formular as 3 melhores jogadas táticas.
+              </p>
+            </div>
+          </div>
+
+          <!-- Sugestão Estruturada (Exemplo Gerado pelo RAG) -->
+          <div class="p-3.5 rounded-2xl bg-dark-card dark:bg-dark-card light:bg-slate-50 border border-brand-purple/30 space-y-3 shadow-lg shadow-purple-950/20">
+            
+            <!-- Diagnóstico da Base de Conhecimento -->
+            <div class="flex items-center justify-between border-b border-dark-border/60 pb-2">
+              <span class="text-[11px] font-bold text-brand-purple flex items-center gap-1.5">
+                <i class="fa-solid fa-brain"></i>
+                Diagnóstico Estratégico (RAG)
+              </span>
+              <span class="text-[9px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">Momento: Escalada</span>
+            </div>
+
+            <p class="text-xs text-dark-text dark:text-dark-text light:text-slate-700 leading-relaxed">
+              Ela usou <em>"amei"</em> e <em>"haha"</em> na mesma frase. Isso sinaliza <strong>receptividade alta</strong> e conforto. O erro de 90% das pessoas agora é ficar jogando papo furado infinito. A recomendação tática é usar o gancho do café para avançar ao convite real com data e local.
+            </p>
+
+            <!-- 3 Opções de Mensagens Prontas (Com Botão Copiar para WhatsApp) -->
+            <div class="space-y-2 pt-1">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-dark-muted">3 Opções de Resposta:</span>
+
+              <!-- Opção 1: Natural & Envolvente -->
+              <div class="p-2.5 rounded-xl bg-dark-surface dark:bg-dark-surface light:bg-white border border-dark-border hover:border-brand-purple/60 transition-all space-y-1.5">
+                <div class="flex items-center justify-between text-[10px]">
+                  <span class="font-bold text-indigo-400">Opção 1: Natural & Desafiadora</span>
+                  <button onclick="copyToClipboard('Sabia que você tinha bom gosto! Mas aposto que você ainda não provou a torta de pistache de lá. Sexta agora a gente vai tirar a prova.')" class="px-2 py-0.5 rounded bg-brand-purple text-white text-[10px] font-bold flex items-center gap-1 active:scale-90 transition-all">
+                    <i class="fa-brands fa-whatsapp"></i> Copiar
+                  </button>
+                </div>
+                <p class="text-xs italic text-slate-300 dark:text-slate-300 light:text-slate-800">
+                  "Sabia que você tinha bom gosto! Mas aposto que você ainda não provou a torta de pistache de lá. Sexta agora a gente vai tirar a prova."
+                </p>
+              </div>
+
+              <!-- Opção 2: Misteriosa / Espirituosa -->
+              <div class="p-2.5 rounded-xl bg-dark-surface dark:bg-dark-surface light:bg-white border border-dark-border hover:border-brand-purple/60 transition-all space-y-1.5">
+                <div class="flex items-center justify-between text-[10px]">
+                  <span class="font-bold text-purple-400">Opção 2: Espirituosa & Curta</span>
+                  <button onclick="copyToClipboard('Esse café tem esse poder mesmo. E olha que você ainda não viu o meu lugar secreto pra tomar drinks.')" class="px-2 py-0.5 rounded bg-brand-purple text-white text-[10px] font-bold flex items-center gap-1 active:scale-90 transition-all">
+                    <i class="fa-brands fa-whatsapp"></i> Copiar
+                  </button>
+                </div>
+                <p class="text-xs italic text-slate-300 dark:text-slate-300 light:text-slate-800">
+                  "Esse café tem esse poder mesmo. E olha que você ainda não viu o meu lugar secreto pra tomar drinks."
+                </p>
+              </div>
+
+              <!-- Opção 3: Recuo Calibrado -->
+              <div class="p-2.5 rounded-xl bg-dark-surface dark:bg-dark-surface light:bg-white border border-dark-border hover:border-brand-purple/60 transition-all space-y-1.5">
+                <div class="flex items-center justify-between text-[10px]">
+                  <span class="font-bold text-slate-400">Opção 3: Pausa & Desapego</span>
+                  <button onclick="copyToClipboard('Que bom que curtiu! Tô numa correria hoje, mais tarde te conto o que você precisa pedir da próxima vez 😉')" class="px-2 py-0.5 rounded bg-brand-purple text-white text-[10px] font-bold flex items-center gap-1 active:scale-90 transition-all">
+                    <i class="fa-brands fa-whatsapp"></i> Copiar
+                  </button>
+                </div>
+                <p class="text-xs italic text-slate-300 dark:text-slate-300 light:text-slate-800">
+                  "Que bom que curtiu! Tô numa correria hoje, mais tarde te conto o que você precisa pedir da próxima vez 😉"
+                </p>
+              </div>
+
+            </div>
+
+            <!-- Tática da Base de Conhecimento (Sem citar livros) -->
+            <div class="p-2 rounded-xl bg-indigo-950/40 border border-indigo-800/40 text-[10px] text-indigo-200 flex items-start gap-2">
+              <i class="fa-solid fa-lightbulb text-brand-amber mt-0.5"></i>
+              <span><strong>Princípio Aplicado:</strong> Fechamento Progressivo. Quando houver sinal claro de interesse, troque conversas digitais por um compromisso presencial leve sem criar pressão.</span>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- INPUT DE MENSAGEM / UPLOAD DE PRINT -->
+        <div class="pt-2 sticky bottom-0 bg-dark-bg dark:bg-dark-bg light:bg-light-bg pb-2">
+          <div class="p-1.5 rounded-2xl bg-dark-surface dark:bg-dark-surface light:bg-light-surface border border-dark-border dark:border-dark-border light:border-light-border flex items-center gap-1.5 shadow-lg">
+            
+            <!-- Botão Anexar Print (Simula Share Intent do WhatsApp) -->
+            <button onclick="simulateUploadPrint()" class="w-8 h-8 rounded-xl bg-dark-card dark:bg-dark-card light:bg-slate-200 text-brand-purple flex items-center justify-center text-xs hover:scale-105 active:scale-90 transition-all" title="Anexar Print do WhatsApp">
+              <i class="fa-solid fa-camera"></i>
+            </button>
+
+            <!-- Input de Texto -->
+            <input type="text" id="ai-user-input" placeholder="Cole o que ela(e) falou ou mande print..." class="flex-1 bg-transparent px-2 text-xs focus:outline-none placeholder:text-dark-muted">
+
+            <!-- Botão Enviar com Consumo de Crédito -->
+            <button onclick="sendUserMessageToAI()" class="w-8 h-8 rounded-xl grad-brand text-white flex items-center justify-center text-xs hover:scale-105 active:scale-90 transition-all shadow-md shadow-brand-purple/30">
+              <i class="fa-solid fa-arrow-up"></i>
+            </button>
+          </div>
+          <p class="text-[9px] text-center text-dark-muted mt-1">Consome 1 crédito da franquia ou saldo avulso</p>
+        </div>
+
+      </section>
+
+      <!-- ============================================== -->
+      <!-- TELA 3: CADASTROS (MEU PERFIL & ALVOS) -->
+      <!-- ============================================== -->
+      <section id="screen-cadastro" class="screen-fade space-y-4 hidden">
+        
+        <!-- Toggle: Meu Perfil vs Novo Alvo -->
+        <div class="grid grid-cols-2 p-1 rounded-xl bg-dark-surface dark:bg-dark-surface light:bg-light-surface border border-dark-border text-xs font-bold">
+          <button onclick="toggleCadastroSubtab('perfil')" id="subtab-perfil" class="py-1.5 rounded-lg bg-brand-purple text-white transition-all">Meu Perfil</button>
+          <button onclick="toggleCadastroSubtab('alvo')" id="subtab-alvo" class="py-1.5 rounded-lg text-dark-muted transition-all">Novo Alvo</button>
+        </div>
+
+        <!-- FORMULÁRIO 1: MEU PERFIL (CADASTRO PRÓPRIO COM CARACTERÍSTICAS) -->
+        <div id="form-meu-perfil" class="space-y-3.5">
+          <div class="p-4 rounded-2xl bg-dark-surface dark:bg-dark-surface light:bg-light-surface border border-dark-border space-y-3">
+            
+            <div class="flex items-center gap-3">
+              <div class="relative">
+                <img id="user-avatar-preview" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80" class="w-14 h-14 rounded-full object-cover ring-2 ring-brand-purple">
+                <button class="absolute bottom-0 right-0 w-5 h-5 rounded-full bg-brand-purple text-white text-[9px] flex items-center justify-center shadow">
+                  <i class="fa-solid fa-camera"></i>
+                </button>
+              </div>
+              <div>
+                <h3 class="font-bold text-sm" id="user-display-name">Lucas D.</h3>
+                <p class="text-xs text-brand-purple font-semibold" id="user-mentor-active-tag">Mentor Ativo: Don Juan 👑</p>
+                <span class="text-[10px] text-dark-muted">Assinatura Pro • 14 Créditos</span>
+              </div>
+            </div>
+
+            <!-- Campos do Usuário com Auto-atribuição Don Juan / Cleópatra -->
+            <div class="space-y-2.5 pt-2 text-xs">
+              <div>
+                <label class="font-bold text-dark-muted text-[11px] block mb-1">Seu Nome / Apelido</label>
+                <input type="text" id="profile-name-input" value="Lucas" class="w-full px-3 py-2 rounded-xl bg-dark-card dark:bg-dark-card light:bg-slate-100 border border-dark-border focus:outline-none focus:border-brand-purple">
+              </div>
+
+              <!-- GÊNERO & ORIENTAÇÃO: GATILHO AUTOMÁTICO DON JUAN / CLEÓPATRA -->
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="font-bold text-dark-muted text-[11px] block mb-1">Seu Gênero</label>
+                  <select id="profile-gender-select" onchange="onGenderOrOrientationChange()" class="w-full px-2.5 py-2 rounded-xl bg-dark-card dark:bg-dark-card light:bg-slate-100 border border-dark-border focus:outline-none font-semibold">
+                    <option value="masculino" selected>Masculino</option>
+                    <option value="feminino">Feminino</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="font-bold text-dark-muted text-[11px] block mb-1">Interesse</label>
+                  <select id="profile-orientation-select" onchange="onGenderOrOrientationChange()" class="w-full px-2.5 py-2 rounded-xl bg-dark-card dark:bg-dark-card light:bg-slate-100 border border-dark-border focus:outline-none font-semibold">
+                    <option value="mulheres" selected>Mulheres</option>
+                    <option value="homens">Homens</option>
+                    <option value="ambos">Ambos</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- BANNER DE CONFIRMAÇÃO DO MENTOR VINCULADO -->
+              <div id="mentor-profile-banner" class="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-between text-[11px]">
+                <div class="flex items-center gap-2">
+                  <span class="text-base" id="mentor-banner-icon">👑</span>
+                  <div>
+                    <span class="text-dark-muted block text-[10px]">Personalidade Atribuída:</span>
+                    <strong class="text-indigo-400 font-bold" id="mentor-banner-title">Don Juan (Homem)</strong>
+                  </div>
+                </div>
+                <span class="text-[9px] px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-bold">Automático</span>
+              </div>
+
+              <div>
+                <label class="font-bold text-dark-muted text-[11px] block mb-1">Seu Arquétipo Predominante</label>
+                <select class="w-full px-2.5 py-2 rounded-xl bg-dark-card dark:bg-dark-card light:bg-slate-100 border border-dark-border focus:outline-none font-medium">
+                  <option selected>O Encantador (Foco no outro, escuta ativa)</option>
+                  <option>O Dandi (Estilo marcante, ambiguidade)</option>
+                  <option>O Natural (Autenticidade e leveza)</option>
+                  <option>O Amante Ideal (Romântico e atento aos detalhes)</option>
+                  <option>O Carismático (Presença forte e confiança)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="font-bold text-dark-muted text-[11px] block mb-1">Sua Linguagem do Amor Principal</label>
+                <div class="grid grid-cols-3 gap-1.5 text-center text-[10px] font-bold">
+                  <button class="py-1.5 rounded-lg bg-brand-purple/20 text-brand-purple border border-brand-purple/40">Tempo de Qualidade</button>
+                  <button class="py-1.5 rounded-lg bg-dark-card dark:bg-dark-card light:bg-slate-100 text-dark-muted">Palavras</button>
+                  <button class="py-1.5 rounded-lg bg-dark-card dark:bg-dark-card light:bg-slate-100 text-dark-muted">Toque Físico</button>
+                </div>
+              </div>
+
+              <button onclick="saveProfileChanges()" class="w-full py-2.5 rounded-xl grad-brand text-white font-bold text-xs shadow-md mt-2 active:scale-95 transition-all">
+                Salvar Alterações
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- FORMULÁRIO 2: CADASTRO DE NOVO ALVO -->
+        <div id="form-novo-alvo" class="space-y-3.5 hidden">
+          <div class="p-4 rounded-2xl bg-dark-surface dark:bg-dark-surface light:bg-light-surface border border-dark-border space-y-3">
+            <h3 class="font-bold text-sm flex items-center gap-1.5">
+              <i class="fa-solid fa-user-plus text-brand-purple"></i>
+              Cadastrar Novo Alvo
+            </h3>
+
+            <div class="space-y-2.5 text-xs">
+              <div>
+                <label class="font-bold text-dark-muted text-[11px] block mb-1">Nome ou Apelido *</label>
+                <input type="text" id="new-target-name" placeholder="Ex: Isabella, Beatriz..." class="w-full px-3 py-2 rounded-xl bg-dark-card dark:bg-dark-card light:bg-slate-100 border border-dark-border focus:outline-none focus:border-brand-purple">
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="font-bold text-dark-muted text-[11px] block mb-1">Onde Conheceu?</label>
+                  <select class="w-full px-2.5 py-2 rounded-xl bg-dark-card dark:bg-dark-card light:bg-slate-100 border border-dark-border focus:outline-none">
+                    <option>Instagram</option>
+                    <option>WhatsApp</option>
+                    <option>Tinder / Bumble</option>
+                    <option>Festa / Balada</option>
+                    <option>Amigos em comum</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="font-bold text-dark-muted text-[11px] block mb-1">Fase Inicial</label>
+                  <select class="w-full px-2.5 py-2 rounded-xl bg-dark-card dark:bg-dark-card light:bg-slate-100 border border-dark-border focus:outline-none">
+                    <option>De Olho</option>
+                    <option selected>Puxando Papo</option>
+                    <option>Flerte Rendendo</option>
+                    <option>Tentando Marcar</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="font-bold text-dark-muted text-[11px] block mb-1">Arquétipo do Alvo</label>
+                <select class="w-full px-2.5 py-2 rounded-xl bg-dark-card dark:bg-dark-card light:bg-slate-100 border border-dark-border focus:outline-none font-medium">
+                  <option>A Sereia / Conquistador (Intensa, magnética)</option>
+                  <option>A Coquete (Provoca, brinca e se afasta)</option>
+                  <option>O Natural (Espontânea, sem joguinhos)</option>
+                  <option>A Estrela (Adora atenção e validação)</option>
+                  <option>Descobrir depois com base nas conversas</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="font-bold text-dark-muted text-[11px] block mb-1">Interesses ou Detalhes Identificados</label>
+                <input type="text" placeholder="Ex: ama café especial, curte pilates, tem gato..." class="w-full px-3 py-2 rounded-xl bg-dark-card dark:bg-dark-card light:bg-slate-100 border border-dark-border focus:outline-none">
+              </div>
+
+              <button onclick="createNewTarget()" class="w-full py-2.5 rounded-xl grad-brand text-white font-bold text-xs shadow-md mt-2 active:scale-95 transition-all">
+                Salvar no Pipeline
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ============================================== -->
+      <!-- TELA 4: INDICADORES & METRICAS (APP INDICADORES) -->
+      <!-- ============================================== -->
+      <section id="screen-indicadores" class="screen-fade space-y-4 hidden">
+        
+        <div>
+          <h2 class="text-lg font-bold tracking-tight">Painel de Indicadores</h2>
+          <p class="text-xs text-dark-muted">Métricas comportamentais das suas oportunidades</p>
+        </div>
+
+        <!-- INDICADOR 1: TERMÔMETRO DE TENSÃO -->
+        <div class="p-3.5 rounded-2xl bg-dark-surface dark:bg-dark-surface light:bg-light-surface border border-dark-border space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold flex items-center gap-1.5">
+              <i class="fa-solid fa-temperature-half text-brand-rose"></i>
+              Termômetro de Tensão Média
+            </span>
+            <span class="text-xs font-extrabold text-brand-rose">68° / 100° (Ideal)</span>
+          </div>
+
+          <!-- Barra de Progresso Visual -->
+          <div class="w-full h-3 rounded-full bg-dark-card dark:bg-dark-card light:bg-slate-200 overflow-hidden p-0.5">
+            <div class="h-full rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-rose-500 w-[68%]"></div>
+          </div>
+
+          <p class="text-[10px] text-dark-muted">
+            Zona de conforto evitada. Suas mensagens mantêm o interesse vivo sem cair na friendzone.
+          </p>
+        </div>
+
+        <!-- GRID DE 2 GAUGES: MISTÉRIO & ESCASSEZ -->
+        <div class="grid grid-cols-2 gap-3">
+          
+          <!-- Gauge Mistério -->
+          <div class="p-3 rounded-2xl bg-dark-surface dark:bg-dark-surface light:bg-light-surface border border-dark-border text-center space-y-1">
+            <span class="text-[10px] font-bold text-dark-muted block">Índice de Mistério</span>
+            <div class="relative w-16 h-16 mx-auto flex items-center justify-center">
+              <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                <path class="text-dark-card stroke-current" stroke-width="3.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path class="text-brand-purple stroke-current" stroke-dasharray="78, 100" stroke-width="3.5" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              </svg>
+              <span class="absolute text-sm font-black font-mono text-brand-purple">78%</span>
+            </div>
+            <span class="text-[9px] text-emerald-400 font-semibold block">Alta atratividade</span>
+          </div>
+
+          <!-- Gauge Escassez -->
+          <div class="p-3 rounded-2xl bg-dark-surface dark:bg-dark-surface light:bg-light-surface border border-dark-border text-center space-y-1">
+            <span class="text-[10px] font-bold text-dark-muted block">Índice de Escassez</span>
+            <div class="relative w-16 h-16 mx-auto flex items-center justify-center">
+              <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                <path class="text-dark-card stroke-current" stroke-width="3.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                <path class="text-brand-rose stroke-current" stroke-dasharray="62, 100" stroke-width="3.5" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+              </svg>
+              <span class="absolute text-sm font-black font-mono text-brand-rose">62%</span>
+            </div>
+            <span class="text-[9px] text-amber-400 font-semibold block">Disponibilidade calibrada</span>
+          </div>
+
+        </div>
+
+        <!-- HISTÓRICO DE VELOCIDADE & TAXA DE CONVERSÃO -->
+        <div class="p-3.5 rounded-2xl bg-dark-surface dark:bg-dark-surface light:bg-light-surface border border-dark-border space-y-2.5">
+          <span class="text-xs font-bold block">Velocidade no Pipeline</span>
+
+          <div class="space-y-2 text-xs">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="text-dark-muted">Tempo médio até o 1º date:</span>
+              <strong class="font-mono text-emerald-400">8.5 dias</strong>
+            </div>
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="text-dark-muted">Alvos convertidos em 30 dias:</span>
+              <strong class="font-mono text-brand-purple">3 dates marcados</strong>
+            </div>
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="text-dark-muted">Taxa de resposta positiva aos convites:</span>
+              <strong class="font-mono text-indigo-400">75%</strong>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ============================================== -->
+      <!-- TELA 5: PLANO, ASSINATURA & CRÉDITOS DE IA -->
+      <!-- ============================================== -->
+      <section id="screen-carteira" class="screen-fade space-y-4 hidden">
+        
+        <div>
+          <h2 class="text-lg font-bold tracking-tight">Assinatura & Créditos</h2>
+          <p class="text-xs text-dark-muted">Controle o seu plano e saldo de inteligência</p>
+        </div>
+
+        <!-- CARD DO STATUS DA ASSINATURA -->
+        <div class="p-4 rounded-2xl grad-brand text-white space-y-3 shadow-xl shadow-purple-900/30">
+          <div class="flex items-center justify-between">
+            <span class="px-2 py-0.5 rounded-full bg-white/20 text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-md">
+              Plano Pro Ativo
+            </span>
+            <span class="text-xs font-semibold opacity-90">Renova em 14 dias</span>
+          </div>
+
+          <div>
+            <h3 class="text-xl font-black">Seduction Master</h3>
+            <p class="text-xs opacity-85">Acesso ilimitado ao CRM, Pipeline e ao seu estrategista pessoal.</p>
+          </div>
+
+          <!-- Barra de Uso da Franquia Mensal -->
+          <div class="space-y-1 pt-1">
+            <div class="flex justify-between text-[10px] font-bold">
+              <span>Franquia Mensal de Análises</span>
+              <span>48 / 100 usadas</span>
+            </div>
+            <div class="w-full h-2 rounded-full bg-black/25 overflow-hidden">
+              <div class="h-full rounded-full bg-white w-[48%]"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARTEIRA DE CRÉDITOS EXCEDENTES -->
+        <div class="p-4 rounded-2xl bg-dark-surface dark:bg-dark-surface light:bg-light-surface border border-dark-border space-y-3">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <div class="w-9 h-9 rounded-xl bg-brand-purple/20 text-brand-purple flex items-center justify-center text-sm font-bold">
+                <i class="fa-solid fa-coins"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-xs">Créditos Adicionais</h4>
+                <p class="text-[10px] text-dark-muted">Usados quando a franquia esgota</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-lg font-black font-mono text-brand-purple" id="wallet-balance-display">14</span>
+              <span class="text-[10px] text-dark-muted block">créditos</span>
+            </div>
+          </div>
+
+          <!-- LOJA DE PACOTES DE CRÉDITOS -->
+          <div class="space-y-2 pt-2 border-t border-dark-border">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-dark-muted">Recarregar Créditos Rápidos:</span>
+
+            <div class="grid grid-cols-3 gap-2">
+              <!-- Pacote 1 -->
+              <button onclick="simulateBuyCredits(25, 19.90)" class="p-2.5 rounded-xl bg-dark-card dark:bg-dark-card light:bg-slate-100 border border-dark-border hover:border-brand-purple text-center active:scale-95 transition-all">
+                <div class="font-extrabold text-xs text-brand-purple">+25</div>
+                <div class="text-[10px] font-bold text-dark-text mt-0.5">R$ 19,90</div>
+                <div class="text-[8px] text-dark-muted">SOS</div>
+              </button>
+
+              <!-- Pacote 2 (Destaque) -->
+              <button onclick="simulateBuyCredits(80, 49.90)" class="p-2.5 rounded-xl bg-brand-purple/15 border-2 border-brand-purple text-center active:scale-95 transition-all relative">
+                <span class="absolute -top-2 left-1/2 -translate-x-1/2 px-1.5 py-0.2 rounded bg-brand-rose text-[7px] font-extrabold text-white uppercase">Popular</span>
+                <div class="font-extrabold text-xs text-brand-purple">+80</div>
+                <div class="text-[10px] font-bold text-dark-text mt-0.5">R$ 49,90</div>
+                <div class="text-[8px] text-brand-purple font-semibold">Mais Vendido</div>
+              </button>
+
+              <!-- Pacote 3 -->
+              <button onclick="simulateBuyCredits(200, 99.90)" class="p-2.5 rounded-xl bg-dark-card dark:bg-dark-card light:bg-slate-100 border border-dark-border hover:border-brand-purple text-center active:scale-95 transition-all">
+                <div class="font-extrabold text-xs text-brand-purple">+200</div>
+                <div class="text-[10px] font-bold text-dark-text mt-0.5">R$ 99,90</div>
+                <div class="text-[8px] text-dark-muted">Pro Master</div>
+              </button>
+            </div>
+
+            <p class="text-[9px] text-center text-dark-muted pt-1">
+              <i class="fa-brands fa-apple"></i> Apple In-App Purchase & Google Play Billing integrados
+            </p>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- BARRA DE NAVEGAÇÃO INFERIOR NATIVA (BOTTOM TABS) -->
+    <nav class="absolute bottom-0 left-0 right-0 h-16 border-t border-dark-border dark:border-dark-border light:border-light-border bg-dark-surface/95 dark:bg-dark-surface/95 light:bg-white/95 backdrop-blur-md flex items-center justify-around px-2 z-30 select-none">
+      
+      <!-- Tab 1: CRM / Oportunidades -->
+      <button onclick="switchTab('crm')" id="tab-btn-crm" class="tab-btn flex flex-col items-center gap-1 text-brand-purple transition-all">
+        <i class="fa-solid fa-users text-base"></i>
+        <span class="text-[10px] font-bold">Alvos</span>
+      </button>
+
+      <!-- Tab 2: Mentor Estratégico (Don Juan ou Cleópatra) -->
+      <button onclick="switchTab('chat')" id="tab-btn-chat" class="tab-btn flex flex-col items-center gap-1 text-dark-muted transition-all">
+        <div class="relative">
+          <span id="tab-icon-mentor" class="text-base">👑</span>
+          <span class="absolute -top-1 -right-1.5 w-2 h-2 rounded-full bg-brand-rose"></span>
+        </div>
+        <span class="text-[10px] font-bold" id="tab-label-mentor">Don Juan</span>
+      </button>
+
+      <!-- Tab 3: Cadastro de Alvo / Perfil -->
+      <button onclick="switchTab('cadastro')" id="tab-btn-cadastro" class="tab-btn flex flex-col items-center gap-1 text-dark-muted transition-all">
+        <i class="fa-solid fa-id-card text-base"></i>
+        <span class="text-[10px] font-bold">Cadastros</span>
+      </button>
+
+      <!-- Tab 4: Indicadores & Métricas -->
+      <button onclick="switchTab('indicadores')" id="tab-btn-indicadores" class="tab-btn flex flex-col items-center gap-1 text-dark-muted transition-all">
+        <i class="fa-solid fa-chart-pie text-base"></i>
+        <span class="text-[10px] font-bold">Métricas</span>
+      </button>
+
+      <!-- Tab 5: Plano & Créditos -->
+      <button onclick="switchTab('carteira')" id="tab-btn-carteira" class="tab-btn flex flex-col items-center gap-1 text-dark-muted transition-all">
+        <i class="fa-solid fa-gem text-base"></i>
+        <span class="text-[10px] font-bold">Créditos</span>
+      </button>
+
+    </nav>
+
+    <!-- TOAST DE FEEDBACK -->
+    <div id="toast" class="absolute top-14 left-4 right-4 z-50 bg-slate-800 dark:bg-slate-800 light:bg-slate-900 text-white px-3 py-2.5 rounded-xl text-xs font-semibold shadow-xl flex items-center justify-between border border-slate-700 pointer-events-none opacity-0 transition-opacity duration-200">
+      <span id="toast-msg">Mensagem</span>
+      <i class="fa-solid fa-circle-check text-brand-emerald"></i>
+    </div>
+
+  </div>
+
+  <!-- JAVASCRIPT DE INTERATIVIDADE DO PROTÓTIPO -->
+  <script>
+    // Estado do Protótipo
+    let currentTheme = 'dark';
+    let currentMentor = 'donjuan'; // 'donjuan' para homens | 'cleopatra' para mulheres
+    let currentCredits = 14;
+
+    // Atualiza relógio do status bar
+    function updateClock() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('status-clock').innerText = `${h}:${m}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Alternar Tema (Claro / Escuro)
+    function toggleTheme() {
+      const html = document.documentElement;
+      const themeLabel = document.getElementById('theme-label');
+      if (html.classList.contains('dark')) {
+        html.classList.remove('dark');
+        html.classList.add('light');
+        currentTheme = 'light';
+        if (themeLabel) themeLabel.innerText = 'Claro';
+      } else {
+        html.classList.remove('light');
+        html.classList.add('dark');
+        currentTheme = 'dark';
+        if (themeLabel) themeLabel.innerText = 'Escuro';
+      }
+    }
+
+    // Alternar Tabs Principais
+    function switchTab(tabName) {
+      const screens = ['crm', 'chat', 'cadastro', 'indicadores', 'carteira'];
+      screens.forEach(s => {
+        const el = document.getElementById(`screen-${s}`);
+        if (el) el.classList.add('hidden');
+        
+        const btn = document.getElementById(`tab-btn-${s}`);
+        if (btn) {
+          btn.classList.remove('text-brand-purple');
+          btn.classList.add('text-dark-muted');
+        }
+      });
+
+      const activeScreen = document.getElementById(`screen-${tabName}`);
+      if (activeScreen) activeScreen.classList.remove('hidden');
+
+      const activeBtn = document.getElementById(`tab-btn-${tabName}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('text-dark-muted');
+        activeBtn.classList.add('text-brand-purple');
+      }
+
+      document.getElementById('main-content').scrollTop = 0;
+    }
+
+    // REGRA FUNDAMENTAL: Seleção e ativação da personalidade (Don Juan ou Cleópatra)
+    function selectMentor(mentorKey, showNotification = true) {
+      currentMentor = mentorKey;
+
+      const btnDonJuan = document.getElementById('btn-agent-donjuan');
+      const btnCleopatra = document.getElementById('btn-agent-cleopatra');
+      const avatar = document.getElementById('current-agent-avatar');
+      const name = document.getElementById('current-agent-name');
+      const greeting = document.getElementById('current-agent-greeting');
+      const tabLabel = document.getElementById('tab-label-mentor');
+      const tabIcon = document.getElementById('tab-icon-mentor');
+      const userMentorTag = document.getElementById('user-mentor-active-tag');
+      const bannerIcon = document.getElementById('mentor-banner-icon');
+      const bannerTitle = document.getElementById('mentor-banner-title');
+      const bannerBox = document.getElementById('mentor-profile-banner');
+
+      // Atualiza botões de ação em todos os cards do CRM
+      const actionTexts = document.querySelectorAll('.btn-mentor-action-text');
+
+      if (mentorKey === 'donjuan') {
+        btnDonJuan.className = 'agent-card p-2.5 rounded-xl border-2 border-brand-purple bg-brand-purple/10 flex items-center gap-2.5 transition-all text-left';
+        btnCleopatra.className = 'agent-card p-2.5 rounded-xl border border-dark-border bg-dark-card flex items-center gap-2.5 transition-all text-left opacity-70';
+        avatar.className = 'w-8 h-8 rounded-full grad-donjuan flex items-center justify-center text-white text-xs shrink-0 shadow';
+        avatar.innerText = '👑';
+        name.innerText = 'Don Juan';
+        name.className = 'text-indigo-400 font-extrabold';
+        greeting.innerHTML = 'Pronto para o jogo. Analisei o dossiê da <strong>Gabriela</strong>. Ela demonstrou abertura falando do café. Me mande um print ou o que ela disse para eu formular as 3 melhores jogadas táticas.';
+        
+        tabLabel.innerText = 'Don Juan';
+        tabIcon.innerText = '👑';
+
+        if (userMentorTag) userMentorTag.innerText = 'Mentor Ativo: Don Juan 👑';
+        if (bannerIcon) bannerIcon.innerText = '👑';
+        if (bannerTitle) bannerTitle.innerText = 'Don Juan (Homem)';
+        if (bannerBox) bannerBox.className = 'p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-between text-[11px]';
+
+        actionTexts.forEach(t => t.innerText = 'Conselho do Don Juan');
+
+        if (showNotification) showToast('Don Juan ativado como seu estrategista!');
+      } else {
+        btnCleopatra.className = 'agent-card p-2.5 rounded-xl border-2 border-brand-rose bg-brand-rose/10 flex items-center gap-2.5 transition-all text-left';
+        btnDonJuan.className = 'agent-card p-2.5 rounded-xl border border-dark-border bg-dark-card flex items-center gap-2.5 transition-all text-left opacity-70';
+        avatar.className = 'w-8 h-8 rounded-full grad-cleopatra flex items-center justify-center text-white text-xs shrink-0 shadow';
+        avatar.innerText = '✨';
+        name.innerText = 'Cleópatra';
+        name.className = 'text-pink-400 font-extrabold';
+        greeting.innerHTML = 'O segredo da atração é fazer o outro sentir que a ideia foi dele. Estou pronta para calibrar a sua comunicação com elegância, mistério e poder magnético. Como posso te orientar?';
+
+        tabLabel.innerText = 'Cleópatra';
+        tabIcon.innerText = '✨';
+
+        if (userMentorTag) userMentorTag.innerText = 'Mentora Ativa: Cleópatra ✨';
+        if (bannerIcon) bannerIcon.innerText = '✨';
+        if (bannerTitle) bannerTitle.innerText = 'Cleópatra (Mulher)';
+        if (bannerBox) bannerBox.className = 'p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-between text-[11px]';
+
+        actionTexts.forEach(t => t.innerText = 'Conselho da Cleópatra');
+
+        if (showNotification) showToast('Cleópatra ativada como sua estrategista!');
+      }
+    }
+
+    // Disparado ao trocar gênero ou orientação no perfil
+    function onGenderOrOrientationChange() {
+      const gender = document.getElementById('profile-gender-select').value;
+      const orientation = document.getElementById('profile-orientation-select').value;
+      const avatarImg = document.getElementById('user-avatar-preview');
+      const nameInput = document.getElementById('profile-name-input');
+      const displayName = document.getElementById('user-display-name');
+
+      if (gender === 'masculino') {
+        selectMentor('donjuan', false);
+        avatarImg.src = 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80';
+        if (nameInput.value === 'Camila') nameInput.value = 'Lucas';
+        displayName.innerText = nameInput.value + ' D.';
+        showToast('Perfil Masculino: Don Juan atribuído automaticamente.');
+      } else if (gender === 'feminino') {
+        selectMentor('cleopatra', false);
+        avatarImg.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80';
+        if (nameInput.value === 'Lucas') nameInput.value = 'Camila';
+        displayName.innerText = nameInput.value + ' M.';
+        showToast('Perfil Feminino: Cleópatra atribuída automaticamente.');
+      }
+    }
+
+    function saveProfileChanges() {
+      const name = document.getElementById('profile-name-input').value;
+      document.getElementById('user-display-name').innerText = name;
+      showToast('Perfil salvo com sucesso!');
+    }
+
+    // Toggle subtab de cadastro (Meu Perfil vs Novo Alvo)
+    function toggleCadastroSubtab(type) {
+      const perfilForm = document.getElementById('form-meu-perfil');
+      const alvoForm = document.getElementById('form-novo-alvo');
+      const btnPerfil = document.getElementById('subtab-perfil');
+      const btnAlvo = document.getElementById('subtab-alvo');
+
+      if (type === 'perfil') {
+        perfilForm.classList.remove('hidden');
+        alvoForm.classList.add('hidden');
+        btnPerfil.className = 'py-1.5 rounded-lg bg-brand-purple text-white transition-all';
+        btnAlvo.className = 'py-1.5 rounded-lg text-dark-muted transition-all';
+      } else {
+        perfilForm.classList.add('hidden');
+        alvoForm.classList.remove('hidden');
+        btnAlvo.className = 'py-1.5 rounded-lg bg-brand-purple text-white transition-all';
+        btnPerfil.className = 'py-1.5 rounded-lg text-dark-muted transition-all';
+      }
+    }
+
+    function openNewTargetForm() {
+      switchTab('cadastro');
+      toggleCadastroSubtab('alvo');
+    }
+
+    // Copiar para a área de transferência (Simula colar no WhatsApp)
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Copiado! Pronto para colar no WhatsApp.');
+      }).catch(() => {
+        showToast('Texto copiado com sucesso!');
+      });
+    }
+
+    // Toast de notificação
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toast-msg');
+      toastMsg.innerText = msg;
+      toast.classList.remove('opacity-0');
+      toast.classList.add('opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0');
+      }, 2400);
+    }
+
+    // Consultar mentor para um alvo específico a partir da lista
+    function consultAIForTarget(targetName, context) {
+      switchTab('chat');
+      const select = document.getElementById('chat-target-select');
+      if (select) select.value = targetName;
+      const mentorName = currentMentor === 'donjuan' ? 'Don Juan' : 'Cleópatra';
+      showToast(`${mentorName} carregou o dossiê de ${targetName}...`);
+    }
+
+    // Simulação de compra de créditos
+    function simulateBuyCredits(amount, price) {
+      currentCredits += amount;
+      document.getElementById('credit-count-top').innerText = currentCredits;
+      document.getElementById('wallet-balance-display').innerText = currentCredits;
+      showToast(`Sucesso! +${amount} créditos adicionados via In-App Purchase.`);
+    }
+
+    function openCreditsModal() {
+      switchTab('carteira');
+    }
+
+    // Enviar mensagem para o mentor ativo com desconto de crédito
+    function sendUserMessageToAI() {
+      const input = document.getElementById('ai-user-input');
+      const text = input.value.trim();
+      const mentorName = currentMentor === 'donjuan' ? 'Don Juan' : 'Cleópatra';
+
+      if (!text) {
+        showToast(`Digite uma mensagem ou print para ${mentorName}.`);
+        return;
+      }
+
+      if (currentCredits <= 0) {
+        showToast('Seus créditos esgotaram! Recarregue para continuar.');
+        switchTab('carteira');
+        return;
+      }
+
+      currentCredits -= 1;
+      document.getElementById('credit-count-top').innerText = currentCredits;
+      document.getElementById('wallet-balance-display').innerText = currentCredits;
+
+      const stream = document.getElementById('chat-stream');
+      const userMsgHtml = `
+        <div class="flex gap-2 justify-end">
+          <div class="max-w-[80%] p-3 rounded-2xl rounded-tr-sm bg-brand-purple text-white text-xs">
+            ${text}
+          </div>
+        </div>
+      `;
+      stream.insertAdjacentHTML('beforeend', userMsgHtml);
+      input.value = '';
+
+      showToast(`1 crédito consumido. ${mentorName} está formulando a jogada...`);
+      
+      setTimeout(() => {
+        const replyHtml = `
+          <div class="flex gap-2.5 items-start">
+            <div class="w-8 h-8 rounded-full ${currentMentor === 'donjuan' ? 'grad-donjuan' : 'grad-cleopatra'} flex items-center justify-center text-white text-xs shrink-0 shadow">
+              ${currentMentor === 'donjuan' ? '👑' : '✨'}
+            </div>
+            <div class="flex-1 p-3 rounded-2xl rounded-tl-sm bg-dark-surface border border-dark-border text-xs space-y-1.5">
+              <div class="flex items-center justify-between text-[10px] text-dark-muted">
+                <strong class="${currentMentor === 'donjuan' ? 'text-indigo-400' : 'text-pink-400'}">${mentorName}</strong>
+                <span>Agora</span>
+              </div>
+              <p>Percebi que ela respondeu com curiosidade. Use uma pergunta fechada de tempo para testar a disponibilidade dela sem parecer ansioso: <em>"Você é mais de sair numa quinta tranquila ou no agito de sábado?"</em></p>
+            </div>
+          </div>
+        `;
+        stream.insertAdjacentHTML('beforeend', replyHtml);
+        document.getElementById('main-content').scrollTop = document.getElementById('main-content').scrollHeight;
+      }, 900);
+    }
+
+    // Simulação do Share Sheet / Upload de Print
+    function simulateUploadPrint() {
+      const mentorName = currentMentor === 'donjuan' ? 'Don Juan' : 'Cleópatra';
+      showToast(`Simulando Share Intent: Print do WhatsApp enviado para ${mentorName}!`);
+      const input = document.getElementById('ai-user-input');
+      input.value = 'Print de conversa analisado: "Acho que sexta tenho um compromisso, mas sábado estarei livre..."';
+      sendUserMessageToAI();
+    }
+
+    // Criar novo alvo dinamicamente no CRM
+    function createNewTarget() {
+      const name = document.getElementById('new-target-name').value.trim();
+      if (!name) {
+        showToast('Por favor, informe o nome do alvo.');
+        return;
+      }
+
+      const list = document.getElementById('targets-list');
+      const mentorActionText = currentMentor === 'donjuan' ? 'Conselho do Don Juan' : 'Conselho da Cleópatra';
+
+      const newCard = `
+        <div class="target-card p-3 rounded-2xl bg-dark-surface border border-brand-purple/40 space-y-2.5" data-temp="warm">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="relative">
+                <div class="w-11 h-11 rounded-full grad-brand flex items-center justify-center font-black text-white text-sm">
+                  ${name.charAt(0)}
+                </div>
+                <span class="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-brand-amber text-[8px] flex items-center justify-center text-white">⚡</span>
+              </div>
+              <div>
+                <div class="flex items-center gap-1.5">
+                  <h3 class="font-bold text-sm">${name}</h3>
+                  <span class="px-1.5 py-0.2 rounded text-[9px] font-bold bg-brand-purple/15 text-brand-purple">Novo Alvo</span>
+                </div>
+                <p class="text-[11px] text-dark-muted">Fase: <strong>Puxando Papo</strong></p>
+              </div>
+            </div>
+            <span class="text-[10px] text-emerald-400 font-semibold">Novo</span>
+          </div>
+          <div class="flex items-center gap-2 pt-1">
+            <button onclick="consultAIForTarget('${name}', 'inicio')" class="flex-1 py-1.5 rounded-xl grad-brand text-white text-xs font-bold flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
+              <span class="btn-mentor-action-text">${mentorActionText}</span>
+            </button>
+          </div>
+        </div>
+      `;
+      list.insertAdjacentHTML('afterbegin', newCard);
+      document.getElementById('new-target-name').value = '';
+      showToast(`${name} adicionada ao seu CRM com sucesso!`);
+      switchTab('crm');
+    }
+
+    // Filtros de temperatura
+    function filterTemp(temp) {
+      const buttons = document.querySelectorAll('.temp-filter');
+      buttons.forEach(b => b.classList.remove('active', 'bg-brand-purple/20', 'text-brand-purple', 'border-brand-purple/40'));
+
+      const cards = document.querySelectorAll('.target-card');
+      cards.forEach(card => {
+        if (temp === 'all' || card.getAttribute('data-temp') === temp) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    // Filtro por texto
+    function filterTargets() {
+      const q = document.getElementById('target-search').value.toLowerCase();
+      const cards = document.querySelectorAll('.target-card');
+      cards.forEach(card => {
+        const text = card.innerText.toLowerCase();
+        card.style.display = text.includes(q) ? 'block' : 'none';
+      });
+    }
+
+    // Alternar visão Mockup / Fullscreen
+    function toggleDeviceView() {
+      const container = document.getElementById('device-container');
+      container.classList.toggle('sm:max-w-[400px]');
+      container.classList.toggle('sm:rounded-[48px]');
+      container.classList.toggle('sm:h-[844px]');
+    }
+
+    // Inicialização
+    selectMentor('donjuan', false);
+  </script>
+
+</body>
+</html>

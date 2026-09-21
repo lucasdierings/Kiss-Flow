@@ -29,25 +29,45 @@ export default function AvatarUpload({
     setUploading(true);
     try {
       const supabase = createSupabaseBrowser();
-      const ext = file.name.split(".").pop();
-      const filePath = `${storagePath}.${ext}`;
+      if (supabase) {
+        const ext = file.name.split(".").pop();
+        const filePath = `${storagePath}.${ext}`;
 
-      const { error } = await supabase.storage
-        .from("kissflow-media")
-        .upload(filePath, file, { upsert: true });
+        const { error } = await supabase.storage
+          .from("kissflow-media")
+          .upload(filePath, file, { upsert: true });
 
-      if (error) throw error;
+        if (!error) {
+          const {
+            data: { publicUrl },
+          } = supabase.storage.from("kissflow-media").getPublicUrl(filePath);
 
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("kissflow-media").getPublicUrl(filePath);
+          setPreviewUrl(publicUrl);
+          onUploaded(publicUrl);
+          setUploading(false);
+          return;
+        }
+      }
 
-      setPreviewUrl(publicUrl);
-      onUploaded(publicUrl);
+      // Local offline fallback using FileReader
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setPreviewUrl(result);
+        onUploaded(result);
+        setUploading(false);
+      };
+      reader.readAsDataURL(file);
     } catch {
-      // silently fail
-    } finally {
-      setUploading(false);
+      // Local offline fallback on catch
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setPreviewUrl(result);
+        onUploaded(result);
+        setUploading(false);
+      };
+      reader.readAsDataURL(file);
     }
   }
 

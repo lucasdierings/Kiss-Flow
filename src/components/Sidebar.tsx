@@ -35,20 +35,38 @@ const navItems = [
     ),
   },
   {
+    label: "WhatsApp Studio",
+    href: "/whatsapp",
+    icon: (
+      <svg className="w-5 h-5 text-[#25D366]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+      </svg>
+    ),
+  },
+  {
+    label: "Matriz Vendas",
+    href: "/matriz-vendas",
+    icon: (
+      <svg className="w-5 h-5 text-[#8b5cf6]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 14.25v2.25m3-4.5v6.75m3-9v9m3-6.75v6.75M3 19.5h18M3 4.5h18" />
+      </svg>
+    ),
+  },
+  {
+    label: "Dates & Encontros",
+    href: "/encontros",
+    icon: (
+      <svg className="w-5 h-5 text-[#e11d48]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+      </svg>
+    ),
+  },
+  {
     label: "Táticas",
     href: "/taticas",
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-      </svg>
-    ),
-  },
-  {
-    label: "Chat IA",
-    href: "/chat",
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" />
       </svg>
     ),
   },
@@ -65,8 +83,8 @@ const navItems = [
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(true);
-  const [userName, setUserName] = useState("Usuario");
-  const [userArchetype, setUserArchetype] = useState("");
+  const [userName, setUserName] = useState("Seducer Pro");
+  const [userArchetype, setUserArchetype] = useState("O Encantador");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const pathname = usePathname();
 
@@ -74,19 +92,22 @@ export default function Sidebar() {
     async function loadProfile() {
       try {
         const supabase = createSupabaseBrowser();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-        const { data } = await supabase
-          .from("user_profiles")
-          .select("display_name, seducer_archetype, avatar_url")
-          .eq("id", user.id)
-          .single();
-        if (data) {
-          setUserName(data.display_name || "Usuario");
-          setUserArchetype(data.seducer_archetype || "");
-          setAvatarUrl(data.avatar_url || null);
+        if (supabase) {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { data } = await supabase
+              .from("user_profiles")
+              .select("display_name, seducer_archetype, avatar_url")
+              .eq("id", user.id)
+              .single();
+            if (data) {
+              setUserName(data.display_name || "Seducer Pro");
+              setUserArchetype(data.seducer_archetype || "O Encantador");
+              setAvatarUrl(data.avatar_url || null);
+            }
+          }
         }
-      } catch { /* silent */ }
+      } catch { /* silent fallback */ }
     }
     loadProfile();
   }, []);
@@ -102,7 +123,7 @@ export default function Sidebar() {
   return (
     <aside
       className={`fixed left-0 top-0 h-full z-40 glass-strong flex flex-col transition-all duration-300 ${
-        collapsed ? "w-16" : "w-56"
+        collapsed ? "w-16" : "w-60"
       }`}
       onMouseEnter={() => setCollapsed(false)}
       onMouseLeave={() => setCollapsed(true)}
@@ -116,49 +137,49 @@ export default function Sidebar() {
         </Link>
         {!collapsed && (
           <div className="animate-float-up">
-            <div className="text-sm font-semibold tracking-tighter">Kiss Flow</div>
-            <div className="text-[9px] text-[#737373] uppercase tracking-wider">Conquest Manager</div>
+            <div className="text-sm font-bold tracking-tighter text-white">Kiss Flow</div>
+            <div className="text-[9px] text-[#737373] uppercase tracking-wider">CRM do Amor</div>
           </div>
         )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-4 px-2 space-y-1">
+      <nav className="flex-1 py-3 px-2 space-y-1 overflow-y-auto">
         {navItems.map((item) => (
           <Link
             key={item.label}
             href={item.href}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
               isActive(item.href)
-                ? "bg-[#7c3aed]/10 text-[#8b5cf6]"
+                ? "bg-[#7c3aed]/15 text-[#8b5cf6] font-semibold border border-[#7c3aed]/30"
                 : "text-[#737373] hover:text-[#a3a3a3] hover:bg-[#ffffff05]"
             }`}
           >
             <div className="flex-shrink-0">{item.icon}</div>
             {!collapsed && (
-              <span className="text-sm font-medium animate-float-up">{item.label}</span>
+              <span className="text-xs animate-float-up">{item.label}</span>
             )}
           </Link>
         ))}
       </nav>
 
-      {/* Bottom - User */}
+      {/* Bottom User */}
       <Link href="/perfil" className="block p-3 border-t border-[#262626]/50 hover:bg-[#ffffff05] transition-colors">
         <div className="flex items-center gap-3 px-1">
-          <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-[#262626]">
+          <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 border border-[#8b5cf6]/40">
             {avatarUrl ? (
               <img src={avatarUrl} alt={userName} className="w-full h-full object-cover" />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-[#1a1a2e] to-[#16213e] flex items-center justify-center">
-                <span className="text-xs font-semibold text-[#8b5cf6]">{initials}</span>
+              <div className="w-full h-full bg-gradient-to-br from-[#7c3aed] to-[#e11d48] flex items-center justify-center">
+                <span className="text-xs font-semibold text-white">{initials}</span>
               </div>
             )}
           </div>
           {!collapsed && (
             <div className="animate-float-up">
-              <div className="text-xs font-medium">{userName}</div>
+              <div className="text-xs font-medium text-white">{userName}</div>
               <div className="text-[9px] text-[#737373]">
-                {archetype ? `Estilo: ${archetype.name}` : "Configurar perfil"}
+                {archetype ? `Estilo: ${archetype.name}` : "O Encantador"}
               </div>
             </div>
           )}
