@@ -96,7 +96,7 @@ autoriza construir mais.
 | Etapa | Escopo | Estado |
 |---|---|---|
 | 1 | Salvar trabalho, reconstruir migrations | ✅ concluída em 21/09/2026 |
-| 2 | Ligar `src/server/` às rotas, criar o handler de auth, tirar os mocks do mobile | ⬜ próxima |
+| 2 | Ligar `src/server/` às rotas, criar o handler de auth, tirar os mocks do mobile, landing page | ⬜ próxima |
 | 3 | Instrumentar eventos e rodar o Gate 0 com 10 usuários | ⬜ |
 | 4 | RevenueCat real, webhook creditando, jurídico de verdade | ⬜ só depois do Gate 0 |
 
@@ -110,7 +110,7 @@ conteúdo bruto de prints ou áudios nos eventos.**
 ## Arquitetura
 
 ```
-/                      app web (Next.js 16) — hoje só dashboard local + /prototipo
+/                      app web (Next.js 16) — landing page + API. NÃO é cliente do D1.
   src/app/api/         rotas de API (consumidas pelo mobile) — todas mock ainda
   src/server/          D1 + Better Auth + repositórios  ← órfã
   src/lib/             motores puros e tipos
@@ -126,6 +126,22 @@ Better Auth · Google Gemini · Expo/React Native · RevenueCat (IAP).
 
 **Abas do mobile:** dashboard (`index`), `cadastros`, `mentor`, `indicadores`,
 `carteira`.
+
+### Decisões de arquitetura
+
+**O app web é landing page + API. Não volta a ser cliente do D1.** (21/09/2026)
+O produto é o app mobile; a web existe para apresentar o produto e levar à
+instalação, e para hospedar as rotas que o mobile consome. Consequências:
+
+- o dashboard em `src/app/page.tsx` dá lugar à landing
+- `src/lib/store.ts` (localStorage) sai, junto com os componentes do dashboard
+  e o resíduo de Supabase
+- nenhuma tela web nova deve ler o D1 direto
+
+A landing anterior está no histórico (`git show fbd7748:src/app/landing/page.tsx`,
+671 linhas). Serve de base visual, mas a copy está vencida: vende
+funcionalidades web que não existem mais, aponta para `/login`, é gendrada
+("como **ela** está se sentindo") e não tem acentos — viola as regras 2 e 5.
 
 ### Backend — armadilhas que já custaram caro
 
