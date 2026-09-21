@@ -2,7 +2,16 @@ import { getSessionCookie } from "better-auth/cookies";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Next 16 renomeou a convenção `middleware` para `proxy`.
-const publicRoutes = ["/", "/login", "/signup", "/landing", "/api/auth"];
+/**
+ * Rotas abertas.
+ *
+ * A lista anterior era `["/", "/login", ...]` conferida com `startsWith`, e
+ * TODO caminho começa com "/" — o proxy liberava o site inteiro e nunca
+ * redirecionava ninguém. Por isso a raiz é comparada por igualdade, e só
+ * prefixos de verdade usam startsWith.
+ */
+const PUBLIC_EXACT = new Set(["/", "/landing"]);
+const PUBLIC_PREFIXES = ["/login", "/signup", "/api/auth"];
 
 /**
  * Redirecionamento otimista, SEM I/O.
@@ -17,7 +26,11 @@ const publicRoutes = ["/", "/login", "/signup", "/landing", "/api/auth"];
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (publicRoutes.some((route) => pathname.startsWith(route))) {
+  const isPublic =
+    PUBLIC_EXACT.has(pathname) ||
+    PUBLIC_PREFIXES.some((route) => pathname.startsWith(route));
+
+  if (isPublic) {
     return NextResponse.next();
   }
 

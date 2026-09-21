@@ -59,6 +59,8 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
 - D1 remoto com 17 tabelas, em sincronia com `src/server/db/schema.ts`
 - Histórico de migrations íntegro em `drizzle/` (baseline conferida objeto a
   objeto contra o `sqlite_master` do remoto)
+- **Login e cadastro na web** em `/login` e `/signup`, falando com o Better
+  Auth; testados pela interface no navegador, não só por curl
 - **Autenticação funcionando:** `/api/auth/[...all]` responde; cadastro cria
   `user` + `account` + `user_profile`; `ALLOWED_EMAILS` barra quem não está na
   lista; rota protegida sem sessão devolve 401
@@ -83,6 +85,7 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
 
 | O quê | Onde | Situação |
 |---|---|---|
+| Latência da IA acima do critério | `/api/ai/advise` | Medido 6,8s / 15,5s / 22,1s. O Gate 0 exige resposta em até 15s. Caminhos: streaming, prompt menor, ou modelo lite. |
 | Segredo do webhook em produção | Cloudflare | `.dev.vars` tem só um placeholder. Definir com `wrangler secret put REVENUECAT_WEBHOOK_AUTH_KEY` antes de apontar a loja para cá. |
 | Login/signup do mobile | `apps/mobile/app/login.tsx` | Grava `'mock_token'` no AsyncStorage. |
 | Dados do mobile | `apps/mobile/context/AppContext.tsx` | `INITIAL_TARGETS` fixos. Só `mentor.tsx` chama a API. |
@@ -142,14 +145,21 @@ Better Auth · Google Gemini · Expo/React Native · RevenueCat (IAP).
 
 ### Decisões de arquitetura
 
-**O app web é landing page + API. Não volta a ser cliente do D1.** (21/09/2026)
-O produto é o app mobile; a web existe para apresentar o produto e levar à
-instalação, e para hospedar as rotas que o mobile consome. Consequências:
+**O app web é um cliente completo, espelho do app mobile.** (21/09/2026)
 
-- o dashboard em `src/app/page.tsx` dá lugar à landing
-- `src/lib/store.ts` (localStorage) sai, junto com os componentes do dashboard
-  e o resíduo de Supabase
-- nenhuma tela web nova deve ler o D1 direto
+Isto **substitui** a decisão anterior do mesmo dia ("landing page + API, não
+cliente do D1"), revista pelo fundador. O que vale agora:
+
+- a web tem login próprio e espelha o que acontece no app
+- ela consome as **rotas de API**, nunca o D1 direto — `withApi` continua sendo
+  a única fronteira de autorização
+- por consequência, os componentes de dashboard em `src/components/` deixam de
+  ser descartáveis: precisam trocar `src/lib/store.ts` (localStorage) por
+  `fetch` nas rotas, não ser apagados
+- ainda haverá uma landing, com captação de beta
+
+Em aberto: hoje `/` é o dashboard. Quando a landing entrar, decidir se ela toma
+`/` e o app vai para `/app`, ou se `/` alterna conforme a sessão.
 
 A landing anterior está no histórico (`git show fbd7748:src/app/landing/page.tsx`,
 671 linhas). Serve de base visual, mas a copy está vencida: vende
@@ -175,13 +185,20 @@ funcionalidades web que não existem mais, aponta para `/login`, é gendrada
 
 ### Modelo de IA
 
-`FLASH_MODEL` em `src/lib/gemini.ts` é um **alias** (`gemini-flash-latest`),
-não uma versão fixa. O código estava preso em `gemini-2.0-flash`, que o Google
-aposentou: a API passou a responder 404 e a rota quebrou sem ninguém mexer numa
-linha. Não há operação aqui para perseguir depreciação de modelo.
+`MODEL_CHAIN` em `src/lib/gemini.ts` é uma **cadeia**, não um nome. Duas coisas
+foram aprendidas medindo, e as duas estão no comentário do arquivo:
 
-O nível gratuito da API sofre 503 de capacidade com frequência. A rota estorna
-a cota nesses casos — ver `refundReservation` em `src/server/usage.ts`.
+- versão fixa apodrece: `gemini-2.0-flash` foi aposentado e a rota quebrou com
+  404 sem ninguém mexer numa linha;
+- um nome só não basta: com faturamento ativo, `gemini-flash-latest` acertou
+  2/4 e `gemini-3-flash-preview` 4/4. O 503 de capacidade é comum e não atinge
+  todos os modelos ao mesmo tempo.
+
+O alias vem primeiro e um modelo concreto cobre a indisponibilidade. Com a
+cadeia mais o retry, 3/3 chamadas passaram.
+
+Quando o provedor falha, a cota é **estornada** — ver `refundReservation` em
+`src/server/usage.ts`. Falha de infraestrutura não custa análise ao usuário.
 
 ### Migrations — regras
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { FLASH_MODEL, getFlashModel, isAiConfigured } from "@/lib/gemini";
+import { generateWithRetry, isAiConfigured } from "@/lib/gemini";
 import { buildMentorSystemPrompt, retrieveKnowledgeChunks } from "@/lib/rag-engine";
 import { withApi } from "@/server/guard";
 import { getContact } from "@/server/repo/crm";
@@ -104,15 +104,16 @@ export const POST = withApi(adviseSchema, async ({ body, ctx }) => {
 
   const startedAt = Date.now();
   let raw: string;
+  let usedModel: string;
   try {
-    const model = await getFlashModel();
-    const result = await model.generateContent([
+    const generated = await generateWithRetry([
       { text: systemPrompt },
       {
         text: `Mensagem do usuário sobre ${contact.firstName}:\n"${body.userMessage}"\n\nResponda no formato JSON solicitado.`,
       },
     ]);
-    raw = result.response.text();
+    raw = generated.text;
+    usedModel = generated.model;
   } catch (error) {
     console.error("Gemini falhou:", error);
     // A análise não foi entregue: devolve a unidade cobrada. Sem isto, uma
@@ -147,7 +148,7 @@ export const POST = withApi(adviseSchema, async ({ body, ctx }) => {
     feature: "ai_analysis",
     featureDetail: "ai/advise",
     contactId: body.contactId,
-    model: FLASH_MODEL,
+    model: usedModel,
     latencyMs,
     status: "ok",
   });

@@ -34,26 +34,97 @@ export async function isAiConfigured(): Promise<boolean> {
 }
 
 /**
- * Alias, não versão fixa, de propósito.
+ * Cadeia de modelos, tentada em ordem.
  *
- * O código vinha preso em "gemini-2.0-flash", que o Google aposentou: a API
- * passou a responder 404 e a rota quebrou sem ninguém mudar uma linha. Este
- * projeto não tem operação para perseguir depreciação de modelo, então o
- * alias — que o Google move para o flash atual — troca uma quebra silenciosa
- * por uma variação de comportamento visível.
+ * Duas lições medidas neste projeto:
  *
- * Se algum dia a estabilidade do prompt passar a importar mais que isso,
- * fixe uma versão E crie um lembrete para revisá-la.
+ * 1. Versão fixa apodrece. O código estava preso em "gemini-2.0-flash", que o
+ *    Google aposentou; a API passou a responder 404 e a rota quebrou sem
+ *    ninguém mexer numa linha.
+ * 2. Um nome só não basta. Medindo 4 chamadas por modelo com faturamento
+ *    ativo: gemini-flash-latest 2/4, gemini-3.5-flash 0/4,
+ *    gemini-3-flash-preview 4/4, gemini-3.1-flash-lite 3/4. O 503 de
+ *    capacidade não é raro, e não atinge todos os modelos ao mesmo tempo.
+ *
+ * Por isso o alias vem primeiro — acompanha o que o Google promove — e um
+ * concreto atrás dele cobre a indisponibilidade. Se o preview sumir, a cadeia
+ * degrada sozinha em vez de derrubar a rota.
+ *
+ * Refaça a medição quando a latência incomodar; ver o comentário sobre o
+ * critério de 15s do Gate 0 em docs/manual-execucao-10-semanas.md.
  */
-export const FLASH_MODEL = "gemini-flash-latest";
+export const MODEL_CHAIN = ["gemini-flash-latest", "gemini-3-flash-preview"];
 
-export async function getFlashModel() {
+/** Primeiro da cadeia — o nome registrado em usage_events. */
+export const FLASH_MODEL = MODEL_CHAIN[0];
+
+export async function getFlashModel(model: string = FLASH_MODEL) {
   const key = await geminiKey();
   if (!key) throw new Error("GEMINI_API_KEY ausente");
 
   return new GoogleGenerativeAI(key).getGenerativeModel({
-    model: FLASH_MODEL,
+    model,
     safetySettings,
     generationConfig: { temperature: 0.7, topP: 0.95, maxOutputTokens: 2048 },
   });
+}
+
+/**
+ * Gera conteúdo com repetição em falha transitória.
+ *
+ * O 503 "high demand" da API do Gemini é frequente: medido em ~50% das
+ * chamadas mesmo com faturamento ativo. Sem repetir, metade dos usuários vê
+ * erro numa ação que é o coração do produto.
+ *
+ * Só repete o que é transitório (503, 429, 500). Um 400 ou 404 é defeito
+ * nosso — prompt inválido, modelo inexistente — e repetir só atrasa o erro.
+ */
+const TRANSIENT = new Set([429, 500, 503]);
+
+function statusOf(error: unknown): number | undefined {
+  const status = (error as { status?: unknown })?.status;
+  if (typeof status === "number") return status;
+  // O SDK às vezes só traz o código na mensagem.
+  const match = String((error as { message?: string })?.message ?? "").match(
+    /\[(\d{3})\s/
+  );
+  return match ? Number(match[1]) : undefined;
+}
+
+export interface GenerationResult {
+  text: string;
+  /** Qual modelo respondeu de fato — vai para usage_events. */
+  model: string;
+}
+
+export async function generateWithRetry(
+  parts: Array<{ text: string }>,
+  { attemptsPerModel = 2, baseDelayMs = 600 } = {}
+): Promise<GenerationResult> {
+  let lastError: unknown;
+
+  for (const modelName of MODEL_CHAIN) {
+    const model = await getFlashModel(modelName);
+
+    for (let attempt = 1; attempt <= attemptsPerModel; attempt += 1) {
+      try {
+        const result = await model.generateContent(parts);
+        return { text: result.response.text(), model: modelName };
+      } catch (error) {
+        lastError = error;
+        const status = statusOf(error);
+
+        // Erro nosso (prompt inválido, modelo inexistente): repetir só atrasa.
+        if (!status || !TRANSIENT.has(status)) throw error;
+
+        // Última tentativa deste modelo: parte para o próximo sem esperar.
+        if (attempt === attemptsPerModel) break;
+
+        const delay = baseDelayMs * 2 ** (attempt - 1) + Math.random() * 250;
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  throw lastError;
 }
