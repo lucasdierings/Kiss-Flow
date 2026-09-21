@@ -120,7 +120,7 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
 
 | O quê | Onde | Situação |
 |---|---|---|
-| Cota do Gemini no nível gratuito | Google Cloud | `GenerateRequestsPerDayPerProjectPerModel-FreeTier`, **20 requisições/dia**. O projeto `dev-vs-code-and-antropic` não foi promovido ao pago. Existe outra chave em projeto com faturamento. |
+| Saldo do faturamento Google | Google Cloud | A chave nova autentica, mas a API responde **402 — prepayment credits depleted**. A conta é pré-paga e está sem saldo; nenhuma chamada ao Gemini passa até adicionar crédito. Não é problema de configuração. |
 | Inferência de traços na interface | `/alvos/[id]` | A rota existe e foi exercitada, mas não há botão para pedir a leitura nem tela para declarar eixo à mão. |
 | Latência da IA acima do critério | `/api/ai/advise` | Medido 6,8s / 15,5s / 22,1s. O Gate 0 exige resposta em até 15s. Caminhos: streaming, prompt menor, ou modelo lite. |
 | URLs de retorno do OAuth do Google | Google Cloud Console | Não registradas para o domínio publicado; o botão \"Continuar com Google\" falha até isso ser feito. Ver `docs/deploy.md`. |
@@ -298,6 +298,25 @@ Duas armadilhas que já apareceram e estão cobertas pela auditoria:
   concluindo errado. Agora importa o módulo.
 
 Rode `npm run auditar:quiz` sempre que mexer nas perguntas.
+
+### Custos e chaves
+
+Tudo do Kiss Flow vive no projeto Google Cloud `triple-hour-492210-i2`
+("Kiss Flow"), o que torna o custo isolável por projeto. A chave do Gemini é
+restrita à Gemini API e **vinculada a uma conta de serviço** — exigência de
+política da organização `fluxorural.com.br`, que é por que ela tem prefixo
+`AQ.` em vez de `AIza`.
+
+Alerta de orçamento **Kiss Flow - custo mensal**: R$ 50/mês, restrito ao
+projeto, disparando em 50%, 90% e 100%. É somente alerta, não limite de
+gastos — limite pausaria os serviços, e app que para sozinho é pior que conta
+alta com aviso.
+
+Detalhes, limites da Cloudflare e o que ainda não é medido: `docs/custos.md`.
+
+Buraco conhecido: `usage_events` tem `tokensIn` e `tokensOut` no schema e
+**ninguém os preenche**, então não há custo real por análise nem por usuário —
+que é um dos critérios do Gate 0.
 
 ### Modelo de IA
 
