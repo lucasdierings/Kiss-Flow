@@ -65,6 +65,10 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
   ALLOWED_EMAILS 403
 - **Build para o Cloudflare passando** (`npx opennextjs-cloudflare build` gera
   `.open-next/worker.js`); runbook de publicação em `docs/deploy.md`
+- **O loop do Gate 0 fecha na web**: cadastrar alvo (`/alvos/novo`), listar
+  (`/alvos`), registrar interação e pedir leitura da IA (`/alvos/[id]`).
+  Verificado ponta a ponta: as métricas são recalculadas pelo servidor
+  (receptividade 10→13, mistério 85→84, tensão 30→36) e a IA responde
 - **Onboarding obrigatório** (regra nº 1 do produto) finalmente existe:
   `/onboarding` com o quiz de 10 perguntas, arquétipo calculado **no
   servidor**, e `requireOnboarded()` barrando o app antes da conclusão
@@ -106,8 +110,9 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
 | Termos e privacidade | `apps/mobile/app/{terms,privacy}.tsx` | Rascunhos. Citam Supabase, sem base legal/DPO/retenção. Reprovam nas lojas. |
 | Resíduo de Supabase | `AvatarUpload` | `Sidebar` e `UserProfileCard` já migraram para `/api/profile`. `src/lib/store.ts` (localStorage) só é usado por componentes ainda não religados. |
 | Componentes órfãos | `src/components/` | `ActionModal`, `AvatarUpload`, `ConfirmDeleteModal`, `EditContactModal`, `EditInteractionModal`, `EncounterPlanner`, `SalesToRelationshipMatrix`, `WhatsAppStudio`, `DemoDataLoader` |
-| Widgets ainda em localStorage | `PipelineFunnel`, `ActiveContacts`, `ConversionAnalytics`, `QuickLogFAB` | Leem `src/lib/store.ts`. Numa conta nova aparecem vazios (correto por acidente), mas não refletem o banco. |
-| Telas do app na web | — | Só existe o dashboard. Faltam alvos, kanban, chat, táticas, analytics e perfil para a web ser mesmo espelho do app. |
+| Widgets ainda em localStorage | `PipelineFunnel`, `ActiveContacts`, `ConversionAnalytics`, `QuickLogFAB` | Leem `src/lib/store.ts`. Numa conta nova aparecem vazios (correto por acidente), mas **não mostram os alvos já cadastrados** — o dashboard segue dizendo "nenhum alvo" depois de criar um. |
+| Telas do app na web | — | Faltam kanban, chat, táticas, analytics, WhatsApp Studio, Matriz de Vendas e Encontros. Estão **ocultas da sidebar** (`ativo: false`) em vez de dar 404 — ao construir a tela, vire a chave. |
+| Transição de fase na UI | `/alvos/[id]` | A rota `POST /api/crm/contacts/[id]/transition` existe e exige evidência, mas não há tela: a sugestão de avanço só é exibida como aviso. |
 
 ---
 
