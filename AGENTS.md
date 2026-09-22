@@ -70,6 +70,8 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
   (exigência da Apple e do Google), Pix ou cartão na web
 - **Táticas contextuais** em `/alvos/[id]`: filtradas pela fase da pessoa e
   ordenadas por risco, vindas do catálogo real
+- **Tela do agente** em `/agente`, ligada ao menu: escolhe a pessoa, descreve
+  a situação, recebe diagnóstico e três sugestões com copiar e WhatsApp
 - **IA funcionando em produção.** Medido numa chamada real: 855 tokens de
   entrada, 370 de saída, **R$ 0,0069**, 1 crédito, 6,7 s — dentro do critério
   de 15 s do Gate 0 e a menos da metade do custo estimado
@@ -144,7 +146,8 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
 | Resíduo de Supabase | `AvatarUpload` | `Sidebar` e `UserProfileCard` já migraram para `/api/profile`. `src/lib/store.ts` (localStorage) só é usado por componentes ainda não religados. |
 | Componentes órfãos | `src/components/` | `ActionBar` (substituída por `TaticasSugeridas`), `ActionModal`, `AvatarUpload`, `ConfirmDeleteModal`, `EditContactModal`, `EditInteractionModal`, `EncounterPlanner`, `SalesToRelationshipMatrix`, `WhatsAppStudio`, `DemoDataLoader` |
 | `QuickLogFAB` em localStorage | `src/components/QuickLogFAB.tsx` | Único widget que ainda lê `src/lib/store.ts`. |
-| Telas do app na web | — | Faltam chat, táticas, analytics, WhatsApp Studio, Matriz de Vendas e Encontros. Estão **ocultas da sidebar** (`ativo: false`) em vez de dar 404 — ao construir a tela, vire a chave. |
+| Conversa do agente não é salva | `/agente` | Não existe tabela de mensagens no D1. A tela avisa em vez de deixar o usuário descobrir ao recarregar. Persistir exige migração. |
+| Telas do app na web | — | Faltam táticas, analytics, WhatsApp Studio, Matriz de Vendas e Encontros. Estão **ocultas da sidebar** (`ativo: false`) em vez de dar 404 — ao construir a tela, vire a chave. |
 | Transição de fase em `/alvos/[id]` | `/alvos/[id]` | O Kanban já aplica transições; na tela de detalhe a sugestão ainda é só um aviso. |
 
 ---
@@ -256,6 +259,24 @@ cara de medição:
 
 Regras completas, incluindo com que frequência cada coisa muda e o que passa
 por IA: `docs/metricas.md`. Leia antes de criar qualquer métrica nova.
+
+### O agente
+
+`/agente` é a tela central do produto: escolhe a pessoa, descreve a situação,
+recebe a leitura e três sugestões prontas.
+
+Duas versões antigas foram consultadas ao montá-la. A web tinha `/chat` (547
+linhas, apagada no pivô) com três modos — conversa, sugerir, validar — mas
+dependia de `/api/ai/chat`, do Supabase e do `context-engine`, todos removidos.
+O mobile tem `mentor.tsx`, que já fala com `/api/ai/advise`.
+
+A tela ficou sobre `/api/ai/advise`, que é a rota que existe e funciona, com o
+que valia das duas: seleção de pessoa, diagnóstico, e as sugestões com copiar
+e abrir no WhatsApp.
+
+**A conversa não é persistida** — não há tabela de mensagens no D1. Ressuscitar
+os três modos exigiria rota nova e migração; é decisão de produto, não detalhe
+de tela.
 
 ### Táticas — onde entram
 
