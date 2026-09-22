@@ -65,6 +65,9 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
   ALLOWED_EMAILS 403
 - **Build para o Cloudflare passando** (`npx opennextjs-cloudflare build` gera
   `.open-next/worker.js`); runbook de publicação em `docs/deploy.md`
+- **Consumo de tokens medido e cobrado**: cada chamada grava tokens, custo em
+  micro-dólares e créditos debitados; `settleAnalysis()` acerta a conta depois
+  da resposta. `GET /api/billing/usage` devolve consumo e extrato
 - **Foto de perfil e campos novos** (cidade, objetivo, linguagem do amor,
   bio): upload no R2 por `/api/media/upload`, servido por `/api/media/<chave>`
   com o dono conferido pelo prefixo — o bucket é privado
@@ -314,9 +317,25 @@ alta com aviso.
 
 Detalhes, limites da Cloudflare e o que ainda não é medido: `docs/custos.md`.
 
-Buraco conhecido: `usage_events` tem `tokensIn` e `tokensOut` no schema e
-**ninguém os preenche**, então não há custo real por análise nem por usuário —
-que é um dos critérios do Gate 0.
+### Consumo e créditos
+
+Cada chamada de IA grava tokens, custo em micro-dólares (inteiro — somar
+frações de centavo em ponto flutuante acumula erro) e créditos debitados.
+
+**Cobrança por análise, não por token.** 1 crédito cobre até 20.000 tokens;
+acima disso, proporcional. O usuário precisa prever o gasto, e "sua análise
+custou 2,7 créditos" é uma péssima frase.
+
+Como o consumo só é conhecido depois, funciona como pré-autorização: reserva 1
+crédito, chama, e `settleAnalysis()` acerta. A cobrança extra **nunca** é
+barrada por saldo — o trabalho já custou; recusar passaria o prejuízo para
+nós. O saldo pode ficar negativo e a próxima reserva barra.
+
+`npm run simular:custo` mostra a conta: análise típica R$ 0,0152, margem de
+97% nos pacotes, 94,9% no Pro em pior caso, e R$ 76/mês para bancar mil
+usuários gratuitos.
+
+O custo em dólar não vai para o cliente — ele compra créditos, não tokens.
 
 ### Modelo de IA
 
@@ -406,6 +425,7 @@ npm run cf-typegen          # regenera cloudflare-env.d.ts após mudar bindings
 
 npm run auditar:quiz        # mede o equilíbrio do quiz de arquétipo
 npm run auditar:scoring     # mede se o diagnóstico comportamental tem sinal
+npm run simular:custo       # custo por análise e margem dos planos
 
 npx drizzle-kit generate --name=<nome>              # gera migration
 npx wrangler d1 migrations apply kissflow --local   # aplica local (sempre antes)

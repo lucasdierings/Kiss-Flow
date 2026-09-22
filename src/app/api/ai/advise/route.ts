@@ -5,7 +5,7 @@ import { extrairJson, generateWithRetry, isAiConfigured } from "@/lib/gemini";
 import { buildMentorSystemPrompt, retrieveKnowledgeChunks } from "@/lib/rag-engine";
 import { withApi } from "@/server/guard";
 import { getContact } from "@/server/repo/crm";
-import { logUsage, refundReservation, reserveAnalysis } from "@/server/usage";
+import { logUsage, refundReservation, reserveAnalysis, settleAnalysis } from "@/server/usage";
 
 /**
  * Conselho do mentor.
@@ -105,6 +105,8 @@ export const POST = withApi(adviseSchema, async ({ body, ctx }) => {
   const startedAt = Date.now();
   let raw: string;
   let usedModel: string;
+  let tokensIn = 0;
+  let tokensOut = 0;
   try {
     const generated = await generateWithRetry([
       { text: systemPrompt },
@@ -114,6 +116,8 @@ export const POST = withApi(adviseSchema, async ({ body, ctx }) => {
     ]);
     raw = generated.text;
     usedModel = generated.model;
+    tokensIn = generated.tokensIn;
+    tokensOut = generated.tokensOut;
   } catch (error) {
     console.error("Gemini falhou:", error);
     // A análise não foi entregue: devolve a unidade cobrada. Sem isto, uma
@@ -142,13 +146,16 @@ export const POST = withApi(adviseSchema, async ({ body, ctx }) => {
     advice = { diagnosis: raw.trim(), options: [{ title: "Leitura da situação", text: raw.trim() }] };
   }
 
-  await logUsage(ctx, {
+  // Fecha a conta com o consumo REAL. A reserva cobrou o mínimo; se a
+  // análise saiu cara, a diferença é debitada aqui.
+  const acerto = await settleAnalysis(ctx, reservation, {
+    model: usedModel,
+    tokensIn,
+    tokensOut,
     feature: "ai_analysis",
     featureDetail: "ai/advise",
     contactId: body.contactId,
-    model: usedModel,
     latencyMs,
-    status: "ok",
   });
 
   return NextResponse.json({
@@ -159,6 +166,7 @@ export const POST = withApi(adviseSchema, async ({ body, ctx }) => {
       used: reservation.used ?? null,
       limit: Number.isFinite(reservation.limit) ? reservation.limit : null,
       creditsLeft: reservation.creditsLeft ?? null,
+      creditosCobrados: acerto.creditosCobrados,
     },
   });
 });

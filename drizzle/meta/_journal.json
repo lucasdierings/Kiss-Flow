@@ -36,6 +36,13 @@
       "when": 1790022258078,
       "tag": "0004_perfil_e_tracos",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1790041396993,
+      "tag": "0005_custo_por_chamada",
+      "breakpoints": true
     }
   ]
 }

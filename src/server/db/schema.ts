@@ -533,6 +533,20 @@ export const usageEvents = sqliteTable(
     model: text("model"),
     tokensIn: integer("tokens_in"),
     tokensOut: integer("tokens_out"),
+
+    /**
+     * Custo em MICRO-DÓLARES, inteiro.
+     *
+     * Não é REAL de propósito: somar centenas de milhares de frações de
+     * centavo em ponto flutuante acumula erro, e este número existe
+     * justamente para ser somado — é ele que responde quanto cada usuário
+     * custa por mês.
+     */
+    costMicroUsd: integer("cost_micro_usd"),
+
+    /** Quantos créditos foram debitados por esta chamada. */
+    creditsCharged: integer("credits_charged"),
+
     latencyMs: integer("latency_ms"),
     status: text("status", { enum: ["ok", "error", "blocked"] })
       .notNull()

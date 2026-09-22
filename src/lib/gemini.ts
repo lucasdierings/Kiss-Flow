@@ -95,6 +95,18 @@ export interface GenerationResult {
   text: string;
   /** Qual modelo respondeu de fato — vai para usage_events. */
   model: string;
+  /**
+   * Tokens consumidos, vindos do `usageMetadata` da própria resposta.
+   *
+   * A API sempre mandou isso e o código descartava: `usage_events` tinha as
+   * colunas `tokens_in` e `tokens_out` e ninguém as preenchia, então não
+   * existia custo por análise nem por usuário.
+   *
+   * Zero quando a resposta vem sem metadados — acontece em erro parcial. O
+   * chamador trata zero como "não medido", nunca como "de graça".
+   */
+  tokensIn: number;
+  tokensOut: number;
 }
 
 export async function generateWithRetry(
@@ -109,7 +121,13 @@ export async function generateWithRetry(
     for (let attempt = 1; attempt <= attemptsPerModel; attempt += 1) {
       try {
         const result = await model.generateContent(parts);
-        return { text: result.response.text(), model: modelName };
+        const uso = result.response.usageMetadata;
+        return {
+          text: result.response.text(),
+          model: modelName,
+          tokensIn: uso?.promptTokenCount ?? 0,
+          tokensOut: uso?.candidatesTokenCount ?? 0,
+        };
       } catch (error) {
         lastError = error;
         const status = statusOf(error);

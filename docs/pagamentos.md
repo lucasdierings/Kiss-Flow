@@ -26,6 +26,41 @@ contra o usuário mais pesado.
 Fonte da verdade: `src/lib/plans.ts` (`PLAN_LIMITS`, `PLAN_INFO`, `CREDIT_PACKS`).
 Mudar preço ou limite é editar esse arquivo e publicar — não há migração.
 
+## Medição de consumo
+
+Cada chamada de IA registra em `usage_events`: modelo, tokens de entrada e
+saída, custo em **micro-dólares** (inteiro, porque somar frações de centavo em
+ponto flutuante acumula erro) e quantos créditos foram debitados.
+
+**A cobrança é por análise, não por token.** Uma análise custa 1 crédito desde
+que caiba em 20.000 tokens; acima disso, proporcional. Isso é deliberado: o
+usuário precisa prever o gasto, e "sua análise custou 2,7 créditos" é uma
+péssima frase. O caso de cobrar mais é raro — quem cola um histórico enorme.
+
+Como não dá para saber o consumo antes da chamada, funciona como
+pré-autorização de cartão: reserva 1 crédito, chama o modelo, e
+`settleAnalysis()` acerta a diferença depois. A cobrança extra nunca é barrada
+por saldo — o trabalho já foi feito e já custou; recusar o débito só passaria
+o prejuízo para nós. O saldo pode ficar negativo, e a próxima reserva barra.
+
+Rode `npm run simular:custo` para ver a conta fechar. Com os preços de
+referência de setembro de 2026:
+
+| | |
+|---|---|
+| Análise típica (2.800 + 700 tokens) | R$ 0,0152 em API |
+| Margem dos pacotes de crédito | 97% a 98% |
+| Plano Pro no pior caso (100 análises) | 94,9% de margem |
+| Plano Pro empata em | 1.966 análises/mês |
+| Bancar 1.000 usuários gratuitos | R$ 76/mês |
+
+A última linha é a que responde "dá para bancar o início?". Dá, com folga.
+
+O usuário vê o próprio consumo e o extrato em `GET /api/billing/usage`. O
+custo em dólar **não** vai para ele: ele compra créditos, não tokens, e expor
+nosso custo de API na tela dele só confundiria. A soma existe para o painel do
+fundador.
+
 ## O que já está pronto
 
 - **Cobrança em duas camadas.** `reserveAnalysis()` em `src/server/usage.ts`
@@ -50,21 +85,32 @@ Mudar preço ou limite é editar esse arquivo e publicar — não há migração
 
 ### 1. Escolher o meio de pagamento
 
-A decisão muda o resto, e ainda não foi tomada:
+Decidido que a recarga aceita **Pix e cartão de crédito**. Isso tem uma
+consequência que vale entender antes de implementar.
 
-| | Lojas (RevenueCat) | Web (Stripe) |
+**Apple e Google exigem o IAP** para desbloqueio de conteúdo digital dentro do
+app, e proíbem apontar para pagamento externo lá dentro. Ou seja: Pix não pode
+ser oferecido dentro do app das lojas. A saída usual é vender na **web** — onde
+Pix e cartão são livres — e manter o IAP no app.
+
+| | Lojas (RevenueCat) | Web (Stripe ou Mercado Pago) |
 |---|---|---|
-| Taxa | 15–30% da Apple/Google | ~4% + R$ 0,39 |
-| Obrigatório? | Sim, para conteúdo digital consumido no app | Não, se a compra acontece fora do app |
-| Pix | Não | Sim |
+| Taxa | 15–30% | ~4% + taxa fixa |
+| Pix | não | sim |
+| Obrigatório? | sim, dentro do app | não |
 | Esforço | webhook já escrito | criar checkout e webhook |
 
-Apple e Google **exigem** o IAP para desbloqueio dentro do app e proíbem
-apontar para pagamento externo dentro dele. Em compensação, a taxa é alta e o
-Pix — que é como o brasileiro paga — fica de fora.
+A diferença de taxa é grande: num pacote de R$ 39,90, a loja fica com R$ 6 a
+R$ 12; o gateway web, com cerca de R$ 2.
 
-O caminho comum é os dois: IAP no app e Stripe/Pix na web. Note que o código
-de webhook hoje existe só para a RevenueCat.
+**Provedores para Pix:** Stripe suporta Pix no Brasil mas exige entidade
+brasileira e aprovação. Mercado Pago e Asaas são alternativas com Pix nativo e
+menos burocracia. A escolha depende de onde a empresa está constituída — é
+decisão sua, não técnica.
+
+Qualquer que seja, o trabalho no nosso lado é o mesmo: um endpoint que cria a
+cobrança e um webhook que chama `addCredits()` depois de conferir a assinatura.
+Toda a parte de creditar, extrato e idempotência já existe e foi testada.
 
 ### 2. Implementação, qualquer que seja a escolha
 

@@ -13,6 +13,12 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 
 import {
+  CREDITO_MINIMO,
+  creditosDaChamada,
+  custoEmDolar,
+  emMicroDolares,
+} from "@/lib/pricing";
+import {
   currentPeriod,
   limitFor,
   type MonthlyFeature,
@@ -227,6 +233,8 @@ export async function logUsage(
     model?: string;
     tokensIn?: number;
     tokensOut?: number;
+    costMicroUsd?: number;
+    creditsCharged?: number;
     latencyMs?: number;
     status?: "ok" | "error" | "blocked";
   }
@@ -241,6 +249,8 @@ export async function logUsage(
       model: entry.model ?? null,
       tokensIn: entry.tokensIn ?? null,
       tokensOut: entry.tokensOut ?? null,
+      costMicroUsd: entry.costMicroUsd ?? null,
+      creditsCharged: entry.creditsCharged ?? null,
       latencyMs: entry.latencyMs ?? null,
       status: entry.status ?? "ok",
     });
@@ -248,6 +258,92 @@ export async function logUsage(
     // Telemetria não derruba a requisição que ela observa.
     console.error("logUsage falhou:", error);
   }
+}
+
+/**
+ * Fecha a conta de uma chamada de IA depois que o custo real é conhecido.
+ *
+ * A reserva acontece ANTES da chamada porque não há como saber o consumo de
+ * antemão — é o mesmo princípio de uma pré-autorização de cartão. Só que a
+ * reserva cobra 1 crédito, e uma análise com um histórico enorme pode ter
+ * custado mais. Esta função acerta a diferença.
+ *
+ * Três decisões:
+ *
+ * 1. **Nunca devolve créditos por consumo baixo.** A reserva de 1 crédito é o
+ *    piso: uma análise barata não vira meio crédito. Quem devolve é o
+ *    `refundReservation`, e só quando a análise NÃO foi entregue.
+ * 2. **A cobrança extra não pode ser bloqueada por saldo.** O trabalho já foi
+ *    feito e já custou dinheiro; recusar o débito aqui só faria o prejuízo
+ *    virar nosso. O saldo pode ficar negativo, e a próxima reserva vai barrar.
+ * 3. **O custo em dólar é registrado sempre**, independente dos créditos. É
+ *    com ele que se descobre se o preço do crédito está certo — créditos são
+ *    a unidade de venda, dólar é a unidade de verdade.
+ */
+export async function settleAnalysis(
+  ctx: Ctx,
+  reserva: Reservation,
+  medicao: {
+    model: string;
+    tokensIn: number;
+    tokensOut: number;
+    feature: string;
+    featureDetail: string;
+    contactId?: string;
+    latencyMs?: number;
+  }
+): Promise<{ creditosCobrados: number; custoMicroUsd: number }> {
+  const { model, tokensIn, tokensOut } = medicao;
+
+  const custoMicroUsd = emMicroDolares(custoEmDolar(model, tokensIn, tokensOut));
+
+  // Sem metadados de token, não dá para cobrar extra com honestidade: fica no
+  // mínimo já reservado e o custo vai zerado, sinalizando "não medido".
+  const medido = tokensIn > 0 || tokensOut > 0;
+  const creditosDevidos = medido ? creditosDaChamada(tokensIn, tokensOut) : CREDITO_MINIMO;
+  const extra = Math.max(0, creditosDevidos - CREDITO_MINIMO);
+
+  if (extra > 0) {
+    const agora = new Date();
+    try {
+      await ctx.db.batch([
+        ctx.db.insert(aiCreditTransactions).values({
+          id: newId(),
+          userId: ctx.userId,
+          amount: -extra,
+          reason: "consumption",
+          referenceId: medicao.contactId ?? null,
+          createdAt: agora,
+        }),
+        ctx.db
+          .update(aiCreditWallets)
+          .set({
+            balance: sql`${aiCreditWallets.balance} - ${extra}`,
+            updatedAt: agora,
+          })
+          .where(eq(aiCreditWallets.userId, ctx.userId)),
+      ]);
+    } catch (erro) {
+      // Perder a cobrança extra é melhor que derrubar a resposta que o
+      // usuário já esperou. Fica no log e no evento de uso.
+      console.error("settleAnalysis: cobrança extra falhou:", erro);
+    }
+  }
+
+  await logUsage(ctx, {
+    feature: medicao.feature,
+    featureDetail: medicao.featureDetail,
+    contactId: medicao.contactId,
+    model,
+    tokensIn: medido ? tokensIn : undefined,
+    tokensOut: medido ? tokensOut : undefined,
+    costMicroUsd: medido ? custoMicroUsd : undefined,
+    creditsCharged: creditosDevidos,
+    latencyMs: medicao.latencyMs,
+    status: "ok",
+  });
+
+  return { creditosCobrados: creditosDevidos, custoMicroUsd };
 }
 
 export async function getWalletBalance(ctx: Ctx): Promise<number> {

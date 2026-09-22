@@ -7,7 +7,7 @@ import { EIXOS, MINIMO_PARA_INFERIR } from "@/lib/traits";
 import { contactTraits, interactions } from "@/server/db/schema";
 import { notFound, withApi } from "@/server/guard";
 import { getContact } from "@/server/repo/crm";
-import { logUsage, refundReservation, reserveAnalysis } from "@/server/usage";
+import { logUsage, refundReservation, reserveAnalysis, settleAnalysis } from "@/server/usage";
 
 /**
  * Leitura dos traços a partir do que foi registrado.
@@ -110,8 +110,16 @@ ANOTAÇÕES (mais recentes primeiro):
 ${comNota.map((r, i) => `${i + 1}. [${r.typeId}, sentimento ${r.sentiment.toFixed(1)}] ${r.notes.trim().slice(0, 300)}`).join("\n")}`;
 
   let bruto: string;
+  let modeloUsado = "";
+  let tokensIn = 0;
+  let tokensOut = 0;
+  const inicio = Date.now();
   try {
-    bruto = (await generateWithRetry([{ text: prompt }])).text;
+    const gerado = await generateWithRetry([{ text: prompt }]);
+    bruto = gerado.text;
+    modeloUsado = gerado.model;
+    tokensIn = gerado.tokensIn;
+    tokensOut = gerado.tokensOut;
   } catch (erro) {
     console.error("Inferência de traços falhou:", erro);
     await refundReservation(ctx, reserva);
@@ -169,11 +177,14 @@ ${comNota.map((r, i) => `${i + 1}. [${r.typeId}, sentimento ${r.sentiment.toFixe
     );
   }
 
-  await logUsage(ctx, {
+  const acerto = await settleAnalysis(ctx, reserva, {
+    model: modeloUsado,
+    tokensIn,
+    tokensOut,
     feature: "ai_analysis",
     featureDetail: "ai/infer-traits",
     contactId: body.contactId,
-    status: "ok",
+    latencyMs: Date.now() - inicio,
   });
 
   return NextResponse.json({
@@ -184,5 +195,6 @@ ${comNota.map((r, i) => `${i + 1}. [${r.typeId}, sentimento ${r.sentiment.toFixe
       .filter((t) => declarados.has(t.axis))
       .map((t) => ({ axis: t.axis, sugerido: Math.round(t.value), evidence: t.evidence })),
     baseadoEm: comNota.length,
+    creditosCobrados: acerto.creditosCobrados,
   });
 });
