@@ -128,7 +128,7 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
 
 | O quê | Onde | Situação |
 |---|---|---|
-| Saldo do faturamento Google | Google Cloud | A chave nova autentica, mas a API responde **402 — prepayment credits depleted**. A conta é pré-paga e está sem saldo; nenhuma chamada ao Gemini passa até adicionar crédito. Não é problema de configuração. |
+| Nível pago da Gemini API | AI Studio | A chave autentica, mas a API responde **402**. A conta do Cloud está saudável (crédito de R$ 50, pós-pago) — o nível pago da Gemini é configurado **por projeto no AI Studio**, e `triple-hour-492210-i2` não está importado lá. Ver `docs/custos.md`. |
 | Inferência de traços na interface | `/alvos/[id]` | A rota existe e foi exercitada, mas não há botão para pedir a leitura nem tela para declarar eixo à mão. |
 | Latência da IA acima do critério | `/api/ai/advise` | Medido 6,8s / 15,5s / 22,1s. O Gate 0 exige resposta em até 15s. Caminhos: streaming, prompt menor, ou modelo lite. |
 | URLs de retorno do OAuth do Google | Google Cloud Console | Não registradas para o domínio publicado; o botão \"Continuar com Google\" falha até isso ser feito. Ver `docs/deploy.md`. |
