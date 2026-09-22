@@ -70,6 +70,9 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
   (exigência da Apple e do Google), Pix ou cartão na web
 - **Táticas contextuais** em `/alvos/[id]`: filtradas pela fase da pessoa e
   ordenadas por risco, vindas do catálogo real
+- **IA funcionando em produção.** Medido numa chamada real: 855 tokens de
+  entrada, 370 de saída, **R$ 0,0069**, 1 crédito, 6,7 s — dentro do critério
+  de 15 s do Gate 0 e a menos da metade do custo estimado
 - **Consumo de tokens medido e cobrado**: cada chamada grava tokens, custo em
   micro-dólares e créditos debitados; `settleAnalysis()` acerta a conta depois
   da resposta. `GET /api/billing/usage` devolve consumo e extrato
@@ -128,7 +131,7 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
 
 | O quê | Onde | Situação |
 |---|---|---|
-| Nível pago da Gemini API | AI Studio | A chave autentica, mas a API responde **402**. A conta do Cloud está saudável (crédito de R$ 50, pós-pago) — o nível pago da Gemini é configurado **por projeto no AI Studio**, e `triple-hour-492210-i2` não está importado lá. Ver `docs/custos.md`. |
+| Alerta de custo na conta errada | Google Cloud | O consumo de IA cai na **My Billing Account 3** (projeto Google Ads API), mas o alerta de R$ 50 está na Account 1, restrito ao projeto Kiss Flow. **Não vai disparar.** Ver `docs/custos.md`. |
 | Inferência de traços na interface | `/alvos/[id]` | A rota existe e foi exercitada, mas não há botão para pedir a leitura nem tela para declarar eixo à mão. |
 | Latência da IA acima do critério | `/api/ai/advise` | Medido 6,8s / 15,5s / 22,1s. O Gate 0 exige resposta em até 15s. Caminhos: streaming, prompt menor, ou modelo lite. |
 | URLs de retorno do OAuth do Google | Google Cloud Console | Não registradas para o domínio publicado; o botão \"Continuar com Google\" falha até isso ser feito. Ver `docs/deploy.md`. |

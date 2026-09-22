@@ -67,38 +67,54 @@ Cloudflare tem alerta próprio — e vale registrar aqui.
 | Custo por usuário | Depende do acima. |
 | Cloudflare | Sem alerta. |
 
-## Por que o Gemini responde 402 — diagnóstico corrigido
+## A IA está funcionando — e o alerta de custo está no lugar errado
 
-A primeira leitura foi **errada**. O 402 diz "prepayment credits are depleted"
-e a conclusão óbvia seria falta de saldo na conta de faturamento. Não é isso.
+Resolvido em 21/09/2026. A chave em uso é a do projeto **Google Ads API**
+(`tribal-sunbeam-502217-v2`), que está em Nível 1 · Pré-pagamento na
+**My Billing Account 3**, com crédito carregado.
 
-**A conta do Cloud está saudável.** Em 21/09/2026, My Billing Account 1:
-crédito de R$ 50,00, modalidade **pós-pagamento**, sem saldo devedor, e
-R$ 200,00 de limite disponível.
+Medição real da primeira chamada:
 
-O que existe são **dois sistemas de cobrança separados**:
+| | |
+|---|---|
+| Modelo | gemini-flash-latest |
+| Tokens | 855 entrada / 370 saída |
+| Custo | US$ 0,001182 = **R$ 0,0069** |
+| Créditos cobrados | 1 |
+| Latência | 6,7 s |
+
+R$ 0,0069 por análise é **menos da metade** da estimativa de R$ 0,0152 que o
+simulador usava. A margem é ainda maior que a projetada.
+
+### PENDÊNCIA: o alerta de orçamento não cobre este gasto
+
+O alerta "Kiss Flow - custo mensal" (R$ 50) foi criado na **My Billing
+Account 1**, restrito ao projeto **Kiss Flow** (`triple-hour-492210-i2`). Mas
+o consumo de IA está caindo na **My Billing Account 3**, projeto Google Ads
+API. **O alerta atual não vai disparar por esse gasto.**
+
+Duas saídas:
+
+1. Criar um alerta equivalente na My Billing Account 3, restrito ao
+   `tribal-sunbeam-502217-v2`. Rápido, mas o custo do Kiss Flow fica
+   misturado com o do Google Ads API.
+2. Importar `triple-hour-492210-i2` para o AI Studio, configurar o nível pago
+   nele e mover a chave para lá. Recupera o isolamento por projeto, que é o
+   que torna o custo do produto legível.
+
+A segunda é a correta a médio prazo. A primeira serve enquanto só o fundador
+usa.
+
+### Por que o 402 durava
+
+Dois sistemas separados, e foi isso que confundiu o diagnóstico:
 
 | | Onde se configura | Estado |
 |---|---|---|
-| Google Cloud (a conta) | console.cloud.google.com/billing | saudável, pós-pago |
-| Gemini API (o nível) | **aistudio.google.com/projects** | por projeto, pré-pago |
+| Google Cloud (a conta) | console.cloud.google.com/billing | Account 1: crédito de R$ 50, pós-pago |
+| Gemini API (o nível) | aistudio.google.com/projects | por projeto, pré-pago |
 
-O nível pago da Gemini API é definido **por projeto, dentro do AI Studio**, e
-é pré-pago — compra-se crédito. Ter conta de faturamento no Cloud não basta.
-
-E o projeto onde a chave foi criada (`triple-hour-492210-i2`, o "Kiss Flow"
-com os clients OAuth) **não aparece no AI Studio**: só projetos importados
-são listados lá.
-
-### O que resolve
-
-Em https://aistudio.google.com/projects, um dos dois:
-
-1. **Importar** `triple-hour-492210-i2` e usar "Configurar faturamento" nele.
-   Mantém tudo no mesmo projeto, que é o que torna o custo isolável.
-2. Comprar crédito no `tribal-sunbeam-502217-v2`, que já está em "Nível 1 ·
-   Pré-pagamento" e mostra "Não há créditos" — mas a chave teria de ser
-   recriada lá, e o custo passaria a se misturar com o do Google Ads API.
-
-A primeira é melhor pelo isolamento de custo. A compra de crédito é ação do
-fundador — envolve meio de pagamento.
+Ter conta de faturamento no Cloud **não basta**. O nível pago da Gemini é por
+projeto, dentro do AI Studio, e só projetos **importados** aparecem lá. A
+chave criada em `triple-hour-492210-i2` não tinha nível nenhum — nem o
+gratuito — porque o projeto não estava importado.
