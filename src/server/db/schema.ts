@@ -224,12 +224,14 @@ export const contacts = sqliteTable(
       enum: ["words", "gifts", "acts", "time", "touch"],
     }),
 
+    // Espelha PIPELINE_STAGES em src/lib/types.ts. Os dois andam juntos.
     pipelineStage: text("pipeline_stage", {
       enum: [
+        "radar",
         "prospeccao",
         "qualificado",
         "engajamento",
-        "agendamento",
+        "encontro",
         "fechamento",
       ],
     }).notNull(),

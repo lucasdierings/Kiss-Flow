@@ -47,11 +47,22 @@ export const LOVE_LANGUAGES = [
 
 export type LoveLanguage = typeof LOVE_LANGUAGES[number]["id"];
 
+/**
+ * Fases do funil, em ordem.
+ *
+ * Mexer aqui é mexer no banco: `contacts.pipeline_stage` tem CHECK com estes
+ * mesmos valores, e `phase_transitions` guarda o histórico em texto. Renomear
+ * exige migração de DADOS, não só de rótulo — ver drizzle/0006.
+ *
+ * Ao adicionar uma fase, revise `tactics-data.ts`: a `agendamento` entrou uma
+ * vez e ficou sem nenhuma tática, e a seção de sugestões sumia sem aviso.
+ */
 export const PIPELINE_STAGES = [
+  { id: "radar", name: "Radar", tooltip: "No seu raio, mas sem nenhuma interação ainda" },
   { id: "prospeccao", name: "Prospecção", tooltip: "Conhecendo e despertando interesse" },
   { id: "qualificado", name: "Qualificado(a)", tooltip: "Já demonstrou interesse, vale investir" },
   { id: "engajamento", name: "Engajamento", tooltip: "Conversas fluindo, conexão crescendo" },
-  { id: "agendamento", name: "Agendamento", tooltip: "Marcando um encontro presencial" },
+  { id: "encontro", name: "Encontro", tooltip: "Marcando ou já tendo encontros presenciais" },
   { id: "fechamento", name: "Fechamento", tooltip: "Quase lá — momento decisivo" },
 ] as const;
 

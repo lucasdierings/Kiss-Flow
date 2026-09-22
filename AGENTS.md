@@ -70,6 +70,8 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
   (exigência da Apple e do Google), Pix ou cartão na web
 - **Táticas contextuais** em `/alvos/[id]`: filtradas pela fase da pessoa e
   ordenadas por risco, vindas do catálogo real
+- **Interações editáveis**: data, notas e exclusão em `/alvos/[id]`, por
+  `PATCH`/`DELETE /api/crm/interactions/[id]`
 - **Tela do agente** em `/agente`, ligada ao menu: escolhe a pessoa, descreve
   a situação, recebe diagnóstico e três sugestões com copiar e WhatsApp
 - **IA funcionando em produção.** Medido numa chamada real: 855 tokens de
@@ -277,6 +279,23 @@ e abrir no WhatsApp.
 **A conversa não é persistida** — não há tabela de mensagens no D1. Ressuscitar
 os três modos exigiria rota nova e migração; é decisão de produto, não detalhe
 de tela.
+
+### Fases do funil — mexer aqui mexe no banco
+
+`PIPELINE_STAGES` em `types.ts` é a fonte da verdade, e `contacts.pipeline_stage`
+espelha os mesmos valores. O `enum` do drizzle em `text(...)` é restrição de
+**TypeScript**: a coluna no SQLite é `text NOT NULL` sem CHECK, então
+`drizzle-kit generate` não vê nada e diz "No schema changes".
+
+Renomear uma fase é, portanto, migração de **dados**, escrita à mão — ver
+`drizzle/0006_radar_e_encontro.sql`. Sem ela, os contatos existentes ficam com
+uma fase que o código não reconhece e **somem do funil sem erro nenhum**.
+
+Ao adicionar ou renomear fase, revise nesta ordem:
+`types.ts` → `schema.ts` → `schemas.ts` → `tactics-data.ts` → `engine.ts`
+(regra de progressão) → migração de dados. O typecheck pega quase tudo; o que
+ele não pega é a cobertura de táticas — `agendamento` e depois `radar` entraram
+sem nenhuma, e a seção de sugestões sumia sem aviso.
 
 ### Táticas — onde entram
 

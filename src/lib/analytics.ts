@@ -63,7 +63,7 @@ const PHASE_ORDER: PipelineStage[] = [
   "prospeccao",
   "qualificado",
   "engajamento",
-  "agendamento",
+  "encontro",
   "fechamento",
 ];
 

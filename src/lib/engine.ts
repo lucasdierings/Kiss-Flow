@@ -127,6 +127,12 @@ function evaluatePipelineProgression(
   interactionCount: number
 ): Contact["pipelineStage"] {
   // Critérios para avançar (com gates de interação)
+  // Radar é onde a pessoa entra antes de existir qualquer contato. A primeira
+  // interação registrada é, por definição, o fim do radar — não há critério de
+  // métrica aqui porque não há métrica antes da primeira interação.
+  if (currentStage === "radar" && interactionCount >= 1) {
+    return "prospeccao";
+  }
   if (currentStage === "prospeccao" && victimScore > 30 && enchantment > 0.15 && interactionCount >= 3) {
     return "qualificado";
   }
@@ -134,9 +140,9 @@ function evaluatePipelineProgression(
     return "engajamento";
   }
   if (currentStage === "engajamento" && victimScore > 65 && enchantment > 0.5 && tension > 35 && interactionCount >= 7) {
-    return "agendamento";
+    return "encontro";
   }
-  if (currentStage === "agendamento" && victimScore > 80 && enchantment > 0.7 && tension > 45 && interactionCount >= 10) {
+  if (currentStage === "encontro" && victimScore > 80 && enchantment > 0.7 && tension > 45 && interactionCount >= 10) {
     return "fechamento";
   }
 

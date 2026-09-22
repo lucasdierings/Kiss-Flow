@@ -67,7 +67,7 @@ export default function SalesToRelationshipMatrix() {
       stageName: "Agendamento",
       formula: "Aceite de convite presencial para encontro de baixa pressão (Café/Drink)",
       tacticalObjective: "Testar a química presencial e preparar o terreno para o fechamento.",
-      metricValue: `${contacts.filter((c) => c.pipelineStage === "agendamento").length} dates agendados`,
+      metricValue: `${contacts.filter((c) => c.pipelineStage === "encontro").length} dates agendados`,
     },
     {
       salesConcept: "Deal Closing / Contract Signed",

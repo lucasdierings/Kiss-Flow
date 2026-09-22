@@ -334,7 +334,7 @@ export function generateProactiveAlerts(
   if (
     contact.status === "active" &&
     contact.closingGoal &&
-    (contact.pipelineStage === "fechamento" || contact.pipelineStage === "agendamento") &&
+    (contact.pipelineStage === "fechamento" || contact.pipelineStage === "encontro") &&
     contact.victimScore > 70 &&
     contact.enchantmentScore > 0.6 &&
     !contact.goalAchievedAt

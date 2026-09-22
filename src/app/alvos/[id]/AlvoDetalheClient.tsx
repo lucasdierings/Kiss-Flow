@@ -134,20 +134,149 @@ export default function AlvoDetalheClient({ id }: { id: string }) {
         ) : (
           <ul className="mt-3 flex flex-col gap-2">
             {interacoes.map((i) => (
-              <li key={i.id} className="bento-card !py-3">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm">{nomeDoTipo(i.typeId)}</span>
-                  <span className="text-xs text-[var(--muted)]">
-                    {new Date(i.date).toLocaleDateString("pt-BR")}
-                  </span>
-                </div>
-                {i.notes && <p className="mt-1.5 text-xs text-[var(--muted)]">{i.notes}</p>}
-              </li>
+              <ItemHistorico key={i.id} interacao={i} aoMudar={recarregar} />
             ))}
           </ul>
         )}
       </section>
     </main>
+  );
+}
+
+/**
+ * Um registro do histórico, editável.
+ *
+ * A data é o campo que mais importa aqui: o formulário antigo gravava sempre
+ * "agora", então quem registrou um encontro de semanas atrás tem a data
+ * errada — e data errada desloca tudo que é calculado por tempo.
+ */
+function ItemHistorico({
+  interacao,
+  aoMudar,
+}: {
+  interacao: Interaction;
+  aoMudar: () => Promise<void>;
+}) {
+  const [editando, setEditando] = useState(false);
+  const [quando, setQuando] = useState(interacao.date.slice(0, 10));
+  const [notas, setNotas] = useState(interacao.notes ?? "");
+  const [salvando, setSalvando] = useState(false);
+  const [confirmandoRemocao, setConfirmandoRemocao] = useState(false);
+
+  async function salvar() {
+    setSalvando(true);
+    await fetch(`/api/crm/interactions/${interacao.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ date: dataParaISO(quando), notes: notas.trim() }),
+    });
+    setEditando(false);
+    setSalvando(false);
+    await aoMudar();
+  }
+
+  async function remover() {
+    setSalvando(true);
+    await fetch(`/api/crm/interactions/${interacao.id}`, { method: "DELETE" });
+    await aoMudar();
+  }
+
+  if (editando) {
+    return (
+      <li className="bento-card !py-3">
+        <p className="text-sm">{nomeDoTipo(interacao.typeId)}</p>
+
+        <label className="mt-3 block">
+          <span className="text-[11px] text-[var(--muted)]">Quando aconteceu</span>
+          <input
+            type="date"
+            value={quando}
+            max={hojeISO()}
+            onChange={(e) => setQuando(e.target.value)}
+            className="mt-1 w-full rounded-lg border border-[var(--card-border)] bg-[#0D0D0D] px-3 py-2 text-sm outline-none focus:border-[var(--accent-violet)]"
+          />
+        </label>
+
+        <label className="mt-2.5 block">
+          <span className="text-[11px] text-[var(--muted)]">Notas</span>
+          <textarea
+            value={notas}
+            onChange={(e) => setNotas(e.target.value)}
+            rows={2}
+            className="mt-1 w-full resize-y rounded-lg border border-[var(--card-border)] bg-[#0D0D0D] px-3 py-2 text-sm outline-none focus:border-[var(--accent-violet)]"
+          />
+        </label>
+
+        <div className="mt-3 flex gap-2">
+          <button
+            onClick={() => setEditando(false)}
+            className="rounded-lg border border-[var(--card-border)] px-3 py-2 text-xs text-[var(--muted)]"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={salvar}
+            disabled={salvando}
+            className="flex-1 rounded-lg bg-gradient-to-r from-[#7c3aed] to-[#8b5cf6] px-3 py-2 text-xs font-medium text-white disabled:opacity-40"
+          >
+            {salvando ? "Salvando…" : "Salvar"}
+          </button>
+        </div>
+
+        <p className="mt-2.5 text-[10px] leading-relaxed text-[var(--muted)]">
+          As métricas calculadas na época não mudam: elas registram o que o
+          sistema concluiu com a informação daquele momento.
+        </p>
+      </li>
+    );
+  }
+
+  return (
+    <li className="bento-card !py-3">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-sm">{nomeDoTipo(interacao.typeId)}</span>
+        <span className="text-xs text-[var(--muted)]">
+          {new Date(interacao.date).toLocaleDateString("pt-BR")}
+        </span>
+      </div>
+
+      {interacao.notes && (
+        <p className="mt-1.5 text-xs text-[var(--muted)]">{interacao.notes}</p>
+      )}
+
+      <div className="mt-2 flex gap-3">
+        <button
+          onClick={() => setEditando(true)}
+          className="text-[11px] text-[var(--accent-violet)] hover:underline"
+        >
+          Editar
+        </button>
+        {confirmandoRemocao ? (
+          <>
+            <button
+              onClick={remover}
+              disabled={salvando}
+              className="text-[11px] text-[#e11d48] hover:underline"
+            >
+              Confirmar exclusão
+            </button>
+            <button
+              onClick={() => setConfirmandoRemocao(false)}
+              className="text-[11px] text-[var(--muted)] hover:underline"
+            >
+              Cancelar
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={() => setConfirmandoRemocao(true)}
+            className="text-[11px] text-[var(--muted)] hover:text-[#e11d48]"
+          >
+            Excluir
+          </button>
+        )}
+      </div>
+    </li>
   );
 }
 
@@ -180,6 +309,10 @@ function RegistrarInteracao({
   const [categoria, setCategoria] = useState<InteractionCategory>("digital_active");
   const [typeId, setTypeId] = useState("dm_casual");
   const [sentiment, setSentiment] = useState(0);
+  // Data editável, e não `new Date()` na hora de enviar. Quem registra um
+  // encontro de duas semanas atrás precisa dizer quando foi: a data alimenta
+  // dias desde o último contato, ritmo, escassez e os alertas de estagnação.
+  const [quando, setQuando] = useState(() => hojeISO());
   const [initiatedByTarget, setInitiatedByTarget] = useState(false);
   const [notes, setNotes] = useState("");
   const [salvando, setSalvando] = useState(false);
@@ -199,7 +332,7 @@ function RegistrarInteracao({
         typeId,
         category: categoria,
         sentiment,
-        date: new Date().toISOString(),
+        date: dataParaISO(quando),
         notes: notes.trim(),
         initiatedByTarget,
       }),
@@ -222,6 +355,7 @@ function RegistrarInteracao({
 
     setNotes("");
     setSentiment(0);
+    setQuando(hojeISO());
     setInitiatedByTarget(false);
     await aoRegistrar();
     setSalvando(false);
@@ -261,6 +395,17 @@ function RegistrarInteracao({
           <option key={t.id} value={t.id}>{t.name}</option>
         ))}
       </select>
+
+      <label className="mt-4 block">
+        <span className="text-xs text-[var(--muted)]">Quando aconteceu</span>
+        <input
+          type="date"
+          value={quando}
+          max={hojeISO()}
+          onChange={(e) => setQuando(e.target.value)}
+          className="mt-1.5 w-full rounded-lg border border-[var(--card-border)] bg-[#0D0D0D] px-3 py-2.5 text-sm outline-none focus:border-[var(--accent-violet)]"
+        />
+      </label>
 
       <label className="mt-4 block">
         <span className="text-xs text-[var(--muted)]">
@@ -313,6 +458,24 @@ function RegistrarInteracao({
       </button>
     </section>
   );
+}
+
+/** `YYYY-MM-DD` de hoje, no fuso local. */
+function hojeISO(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/**
+ * Converte `YYYY-MM-DD` para ISO ao MEIO-DIA local.
+ *
+ * Meia-noite seria o óbvio e estaria errado: em fuso negativo, meia-noite
+ * local vira o dia anterior em UTC, e a interação apareceria um dia antes do
+ * que aconteceu.
+ */
+function dataParaISO(yyyymmdd: string): string {
+  const [a, m, d] = yyyymmdd.split("-").map(Number);
+  return new Date(a, m - 1, d, 12, 0, 0).toISOString();
 }
 
 function rotuloSentimento(v: number) {

@@ -1,10 +1,11 @@
 import { z } from "zod";
 
 const PIPELINE = [
+  "radar",
   "prospeccao",
   "qualificado",
   "engajamento",
-  "agendamento",
+  "encontro",
   "fechamento",
 ] as const;
 

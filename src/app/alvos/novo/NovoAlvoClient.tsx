@@ -24,7 +24,9 @@ export default function NovoAlvoClient() {
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [primaryArchetype, setPrimaryArchetype] = useState<string>("");
-  const [pipelineStage, setPipelineStage] = useState<string>("prospeccao");
+  // Radar é o padrão: alvo recém-cadastrado, por definição, ainda não teve
+  // interação nenhuma. A primeira interação registrada tira ele de lá.
+  const [pipelineStage, setPipelineStage] = useState<string>("radar");
   const [closingGoal, setClosingGoal] = useState("");
   const [notes, setNotes] = useState("");
 
