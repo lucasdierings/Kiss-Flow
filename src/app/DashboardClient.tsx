@@ -9,7 +9,6 @@ import VulnerabilityRadar from "@/components/VulnerabilityRadar";
 import EnchantmentTimeline from "@/components/EnchantmentTimeline";
 import ScarcityIndex from "@/components/ScarcityIndex";
 import KPICards from "@/components/KPICards";
-import ActionBar from "@/components/ActionBar";
 import QuickLogFAB from "@/components/QuickLogFAB";
 import AlertBanner, { type AlertItem } from "@/components/AlertBanner";
 import StrategicInsights from "@/components/StrategicInsights";
@@ -303,7 +302,6 @@ export default function DashboardClient() {
       </main>
 
       {/* Floating Action Bar */}
-      <ActionBar contact={activeContact} />
       <QuickLogFAB />
     </div>
   );

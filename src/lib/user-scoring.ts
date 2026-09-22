@@ -27,7 +27,7 @@ export interface UserScore {
   strengths: string[];
   weaknesses: string[];
   nextLevelTip: string;
-  greeneInsight: string;          // Insight estratégico de sedução
+  seductionInsight: string;          // Insight estratégico de sedução
   powerLawApplied: string;        // Lei do poder relevante
   humanNatureInsight: string;     // Insight de Leis da Natureza Humana
 }
@@ -328,7 +328,7 @@ export function calculateUserScore(
   );
 
   // Insight estratégico de sedução
-  const greeneInsight = generateGreeneInsight(seducerArchetype, overallPower, summary);
+  const seductionInsight = generateGreeneInsight(seducerArchetype, overallPower, summary);
 
   return {
     mysteryMaintenance,
@@ -344,7 +344,7 @@ export function calculateUserScore(
     strengths,
     weaknesses,
     nextLevelTip,
-    greeneInsight,
+    seductionInsight,
     powerLawApplied,
     humanNatureInsight,
   };
@@ -463,7 +463,7 @@ export function getDefaultUserScore(): UserScore {
     strengths: ["Perfil configurado — pronto para começar"],
     weaknesses: ["Sem dados suficientes — registre interações para análise completa"],
     nextLevelTip: "Cadastre seus alvos e comece a registrar interações. O sistema precisa de dados para analisar seu comportamento e sugerir melhorias.",
-    greeneInsight: "A sedução começa com a observação. Antes de agir, observe. Antes de falar, escute. Antes de avançar, construa o terreno.",
+    seductionInsight: "A sedução começa com a observação. Antes de agir, observe. Antes de falar, escute. Antes de avançar, construa o terreno.",
     powerLawApplied: `Lei #3: "${POWER_LAWS[1].name}" — ${POWER_LAWS[1].insight}`,
     humanNatureInsight: `${HUMAN_NATURE_LAWS[0].name}: ${HUMAN_NATURE_LAWS[0].insight}`,
   };

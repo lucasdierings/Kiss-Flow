@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
+import Carteira from "@/components/Carteira";
+import TaticasSugeridas from "@/components/TaticasSugeridas";
 import {
   INTERACTION_CATEGORIES,
   PIPELINE_STAGES,
@@ -117,6 +119,8 @@ export default function AlvoDetalheClient({ id }: { id: string }) {
       <RegistrarInteracao contatoId={id} aoRegistrar={recarregar} />
 
       <PedirLeitura contatoId={id} nome={contato.firstName} />
+
+      <TaticasSugeridas contato={contato} />
 
       <section className="mt-8">
         <h2 className="text-xs uppercase tracking-widest text-[var(--muted)]">
@@ -356,9 +360,13 @@ function PedirLeitura({ contatoId, nome }: { contatoId: string; nome: string }) 
 
   return (
     <section className="bento-card mt-6">
-      <h2 className="text-xs uppercase tracking-widest text-[var(--muted)]">
-        Pedir leitura da situação
-      </h2>
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="text-xs uppercase tracking-widest text-[var(--muted)]">
+          Pedir leitura da situação
+        </h2>
+        {/* Saldo aqui, e não só no perfil: é neste botão que o crédito sai. */}
+        <Carteira compacto />
+      </div>
       <p className="mt-1.5 text-xs text-[var(--muted)]">
         Descreva o que está acontecendo com {nome}. A resposta pode levar alguns
         segundos.

@@ -3,7 +3,14 @@ import { createSupabaseBrowser } from "./supabase";
 
 // ===== 24 Táticas de Sedução =====
 
-export const GREENE_TACTICS: Record<
+/**
+ * Catálogo de táticas indexado por número, para os alertas.
+ *
+ * O nome anterior citava o autor das estratégias — a regra nº 1 do produto
+ * proíbe isso em qualquer lugar, inclusive em identificador de código: nome
+ * de variável vaza em stack trace, em bundle e em busca no repositório.
+ */
+export const TATICAS_POR_NUMERO: Record<
   number,
   { number: number; name: string; description: string }
 > = {
@@ -91,7 +98,7 @@ export function generateProactiveAlerts(
 
   // 1. Excessive Frequency
   if (userInitiated24h.length >= 4) {
-    const tactic = GREENE_TACTICS[21];
+    const tactic = TATICAS_POR_NUMERO[21];
     alerts.push({
       contact_id: contact.id,
       alert_type: "excessive_frequency",
@@ -111,7 +118,7 @@ export function generateProactiveAlerts(
 
   // 2. Silence Needed (3+ interactions without being excessive)
   if (userInitiated24h.length >= 3 && userInitiated24h.length < 4) {
-    const tactic = GREENE_TACTICS[21];
+    const tactic = TATICAS_POR_NUMERO[21];
     alerts.push({
       contact_id: contact.id,
       alert_type: "silence_needed",
@@ -130,7 +137,7 @@ export function generateProactiveAlerts(
 
   // 3. Mystery Critical
   if (contact.mysteryCoefficient < 25) {
-    const tactic = GREENE_TACTICS[9];
+    const tactic = TATICAS_POR_NUMERO[9];
     alerts.push({
       contact_id: contact.id,
       alert_type: "mystery_critical",
@@ -157,7 +164,7 @@ export function generateProactiveAlerts(
       );
 
     if (tensionFlat) {
-      const tactic = GREENE_TACTICS[4];
+      const tactic = TATICAS_POR_NUMERO[4];
       alerts.push({
         contact_id: contact.id,
         alert_type: "friendzone_risk",
@@ -178,7 +185,7 @@ export function generateProactiveAlerts(
 
   // 5. Climax Ready
   if (contact.victimScore > 70 && contact.enchantmentScore > 0.7) {
-    const tactic = GREENE_TACTICS[23];
+    const tactic = TATICAS_POR_NUMERO[23];
     alerts.push({
       contact_id: contact.id,
       alert_type: "climax_ready",
@@ -200,7 +207,7 @@ export function generateProactiveAlerts(
   const totalRecent = contactInteractions.slice(0, 10);
   const targetInitiated = totalRecent.filter((i) => i.initiatedByTarget).length;
   if (totalRecent.length >= 3 && targetInitiated / totalRecent.length > 0.7) {
-    const tactic = GREENE_TACTICS[9];
+    const tactic = TATICAS_POR_NUMERO[9];
     const pursuitRate = Math.round((targetInitiated / totalRecent.length) * 100);
     alerts.push({
       contact_id: contact.id,
@@ -225,7 +232,7 @@ export function generateProactiveAlerts(
     const daysSince =
       (now - new Date(lastInteraction.date).getTime()) / (24 * 60 * 60 * 1000);
     if (daysSince > 5) {
-      const tactic = GREENE_TACTICS[6];
+      const tactic = TATICAS_POR_NUMERO[6];
       alerts.push({
         contact_id: contact.id,
         alert_type: "extended_silence",
@@ -249,7 +256,7 @@ export function generateProactiveAlerts(
     contact.pipelineStage !== "fechamento" &&
     contact.status !== "won"
   ) {
-    const tactic = GREENE_TACTICS[23];
+    const tactic = TATICAS_POR_NUMERO[23];
     alerts.push({
       contact_id: contact.id,
       alert_type: "high_enchantment",

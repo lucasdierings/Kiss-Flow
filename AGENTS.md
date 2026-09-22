@@ -65,6 +65,11 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
   ALLOWED_EMAILS 403
 - **Build para o Cloudflare passando** (`npx opennextjs-cloudflare build` gera
   `.open-next/worker.js`); runbook de publicação em `docs/deploy.md`
+- **Carteira visível** (`src/components/Carteira.tsx`): saldo no perfil e ao
+  lado do botão que gasta. A recarga detecta o ambiente — loja dentro do app
+  (exigência da Apple e do Google), Pix ou cartão na web
+- **Táticas contextuais** em `/alvos/[id]`: filtradas pela fase da pessoa e
+  ordenadas por risco, vindas do catálogo real
 - **Consumo de tokens medido e cobrado**: cada chamada grava tokens, custo em
   micro-dólares e créditos debitados; `settleAnalysis()` acerta a conta depois
   da resposta. `GET /api/billing/usage` devolve consumo e extrato
@@ -134,7 +139,7 @@ grep -rn "TODO\|DEMO_\|mock" src/app src/lib apps/mobile/app apps/mobile/service
 | Consentimento LGPD | `apps/mobile/app/onboarding.tsx` | Só grava flag local, não escreve em `user_consents`. |
 | Termos e privacidade | `apps/mobile/app/{terms,privacy}.tsx` | Rascunhos. Citam Supabase, sem base legal/DPO/retenção. Reprovam nas lojas. |
 | Resíduo de Supabase | `AvatarUpload` | `Sidebar` e `UserProfileCard` já migraram para `/api/profile`. `src/lib/store.ts` (localStorage) só é usado por componentes ainda não religados. |
-| Componentes órfãos | `src/components/` | `ActionModal`, `AvatarUpload`, `ConfirmDeleteModal`, `EditContactModal`, `EditInteractionModal`, `EncounterPlanner`, `SalesToRelationshipMatrix`, `WhatsAppStudio`, `DemoDataLoader` |
+| Componentes órfãos | `src/components/` | `ActionBar` (substituída por `TaticasSugeridas`), `ActionModal`, `AvatarUpload`, `ConfirmDeleteModal`, `EditContactModal`, `EditInteractionModal`, `EncounterPlanner`, `SalesToRelationshipMatrix`, `WhatsAppStudio`, `DemoDataLoader` |
 | `QuickLogFAB` em localStorage | `src/components/QuickLogFAB.tsx` | Único widget que ainda lê `src/lib/store.ts`. |
 | Telas do app na web | — | Faltam chat, táticas, analytics, WhatsApp Studio, Matriz de Vendas e Encontros. Estão **ocultas da sidebar** (`ativo: false`) em vez de dar 404 — ao construir a tela, vire a chave. |
 | Transição de fase em `/alvos/[id]` | `/alvos/[id]` | O Kanban já aplica transições; na tela de detalhe a sugestão ainda é só um aviso. |
@@ -248,6 +253,30 @@ cara de medição:
 
 Regras completas, incluindo com que frequência cada coisa muda e o que passa
 por IA: `docs/metricas.md`. Leia antes de criar qualquer métrica nova.
+
+### Táticas — onde entram
+
+A `ActionBar` ficava no painel com cinco botões fixos e foi removida. Tinha
+cinco defeitos, e o primeiro é o que importa: **lista fixa não conhece
+contexto**. Oferecia "Recuo Estratégico" — risco alto, fases avançadas — para
+alguém que o usuário acabou de conhecer.
+
+Os outros quatro: dois dos cinco números apontavam para outra tática ("Tática
+10 · Poetizar Presença", mas a 10 é "Use o Poder das Palavras"); "Tática 21"
+não diz nada a ninguém e é a numeração da fonte, que a regra nº 1 proíbe
+expor; não havia nenhum "porquê", contra a regra nº 4; e ficava no painel,
+que é visão geral, usando silenciosamente o "contato ativo".
+
+Hoje as táticas aparecem em `TaticasSugeridas`, na página da pessoa,
+filtradas pela fase dela e ordenadas por risco. Risco alto aparece com aviso,
+não escondido — esconder seria decidir pelo usuário.
+
+`alerts-engine.ts` também escolhe tática por contexto (interações em 24h,
+mistério, escassez), e é o mecanismo certo para sugestão proativa.
+
+**Ao mexer em `PIPELINE_STAGES`, revise `tactics-data.ts`.** A fase
+`agendamento` entrou no pipeline depois e ficou sem nenhuma tática: a seção
+inteira sumia para quem estivesse nela, sem aviso.
 
 ### Liberação progressiva
 

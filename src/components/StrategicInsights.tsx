@@ -35,7 +35,7 @@ export default function StrategicInsights({ score }: StrategicInsightsProps) {
         <InsightCard
           icon="chess"
           label="Estratégia de Sedução"
-          text={score.greeneInsight}
+          text={score.seductionInsight}
           color="#8b5cf6"
         />
 

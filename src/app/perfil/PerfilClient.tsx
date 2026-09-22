@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { LOVE_LANGUAGES, SEDUCER_ARCHETYPES } from "@/lib/types";
+import Carteira from "@/components/Carteira";
 import FotoPerfil from "@/components/FotoPerfil";
 
 interface Perfil {
@@ -231,9 +232,8 @@ export default function PerfilClient() {
         </Link>
       </div>
 
-      <div className="bento-card mt-4">
-        <p className="text-xs uppercase tracking-widest text-[var(--muted)]">Plano</p>
-        <p className="mt-2 text-sm capitalize">{perfil.plan}</p>
+      <div className="mt-4">
+        <Carteira />
       </div>
     </main>
   );
