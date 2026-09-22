@@ -42,7 +42,7 @@ export default function StrategicInsights({ score }: StrategicInsightsProps) {
         {/* Power Law */}
         <InsightCard
           icon="crown"
-          label="48 Leis do Poder"
+          label="Dinâmica de poder"
           text={score.powerLawApplied}
           color="#d97706"
         />
@@ -50,7 +50,7 @@ export default function StrategicInsights({ score }: StrategicInsightsProps) {
         {/* Human Nature */}
         <InsightCard
           icon="brain"
-          label="Natureza Humana"
+          label="Comportamento humano"
           text={score.humanNatureInsight}
           color="#06b6d4"
         />

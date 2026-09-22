@@ -47,6 +47,14 @@ export interface UserBehaviorSummary {
 }
 
 // ===== As 48 Leis do Poder (resumidas para scoring) =====
+/**
+ * Princípios de dinâmica de poder.
+ *
+ * O texto de cada um vai para a tela; a NUMERAÇÃO e o nome da obra, não. A
+ * regra nº 1 do produto proíbe expor a origem das estratégias, e "Lei #16"
+ * só faz sentido para quem conhece o livro — é citação de fonte disfarçada
+ * de informação.
+ */
 export const POWER_LAWS = [
   { number: 1, name: "Nunca ofusque o mestre", insight: "Faça sempre os que estão acima se sentirem superiores. Deixe seus alvos brilharem." },
   { number: 3, name: "Oculte suas intenções", insight: "Mantenha as pessoas desorientadas. Nunca revele o propósito por trás de suas ações." },
@@ -356,21 +364,21 @@ function selectRelevantPowerLaw(
   mysteryMaintenance: number
 ): string {
   if (needinessIndex > 60) {
-    return `Lei #16: "${POWER_LAWS[7].name}" — ${POWER_LAWS[7].insight}`;
+    return `${POWER_LAWS[7].name} — ${POWER_LAWS[7].insight}`;
   }
   if (mysteryMaintenance < 40) {
-    return `Lei #4: "${POWER_LAWS[2].name}" — ${POWER_LAWS[2].insight}`;
+    return `${POWER_LAWS[2].name} — ${POWER_LAWS[2].insight}`;
   }
   if (summary.userInitiatedPercent > 65) {
-    return `Lei #36: "${POWER_LAWS[13].name}" — ${POWER_LAWS[13].insight}`;
+    return `${POWER_LAWS[13].name} — ${POWER_LAWS[13].insight}`;
   }
   if (summary.boldMoveCount === 0 && summary.totalInteractions > 10) {
-    return `Lei #28: "${POWER_LAWS[11].name}" — ${POWER_LAWS[11].insight}`;
+    return `${POWER_LAWS[11].name} — ${POWER_LAWS[11].insight}`;
   }
   if (summary.totalContacts < 2) {
-    return `Lei #20: "${POWER_LAWS[9].name}" — ${POWER_LAWS[9].insight}`;
+    return `${POWER_LAWS[9].name} — ${POWER_LAWS[9].insight}`;
   }
-  return `Lei #17: "${POWER_LAWS[8].name}" — ${POWER_LAWS[8].insight}`;
+  return `${POWER_LAWS[8].name} — ${POWER_LAWS[8].insight}`;
 }
 
 function selectHumanNatureInsight(
@@ -464,7 +472,7 @@ export function getDefaultUserScore(): UserScore {
     weaknesses: ["Sem dados suficientes — registre interações para análise completa"],
     nextLevelTip: "Cadastre seus alvos e comece a registrar interações. O sistema precisa de dados para analisar seu comportamento e sugerir melhorias.",
     seductionInsight: "A sedução começa com a observação. Antes de agir, observe. Antes de falar, escute. Antes de avançar, construa o terreno.",
-    powerLawApplied: `Lei #3: "${POWER_LAWS[1].name}" — ${POWER_LAWS[1].insight}`,
+    powerLawApplied: `${POWER_LAWS[1].name} — ${POWER_LAWS[1].insight}`,
     humanNatureInsight: `${HUMAN_NATURE_LAWS[0].name}: ${HUMAN_NATURE_LAWS[0].insight}`,
   };
 }
